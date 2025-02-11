@@ -19,7 +19,7 @@ func SortSlice(unsorted []int32) []int32 {
 	return unsorted
 }
 
-func GetLineLength() int {
+func GetScreenWidth() int {
 	var (
 		err    error
 		length int = 132
