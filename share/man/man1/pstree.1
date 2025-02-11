@@ -1,0 +1,52 @@
+.Dd Feb 10, 2025
+.Dt PSTREE 1
+.Os
+.Sh NAME
+.Nm pstree
+.Nd display a tree of processes
+
+.Sh SYNOPSIS
+.Nm
+.Op Fl a, -arguments
+.Op Fl A, -ascii
+.Op Fl c, -contains Ar pattern
+.Op Fl U, -exclude-root
+.Op Fl f, -file Ar path
+.Op Fl l, -level Ar int
+.Op Fl p, -show-pids
+.Op Fl -start Ar PID
+.Op Fl u, -user username
+.Op Fl w, -wide
+.Sh DESCRIPTION
+pstree  shows  running  processes as a tree.  The tree is rooted at either pid or init if pid is omitted.  If a user name is specified, all process trees ooted at processes owned by that user are shown.
+.Sh OPTIONS
+.Bl -tag -width indent
+.It Fl a, -arguments
+Show command line arguments.
+.It Fl A, -ascii
+Use ASCII characters to draw the tree.
+.It Fl C, -contains
+Show only branches containing process with <string> in commandline.
+.It Fl U
+Don't show branches containing only root processes. This cannot be used with --user.
+.It Fl f, -file
+Read input from <file> (- is stdin). The file format must be the output of "ps -axwwo user,pid,ppid,pgid,command".
+.It Fl l, -level
+Limit the output the number of levels specified.
+.It Fl p, -show-pids
+Preface each line with the PID.
+.It Fl -start
+The process ID to start from, default is 1.
+.It Fl u, -user
+Show only branches containing processes of <user>. This cannot be used with --exclude-root.
+.It Fl w, -wide
+Display wide output. Do not truncate to the window width.
+.It Fl V, -version
+Display version information.
+.El
+.Sh REPORTING BUGS
+You can report bugs to <gdanko@protonmail.com>.
+.Sh AUTHOR
+Written by Gary Danko.
+.Sh SEE ALSO
+ps(1), top(1)
