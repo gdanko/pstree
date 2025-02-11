@@ -12,8 +12,8 @@ import (
 
 var (
 	colorCount      int
-	colorSupport    bool
 	colorizeString  string = ""
+	colorSupport    bool
 	err             error
 	flagArguments   bool
 	flagAscii       bool
@@ -22,8 +22,8 @@ var (
 	flagExcludeRoot bool
 	flagFile        string
 	flagLevel       int
+	flagPid         int32
 	flagShowPids    bool
-	flagStart       int32
 	flagUsername    string
 	flagVersion     bool
 	flagWide        bool
@@ -32,10 +32,9 @@ var (
 	startingPid     int32
 	tree            map[int32][]int32
 	usageTemplate   string
-	version         string = "0.2.0"
+	version         string = "0.2.1"
 	versionString   string
-	// flagPid         int32
-	rootCmd = &cobra.Command{
+	rootCmd         = &cobra.Command{
 		Use:    "pstree",
 		Short:  "",
 		Long:   "",
@@ -55,7 +54,7 @@ func init() {
 	}
 	usageTemplate = fmt.Sprintf(
 		`Usage: pstree [-aAUpw]%s [-f file] [-l n] [--show-pids] 
-	      [--start n] [-u user] [-c string]
+	      [--pid n] [-u user] [-c string]
    or: pstree -V
 
 Display a tree of processes.
@@ -100,8 +99,8 @@ For more information about these matters, see the files named COPYING.`,
 	screenWidth = util.GetScreenWidth()
 
 	startingPid = pstree.FindFirstPid(tree)
-	if flagStart > 0 {
-		startingPid = flagStart
+	if flagPid > 0 {
+		startingPid = flagPid
 	}
 	pstree.GenerateTree(startingPid, tree, "", "", initialIndent, flagArguments, flagWide, flagShowPids, flagAscii, flagColorize, screenWidth)
 
