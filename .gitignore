@@ -29,3 +29,6 @@ pstree
 
 # sample ps output file
 a.txt
+
+# ignore tarballs
+*.tgz
