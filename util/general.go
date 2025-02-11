@@ -1,15 +1,49 @@
 package util
 
 import (
+	"bytes"
+	"os/exec"
 	"sort"
 	"strconv"
+	"strings"
 
 	terminal "github.com/wayneashleyberry/terminal-dimensions"
 )
 
+func ExecuteCommand(name string, args ...string) (int, string, string, error) {
+	var (
+		cmd      *exec.Cmd
+		err      error
+		exitCode int = 0
+		exitErr  *exec.ExitError
+		ok       bool
+	)
+	cmd = exec.Command(name, args...)
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err = cmd.Run()
+
+	if err != nil {
+		if exitErr, ok = err.(*exec.ExitError); ok {
+			exitCode = exitErr.ExitCode()
+		} else {
+			return -1, "", "", err // Return error if not an ExitError
+		}
+	}
+	return exitCode, strings.TrimRight(stdout.String(), "\n"), strings.TrimRight(stderr.String(), "\n"), nil
+}
+
 func StrToInt32(input string) int32 {
 	num, _ := strconv.ParseInt(input, 10, 32)
 	return int32(num)
+}
+
+func Int32toStr(input int32) string {
+	output := strconv.Itoa(int(input))
+	return output
 }
 
 func SortSlice(unsorted []int32) []int32 {
@@ -38,4 +72,19 @@ func TruncateString(s string, length int) string {
 		return s[:length]
 	}
 	return s
+}
+
+func HasColorSupport() (bool, int) {
+	returncode, stdout, _, err := ExecuteCommand("/usr/bin/tput", "colors")
+	if err != nil || returncode != 0 {
+		return false, 0
+	}
+	colors, err := strconv.Atoi(stdout)
+	if err != nil {
+		return false, 0
+	}
+	if colors < 8 {
+		return false, 0
+	}
+	return true, colors
 }
