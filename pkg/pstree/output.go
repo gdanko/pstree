@@ -10,46 +10,45 @@ import (
 	"github.com/shirou/gopsutil/v4/process"
 )
 
-func GenerateTree(parent int32, tree map[int32][]int32, currentSymbol string, currentIndent, indent string, arguments bool, wide bool, showPids bool, useAscii bool, screenWidth int) {
+func GenerateTree(parent int32, tree map[int32][]int32, currentSymbol string, currentIndent, indent string, arguments bool, wide bool, showPids bool, useAscii bool, colorize bool, screenWidth int) {
 	var (
 		cmdArgs       []string
 		cmdArgsJoined string = ""
 		cmdName       string
-		// currentsSreenWidth int
-		err        error
-		line       string
-		linePrefix string
-		ok         bool
-		pgid       int
-		pid        int32
-		pipe       string
-		symbol     string
-		username   string
+		err           error
+		line          string
+		linePrefix    string
+		ok            bool
+		pgid          int
+		pid           string
+		pipe          string
+		symbol        string
+		username      string
 	)
 
 	proc, err := process.NewProcess(parent)
 	if err == nil {
-		pid = proc.Pid
+		pid = util.Int32toStr(proc.Pid)
 
-		pgid, err = syscall.Getpgid(int(pid))
+		pgid, err = syscall.Getpgid(int(parent))
 		if err != nil {
 			pgid = -1
 		}
 
 		if currentSymbol == "%s  └── " {
-			if pid == int32(pgid) {
+			if parent == int32(pgid) {
 				currentSymbol = "%s  └─= "
 			}
 		} else if currentSymbol == "%s  `-- " {
-			if pid == int32(pgid) {
+			if parent == int32(pgid) {
 				currentSymbol = "%s  `-= "
 			}
 		} else if currentSymbol == "%s  ├── " {
-			if pid == int32(pgid) {
+			if parent == int32(pgid) {
 				currentSymbol = "%s  ├─= "
 			}
 		} else if currentSymbol == "%s  |-- " {
-			if pid == int32(pgid) {
+			if parent == int32(pgid) {
 				currentSymbol = "%s  |-= "
 			}
 		}
@@ -67,8 +66,16 @@ func GenerateTree(parent int32, tree map[int32][]int32, currentSymbol string, cu
 			linePrefix = fmt.Sprintln(currentIndent)
 		}
 
+		if colorize {
+			linePrefix = util.ColorYellow(linePrefix)
+			username = util.ColorCyan(username)
+			pid = util.ColorPurple(pid)
+			cmdName = util.ColorBlue(cmdName)
+			cmdArgsJoined = util.ColorRed(cmdArgsJoined)
+		}
+
 		if showPids {
-			line = fmt.Sprintf("%s%d %s %s %s", linePrefix, parent, username, cmdName, cmdArgsJoined)
+			line = fmt.Sprintf("%s%s %s %s %s", linePrefix, pid, username, cmdName, cmdArgsJoined)
 		} else {
 			line = fmt.Sprintf("%s%s %s %s", linePrefix, username, cmdName, cmdArgsJoined)
 		}
@@ -77,7 +84,7 @@ func GenerateTree(parent int32, tree map[int32][]int32, currentSymbol string, cu
 			fmt.Fprintln(os.Stdout, line)
 		} else {
 			if len(line) > screenWidth {
-				fmt.Fprintln(os.Stdout, util.TruncateString(line, screenWidth))
+				fmt.Fprintln(os.Stdout, util.TruncateANSI(line, screenWidth))
 			} else {
 				fmt.Fprintln(os.Stdout, line)
 			}
@@ -97,7 +104,7 @@ func GenerateTree(parent int32, tree map[int32][]int32, currentSymbol string, cu
 			symbol = "%s  ├── "
 			pipe = "  │ "
 		}
-		GenerateTree(child, tree, symbol, indent, indent+pipe, arguments, wide, showPids, useAscii, screenWidth)
+		GenerateTree(child, tree, symbol, indent, indent+pipe, arguments, wide, showPids, useAscii, colorize, screenWidth)
 	}
 	child := returnLastElement(tree[parent])
 	if useAscii {
@@ -105,5 +112,5 @@ func GenerateTree(parent int32, tree map[int32][]int32, currentSymbol string, cu
 	} else {
 		symbol = "%s  └── "
 	}
-	GenerateTree(child, tree, symbol, indent, indent+"    ", arguments, wide, showPids, useAscii, screenWidth)
+	GenerateTree(child, tree, symbol, indent, indent+"    ", arguments, wide, showPids, useAscii, colorize, screenWidth)
 }

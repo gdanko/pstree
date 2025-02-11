@@ -11,9 +11,13 @@ import (
 )
 
 var (
+	colorCount      int
+	colorSupport    bool
+	colorizeString  string = ""
 	err             error
 	flagArguments   bool
 	flagAscii       bool
+	flagColorize    bool
 	flagContains    string
 	flagExcludeRoot bool
 	flagFile        string
@@ -27,7 +31,8 @@ var (
 	screenWidth     int
 	startingPid     int32
 	tree            map[int32][]int32
-	version         string = "0.1.0"
+	usageTemplate   string
+	version         string = "0.2.0"
 	versionString   string
 	// flagPid         int32
 	rootCmd = &cobra.Command{
@@ -44,16 +49,23 @@ func Execute() error {
 }
 
 func init() {
-	GetPersistentFlags(rootCmd)
-	rootCmd.SetUsageTemplate(`Usage: pstree [-aAUpw] [-f file] [-l n] [--show-pids] [--start n]
-	      [-u user] [-c string]
+	colorSupport, colorCount := util.HasColorSupport()
+	if colorSupport {
+		colorizeString = " [--colorize]"
+	}
+	usageTemplate = fmt.Sprintf(
+		`Usage: pstree [-aAUpw]%s [-f file] [-l n] [--show-pids] 
+	      [--start n] [-u user] [-c string]
    or: pstree -V
 
 Display a tree of processes.
 
 {{.Flags.FlagUsages}}
 Process group leaders are marked with '='.
-`)
+`, colorizeString)
+
+	GetPersistentFlags(rootCmd, colorSupport, colorCount)
+	rootCmd.SetUsageTemplate(usageTemplate)
 }
 
 func pstreePreRunCmd(cmd *cobra.Command, args []string) {
@@ -86,13 +98,12 @@ For more information about these matters, see the files named COPYING.`,
 	}
 
 	screenWidth = util.GetScreenWidth()
-	// lineLength = lineLength - 20 // Accomodate the indentation, etc
 
 	startingPid = pstree.FindFirstPid(tree)
 	if flagStart > 0 {
 		startingPid = flagStart
 	}
-	pstree.GenerateTree(startingPid, tree, "", "", initialIndent, flagArguments, flagWide, flagShowPids, flagAscii, screenWidth)
+	pstree.GenerateTree(startingPid, tree, "", "", initialIndent, flagArguments, flagWide, flagShowPids, flagAscii, flagColorize, screenWidth)
 
 	return nil
 }
