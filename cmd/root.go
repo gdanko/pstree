@@ -1,37 +1,41 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
 	"github.com/gdanko/pstree/pkg/pstree"
+	"github.com/gdanko/pstree/util"
 	"github.com/spf13/cobra"
 )
 
 var (
-	err           error
-	flagArguments bool
-	flagAscii     bool
-	flagContains  string
-	flagFile      string
-	flagLevel     int
-	flagPid       int32
-	flagShowPids  bool
-	flagStart     int32
-	flagUsername  string
-	flagVersion   bool
-	flagWide      bool
-	initialIndent string = ""
-	startingPid   int32
-	versionString string
-	version       string = "0.1.0"
-	tree          map[int32][]int32
-	rootCmd       = &cobra.Command{
+	err             error
+	flagArguments   bool
+	flagAscii       bool
+	flagContains    string
+	flagFile        string
+	flagLevel       int
+	flagExcludeRoot bool
+	flagShowPids    bool
+	flagStart       int32
+	flagUsername    string
+	flagVersion     bool
+	flagWide        bool
+	initialIndent   string = ""
+	lineLength      int
+	startingPid     int32
+	versionString   string
+	version         string = "0.1.0"
+	tree            map[int32][]int32
+	// flagPid         int32
+	rootCmd = &cobra.Command{
 		Use:    "pstree",
 		Short:  "",
 		Long:   "",
 		PreRun: pstreePreRunCmd,
-		Run:    pstreeRunCmd,
+		RunE:   pstreeRunCmd,
 	}
 )
 
@@ -55,12 +59,10 @@ Process group leaders are marked with '='.
 func pstreePreRunCmd(cmd *cobra.Command, args []string) {
 }
 
-func pstreeRunCmd(cmd *cobra.Command, args []string) {
-	// if flagFile != "" {
-	// 	tree, err = pstree.GetTreeDataFromFile(flagFile, flagUsername, flagContains, flagLevel)
-	// } else {
-	// 	tree = pstree.GetTreeData(flagUsername, flagContains, flagLevel)
-	// }
+func pstreeRunCmd(cmd *cobra.Command, args []string) error {
+	if flagUsername != "" && flagExcludeRoot {
+		return errors.New("flags --user and --exclude-root are mutually exclusive")
+	}
 
 	if flagVersion {
 		versionString = fmt.Sprintf(`pstree %s
@@ -76,12 +78,21 @@ For more information about these matters, see the files named COPYING.`,
 		os.Exit(0)
 	}
 
-	tree, err = pstree.GetTreeDataFromPs(flagUsername, flagContains, flagLevel)
+	if flagFile != "" {
+		tree, err = pstree.GetTreeDataFromFile(flagFile, flagUsername, flagContains, flagLevel)
+	} else {
+		tree = pstree.GetTreeData(flagUsername, flagContains, flagLevel, flagExcludeRoot)
+		// tree, err = pstree.GetTreeDataFromPs(flagUsername, flagContains, flagLevel)
+	}
+
+	lineLength = util.GetLineLength()
+	// lineLength = lineLength - 20 // Accomodate the indentation, etc
 
 	startingPid = pstree.FindFirstPid(tree)
 	if flagStart > 0 {
 		startingPid = flagStart
 	}
+	pstree.GenerateTree(startingPid, tree, "", "", initialIndent, flagArguments, flagWide, flagShowPids, flagAscii, lineLength)
 
-	pstree.GenerateTree(startingPid, tree, "", "", initialIndent, flagArguments, flagWide, flagShowPids, flagAscii)
+	return nil
 }
