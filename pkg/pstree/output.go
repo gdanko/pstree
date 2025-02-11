@@ -6,15 +6,9 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/gdanko/pstree/util"
 	"github.com/shirou/gopsutil/v4/process"
 )
-
-func TruncateString(s string, length int) string {
-	if len(s) > length {
-		return s[:length]
-	}
-	return s
-}
 
 func GenerateTree(parent int32, tree map[int32][]int32, currentSymbol string, currentIndent, indent string, arguments bool, wide bool, showPids bool, useAscii bool, lineLength int) {
 	var (
@@ -24,14 +18,14 @@ func GenerateTree(parent int32, tree map[int32][]int32, currentSymbol string, cu
 		currentLineLength int
 		err               error
 		line              string
+		linePrefix        string
 		ok                bool
+		pgid              int
 		pid               int32
 		pipe              string
-		pgid              int
 		symbol            string
 		username          string
 	)
-	currentLineLength = lineLength - (len(currentSymbol) + 6)
 
 	proc, err := process.NewProcess(parent)
 	if err == nil {
@@ -68,10 +62,12 @@ func GenerateTree(parent int32, tree map[int32][]int32, currentSymbol string, cu
 		}
 
 		if currentSymbol != "" {
-			fmt.Fprintf(os.Stdout, currentSymbol, currentIndent)
+			linePrefix = fmt.Sprintf(currentSymbol, currentIndent)
 		} else {
-			fmt.Fprint(os.Stdout, currentIndent)
+			linePrefix = fmt.Sprintln(currentIndent)
 		}
+		fmt.Fprint(os.Stdout, linePrefix)
+		currentLineLength = (lineLength - len(linePrefix) + 4)
 
 		if showPids {
 			line = fmt.Sprintf("%d %s %s %s", parent, username, cmdName, cmdArgsJoined)
@@ -82,7 +78,7 @@ func GenerateTree(parent int32, tree map[int32][]int32, currentSymbol string, cu
 		if wide {
 			fmt.Fprintln(os.Stdout, line)
 		} else {
-			fmt.Fprintln(os.Stdout, TruncateString(line, currentLineLength+9))
+			fmt.Fprintln(os.Stdout, util.TruncateString(line, currentLineLength))
 		}
 	}
 	_, ok = tree[parent]

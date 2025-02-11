@@ -33,10 +33,9 @@ func GetLineLength() int {
 	return int(width)
 }
 
-func ToggleBool(input *bool) {
-	if *input {
-		*input = false
-	} else {
-		*input = true
+func TruncateString(s string, length int) string {
+	if len(s) > length {
+		return s[:length]
 	}
+	return s
 }
