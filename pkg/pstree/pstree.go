@@ -86,7 +86,7 @@ func getProcInfo(proc *process.Process) (username string, cmdName string, cmdArg
 	return username, cmdName, cmdArgs
 }
 
-func GetTreeData(username string, contains string, level int) (tree map[int32][]int32) {
+func GetTreeData(username string, contains string, level int, excludeRoot bool) (tree map[int32][]int32) {
 	tree = make(map[int32][]int32)
 
 	// Get all processes
@@ -122,6 +122,12 @@ func GetTreeData(username string, contains string, level int) (tree map[int32][]
 			}
 		}
 
+		if excludeRoot {
+			if procUser == "root" {
+				addProc = false
+			}
+		}
+
 		if addProc {
 			pid := int32(p.Pid)
 			tree[ppid] = append(tree[ppid], pid)
@@ -135,7 +141,6 @@ func GetTreeData(username string, contains string, level int) (tree map[int32][]
 }
 
 func GetTreeDataFromPs(username string, contains string, level int) (tree map[int32][]int32, err error) {
-	// ps -axwwo user,pid,ppid,pgid,command
 	var (
 		cmd       *exec.Cmd
 		exitCode  int

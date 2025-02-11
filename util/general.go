@@ -3,7 +3,6 @@ package util
 import (
 	"sort"
 	"strconv"
-	"unicode"
 
 	terminal "github.com/wayneashleyberry/terminal-dimensions"
 )
@@ -34,25 +33,10 @@ func GetLineLength() int {
 	return int(width)
 }
 
-func TruncateEllipsis(text string, maxLength int) string {
-	spaceBeforeLast, lastSpace := -1, -1
-	iMinus1, iMinus2, iMinus3 := -1, -1, -1
-	len := 0
-	for i, r := range text {
-		if unicode.IsSpace(r) || unicode.IsPunct(r) {
-			spaceBeforeLast, lastSpace = lastSpace, i
-		}
-		len++
-		if len > maxLength {
-			if lastSpace != -1 && lastSpace <= iMinus3 {
-				return text[:lastSpace] + "..."
-			}
-			if spaceBeforeLast != -1 && spaceBeforeLast <= iMinus3 {
-				return text[:spaceBeforeLast] + "..."
-			}
-			return text[:iMinus3] + "..."
-		}
-		iMinus3, iMinus2, iMinus1 = iMinus2, iMinus1, i
+func ToggleBool(input *bool) {
+	if *input {
+		*input = false
+	} else {
+		*input = true
 	}
-	return text
 }

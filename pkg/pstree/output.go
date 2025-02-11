@@ -6,27 +6,32 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/gdanko/pstree/util"
 	"github.com/shirou/gopsutil/v4/process"
 )
 
-func GenerateTree(parent int32, tree map[int32][]int32, currentSymbol string, currentIndent, indent string, arguments bool, wide bool, showPids bool, useAscii bool) {
+func TruncateString(s string, length int) string {
+	if len(s) > length {
+		return s[:length]
+	}
+	return s
+}
+
+func GenerateTree(parent int32, tree map[int32][]int32, currentSymbol string, currentIndent, indent string, arguments bool, wide bool, showPids bool, useAscii bool, lineLength int) {
 	var (
-		cmdArgs       []string
-		cmdArgsJoined string = ""
-		cmdName       string
-		err           error
-		line          string
-		lineLength    int
-		ok            bool
-		pid           int32
-		pipe          string
-		pgid          int
-		symbol        string
-		username      string
+		cmdArgs           []string
+		cmdArgsJoined     string = ""
+		cmdName           string
+		currentLineLength int
+		err               error
+		line              string
+		ok                bool
+		pid               int32
+		pipe              string
+		pgid              int
+		symbol            string
+		username          string
 	)
-	lineLength = util.GetLineLength()
-	lineLength = lineLength - len(indent) - 6 // Accomodate the indentation, etc
+	currentLineLength = lineLength - (len(currentSymbol) + 6)
 
 	proc, err := process.NewProcess(parent)
 	if err == nil {
@@ -56,22 +61,28 @@ func GenerateTree(parent int32, tree map[int32][]int32, currentSymbol string, cu
 		}
 
 		username, cmdName, cmdArgs = getProcInfo(proc)
-
-		if len(cmdArgs) > 0 {
-			if arguments {
+		if arguments {
+			if len(cmdArgs) > 0 {
 				cmdArgsJoined = strings.Join(cmdArgs, " ")
 			}
 		}
 
-		fmt.Fprintf(os.Stdout, currentSymbol, currentIndent)
-		line = fmt.Sprintf("%s %s %s", username, cmdName, cmdArgsJoined)
-		if showPids {
-			line = line + fmt.Sprintf("(%d)", parent)
+		if currentSymbol != "" {
+			fmt.Fprintf(os.Stdout, currentSymbol, currentIndent)
+		} else {
+			fmt.Fprint(os.Stdout, currentIndent)
 		}
+
+		if showPids {
+			line = fmt.Sprintf("%d %s %s %s", parent, username, cmdName, cmdArgsJoined)
+		} else {
+			line = fmt.Sprintf("%s %s %s", username, cmdName, cmdArgsJoined)
+		}
+
 		if wide {
 			fmt.Fprintln(os.Stdout, line)
 		} else {
-			fmt.Fprintln(os.Stdout, util.TruncateEllipsis(line, lineLength))
+			fmt.Fprintln(os.Stdout, TruncateString(line, currentLineLength+9))
 		}
 	}
 	_, ok = tree[parent]
@@ -88,7 +99,7 @@ func GenerateTree(parent int32, tree map[int32][]int32, currentSymbol string, cu
 			symbol = "%s  ├── "
 			pipe = "  │ "
 		}
-		GenerateTree(child, tree, symbol, indent, indent+pipe, arguments, wide, showPids, useAscii)
+		GenerateTree(child, tree, symbol, indent, indent+pipe, arguments, wide, showPids, useAscii, lineLength)
 	}
 	child := returnLastElement(tree[parent])
 	if useAscii {
@@ -96,5 +107,5 @@ func GenerateTree(parent int32, tree map[int32][]int32, currentSymbol string, cu
 	} else {
 		symbol = "%s  └── "
 	}
-	GenerateTree(child, tree, symbol, indent, indent+"    ", arguments, wide, showPids, useAscii)
+	GenerateTree(child, tree, symbol, indent, indent+"    ", arguments, wide, showPids, useAscii, lineLength)
 }
