@@ -1,7 +1,7 @@
 GOPATH := $(shell go env GOPATH)
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
-pstree_VERSION := "0.1.0"
+pstree_VERSION := "0.2.0"
 
 GOOS ?= $(shell uname | tr '[:upper:]' '[:lower:]')
 GOARCH ?=$(shell arch)
