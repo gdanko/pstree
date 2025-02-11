@@ -15,20 +15,20 @@ var (
 	flagArguments   bool
 	flagAscii       bool
 	flagContains    string
+	flagExcludeRoot bool
 	flagFile        string
 	flagLevel       int
-	flagExcludeRoot bool
 	flagShowPids    bool
 	flagStart       int32
 	flagUsername    string
 	flagVersion     bool
 	flagWide        bool
 	initialIndent   string = ""
-	lineLength      int
+	screenWidth     int
 	startingPid     int32
-	versionString   string
-	version         string = "0.1.0"
 	tree            map[int32][]int32
+	version         string = "0.1.0"
+	versionString   string
 	// flagPid         int32
 	rootCmd = &cobra.Command{
 		Use:    "pstree",
@@ -45,7 +45,7 @@ func Execute() error {
 
 func init() {
 	GetPersistentFlags(rootCmd)
-	rootCmd.SetUsageTemplate(`Usage: pstree [-aApw] [-f file] [-l n] [--show-pids] [--start n]
+	rootCmd.SetUsageTemplate(`Usage: pstree [-aAUpw] [-f file] [-l n] [--show-pids] [--start n]
 	      [-u user] [-c string]
    or: pstree -V
 
@@ -85,14 +85,14 @@ For more information about these matters, see the files named COPYING.`,
 		// tree, err = pstree.GetTreeDataFromPs(flagUsername, flagContains, flagLevel)
 	}
 
-	lineLength = util.GetLineLength()
+	screenWidth = util.GetScreenWidth()
 	// lineLength = lineLength - 20 // Accomodate the indentation, etc
 
 	startingPid = pstree.FindFirstPid(tree)
 	if flagStart > 0 {
 		startingPid = flagStart
 	}
-	pstree.GenerateTree(startingPid, tree, "", "", initialIndent, flagArguments, flagWide, flagShowPids, flagAscii, lineLength)
+	pstree.GenerateTree(startingPid, tree, "", "", initialIndent, flagArguments, flagWide, flagShowPids, flagAscii, screenWidth)
 
 	return nil
 }
