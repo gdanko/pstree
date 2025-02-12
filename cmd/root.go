@@ -7,6 +7,7 @@ import (
 
 	"github.com/gdanko/pstree/pkg/pstree"
 	"github.com/gdanko/pstree/util"
+	"github.com/kr/pretty"
 	"github.com/spf13/cobra"
 )
 
@@ -89,12 +90,15 @@ For more information about these matters, see the files named COPYING.`,
 		os.Exit(0)
 	}
 
-	if flagFile != "" {
-		tree, err = pstree.GetTreeDataFromFile(flagFile, flagUsername, flagContains, flagLevel)
-	} else {
-		tree = pstree.GetTreeData(flagUsername, flagContains, flagLevel, flagExcludeRoot)
-		// tree, err = pstree.GetTreeDataFromPs(flagUsername, flagContains, flagLevel)
-	}
+	// if flagFile != "" {
+	// 	tree, err = pstree.MakeTreeFromFile(flagFile, flagUsername, flagContains, flagLevel)
+	// } else {
+	// 	tree = pstree.MakeTree(flagUsername, flagContains, flagLevel, flagExcludeRoot)
+	// 	// tree, err = pstree.MakeTreeFromPs(flagUsername, flagContains, flagLevel)
+	// }
+	foo := pstree.MakeTree2(flagUsername, flagContains, flagLevel, flagExcludeRoot)
+	pretty.Println(foo)
+	os.Exit(0)
 
 	screenWidth = util.GetScreenWidth()
 

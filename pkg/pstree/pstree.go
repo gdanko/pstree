@@ -4,16 +4,32 @@ import (
 	"bytes"
 	"errors"
 	"log"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"syscall"
 
 	"github.com/gdanko/pstree/util"
+	"github.com/kr/pretty"
 
 	"github.com/shirou/gopsutil/v4/process"
 )
+
+type Process struct {
+	Args     []string
+	Children []Process
+	Command  string
+	Hide     bool
+	Parent   int
+	Pgid     int32
+	Pid      int32
+	Ppid     int32
+	Print    bool
+	Username string
+}
 
 func returnLastElement(input []int32) (last int32) {
 	return input[len(input)-1]
@@ -86,7 +102,7 @@ func getProcInfo(proc *process.Process) (username string, cmdName string, cmdArg
 	return username, cmdName, cmdArgs
 }
 
-func GetTreeData(username string, contains string, level int, excludeRoot bool) (tree map[int32][]int32) {
+func MakeTree(username string, contains string, level int, excludeRoot bool) (tree map[int32][]int32) {
 	tree = make(map[int32][]int32)
 
 	// Get all processes
@@ -140,7 +156,133 @@ func GetTreeData(username string, contains string, level int, excludeRoot bool) 
 	return pruneTree(tree, level, startingPid)
 }
 
-func GetTreeDataFromPs(username string, contains string, level int) (tree map[int32][]int32, err error) {
+func AddToTree(tree *[]Process, newProc Process) {
+	for i, p := range *tree {
+		if newProc.Ppid == (*tree)[i].Pid {
+			(*tree)[i].Children = append((*tree)[i].Children, newProc)
+		} else {
+			if len((*tree)[i].Children) > 0 {
+				AddToTree(&p.Children, newProc)
+			}
+		}
+	}
+}
+
+func sortByPid(procs []*process.Process) []*process.Process {
+	sort.Slice(procs, func(i, j int) bool {
+		return procs[i].Pid < procs[j].Pid // Ascending order
+	})
+	return procs
+}
+
+func MarkProcs(tree *[]Process, numProcs int, username string, contains string, excludeRoot bool) {
+	username = "gdanko"
+	var (
+		// myPid int32
+		// parent  int32
+		// proc    Process
+		i       int
+		showAll bool = false
+	)
+	// myPid = int32(os.Getpid())
+
+	if username == "" && contains == "" && !excludeRoot {
+		showAll = true
+	}
+
+	for i, _ = range *tree {
+		if showAll {
+			(*tree)[i].Print = true
+		} else {
+			if username != "" {
+				if (*tree)[i].Username == username {
+					(*tree)[i].Print = true
+				}
+			}
+
+			// if (username != "" && (*tree)[i].Username == username) || (excludeRoot && (*tree)[i].Username != "root") || (contains != "" && (strings.Contains((*tree)[i].Command, contains) && (*tree)[i].Pid != myPid)) {
+			// 	indexOfProcess := indexOf(tree, (*tree)[i].Pid)
+			// 	os.Exit(0)
+			// 	MarkAncestors(tree, indexOfProcess)
+			// }
+		}
+	}
+}
+
+func indexOf(tree []Process, pid int32) int {
+	for i, p := range tree {
+		if p.Pid == pid {
+			return i
+		}
+	}
+	return -1
+}
+
+func MakeTree2(username string, contains string, level int, excludeRoot bool) (tree []Process) {
+	var (
+		i   int
+		err error
+		// numProcs  int
+		processes []*process.Process
+		sorted    []*process.Process
+	)
+	// Get all processes
+	processes, err = process.Processes()
+	if err != nil {
+		log.Fatalf("Failed to get processes: %v", err)
+	}
+	sorted = sortByPid(processes)
+
+	for _, p := range sorted {
+		pid := p.Pid
+		ppid, err := p.Ppid()
+		if err != nil {
+			continue
+		}
+
+		pgid, err := syscall.Getpgid(int(pid))
+		if err != nil {
+			pgid = -1
+		}
+
+		username, cmdName, cmdArgs := getProcInfo(p)
+
+		newProc := Process{
+			Args:     cmdArgs,
+			Children: []Process{},
+			Command:  cmdName,
+			Pgid:     int32(pgid),
+			Pid:      pid,
+			Ppid:     ppid,
+			Print:    false,
+			Username: username,
+		}
+
+		tree = append(tree, newProc)
+	}
+
+	for i, _ = range tree {
+		var parent int
+		parent = indexOf(tree, tree[i].Ppid)
+		if parent != i && parent != -1 {
+			tree[i].Parent = parent
+		}
+	}
+
+	for _, p := range tree {
+		if p.Pid == 64345 {
+			pretty.Println(p)
+			pretty.Println(tree[p.Parent])
+			os.Exit(0)
+		}
+	}
+
+	pretty.Println(tree)
+	os.Exit(0)
+	return tree
+}
+
+func MakeTreeFromPs(username string, contains string, level int) (tree map[int32][]int32, err error) {
 	var (
 		cmd       *exec.Cmd
 		exitCode  int
@@ -210,7 +352,7 @@ func GetTreeDataFromPs(username string, contains string, level int) (tree map[in
 	return pruneTree(tree, level, startingPid), nil
 }
 
-func GetTreeDataFromFile(filename string, username string, contains string, level int) (tree map[int32][]int32, err error) {
+func MakeTreeFromFile(filename string, username string, contains string, level int) (tree map[int32][]int32, err error) {
 	var (
 		line    string
 		lines   []string

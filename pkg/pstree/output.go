@@ -104,7 +104,9 @@ func GenerateTree(parent int32, tree map[int32][]int32, currentSymbol string, cu
 			symbol = "%s  ├── "
 			pipe = "  │ "
 		}
-		GenerateTree(child, tree, symbol, indent, indent+pipe, arguments, wide, showPids, useAscii, colorize, screenWidth)
+		if strings.Contains(cmdName, "WezTerm") {
+			GenerateTree(child, tree, symbol, indent, indent+pipe, arguments, wide, showPids, useAscii, colorize, screenWidth)
+		}
 	}
 	child := returnLastElement(tree[parent])
 	if useAscii {
@@ -112,5 +114,7 @@ func GenerateTree(parent int32, tree map[int32][]int32, currentSymbol string, cu
 	} else {
 		symbol = "%s  └── "
 	}
-	GenerateTree(child, tree, symbol, indent, indent+"    ", arguments, wide, showPids, useAscii, colorize, screenWidth)
+	if strings.Contains(cmdName, "WezTerm") {
+		GenerateTree(child, tree, symbol, indent, indent+"    ", arguments, wide, showPids, useAscii, colorize, screenWidth)
+	}
 }
