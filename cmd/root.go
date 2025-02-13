@@ -7,35 +7,34 @@ import (
 
 	"github.com/gdanko/pstree/pkg/pstree"
 	"github.com/gdanko/pstree/util"
-	"github.com/kr/pretty"
 	"github.com/spf13/cobra"
 )
 
 var (
-	colorCount      int
-	colorizeString  string = ""
-	colorSupport    bool
-	err             error
-	flagArguments   bool
-	flagAscii       bool
-	flagColorize    bool
-	flagContains    string
-	flagExcludeRoot bool
-	flagFile        string
-	flagLevel       int
-	flagPid         int32
-	flagShowPids    bool
-	flagUsername    string
-	flagVersion     bool
-	flagWide        bool
-	initialIndent   string = ""
-	screenWidth     int
-	startingPid     int32
-	tree            map[int32][]int32
-	usageTemplate   string
-	version         string = "0.2.1"
-	versionString   string
-	rootCmd         = &cobra.Command{
+	colorCount       int
+	colorizeString   string = ""
+	colorSupport     bool
+	err              error
+	flagArguments    bool
+	flagColorize     bool
+	flagContains     string
+	flagExcludeRoot  bool
+	flagFile         string
+	flagGraphicsMode int
+	flagLevel        int
+	flagPid          int32
+	flagShowPids     bool
+	flagUsername     string
+	flagVersion      bool
+	flagWide         bool
+	initialIndent    string = ""
+	processes        []pstree.Process
+	screenWidth      int
+	startingPidIndex int
+	usageTemplate    string
+	version          string = "0.2.1"
+	versionString    string
+	rootCmd          = &cobra.Command{
 		Use:    "pstree",
 		Short:  "",
 		Long:   "",
@@ -54,7 +53,7 @@ func init() {
 		colorizeString = " [--colorize]"
 	}
 	usageTemplate = fmt.Sprintf(
-		`Usage: pstree [-aAUpw]%s [-f file] [-l n] [--show-pids] 
+		`Usage: pstree [-aUpw] [-g n]%s [-l n] [--show-pids] 
 	      [--pid n] [-u user] [-c string]
    or: pstree -V
 
@@ -90,23 +89,22 @@ For more information about these matters, see the files named COPYING.`,
 		os.Exit(0)
 	}
 
-	// if flagFile != "" {
-	// 	tree, err = pstree.MakeTreeFromFile(flagFile, flagUsername, flagContains, flagLevel)
-	// } else {
-	// 	tree = pstree.MakeTree(flagUsername, flagContains, flagLevel, flagExcludeRoot)
-	// 	// tree, err = pstree.MakeTreeFromPs(flagUsername, flagContains, flagLevel)
-	// }
-	foo := pstree.MakeTree2(flagUsername, flagContains, flagLevel, flagExcludeRoot)
-	pretty.Println(foo)
-	os.Exit(0)
-
 	screenWidth = util.GetScreenWidth()
+	pstree.GetProcesses(&processes)
+	pstree.MakeTree(&processes)
+	pstree.MarkProcs(&processes, flagContains, flagUsername, flagExcludeRoot, flagPid)
+	pstree.DropProcs(&processes)
 
-	startingPid = pstree.FindFirstPid(tree)
-	if flagPid > 0 {
-		startingPid = flagPid
+	// when --pid is used, we want to print `-+= 1 root /sbin/launchd``
+
+	if flagPid > 1 {
+		startingPidIndex = pstree.GetPIDIndex(processes, flagPid)
+		if startingPidIndex <= 1 {
+			startingPidIndex = pstree.GetPIDIndex(processes, 1)
+		}
 	}
-	pstree.GenerateTree(startingPid, tree, "", "", initialIndent, flagArguments, flagWide, flagShowPids, flagAscii, flagColorize, screenWidth)
+
+	pstree.PrintTree(processes, startingPidIndex, "", screenWidth, flagArguments, flagShowPids, flagGraphicsMode, flagWide, flagColorize)
 
 	return nil
 }
