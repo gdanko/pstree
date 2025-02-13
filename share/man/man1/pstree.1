@@ -14,8 +14,8 @@
 .Op Fl U, -exclude-root
 .Op Fl f, -file Ar path
 .Op Fl l, -level Ar int
-.Op Fl p, -show-pids
-.Op Fl -pid Ar PID
+.Op Fl n, -no-pids
+.Op Fl p, -pid Ar PID
 .Op Fl u, -user username
 .Op Fl w, -wide
 .Sh DESCRIPTION
@@ -36,9 +36,9 @@ Don't show branches containing only root processes. This cannot be used with --u
 Read input from <file> (- is stdin). The file format must be the output of "ps -axwwo user,pid,ppid,pgid,command".
 .It Fl l, -level
 Limit the output the number of levels specified.
-.It Fl p, -show-pids
-Preface each line with the PID.
-.It Fl -pid
+.It Fl -no-pids
+Suppress the display of the PID with each process.
+.It Fl p, -pid
 Show only branches containing process <pid>.
 .It Fl u, -user
 Show only branches containing processes of <user>. This cannot be used with --exclude-root.
