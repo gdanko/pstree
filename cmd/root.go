@@ -32,7 +32,7 @@ var (
 	screenWidth      int
 	startingPidIndex int
 	usageTemplate    string
-	version          string = "0.2.1"
+	version          string = "0.3.0"
 	versionString    string
 	rootCmd          = &cobra.Command{
 		Use:    "pstree",
@@ -99,12 +99,24 @@ For more information about these matters, see the files named COPYING.`,
 
 	if flagPid > 1 {
 		startingPidIndex = pstree.GetPIDIndex(processes, flagPid)
-		if startingPidIndex <= 1 {
-			startingPidIndex = pstree.GetPIDIndex(processes, 1)
+		if startingPidIndex == -1 {
+			fmt.Printf("PID %d does not exist.\n", flagPid)
+			os.Exit(1)
 		}
 	}
 
-	pstree.PrintTree(processes, startingPidIndex, "", screenWidth, flagArguments, flagShowPids, flagGraphicsMode, flagWide, flagColorize)
+	if flagUsername != "" {
+		if !util.UserExists(flagUsername) {
+			fmt.Printf("User '%s' does not exist.\n", flagUsername)
+			os.Exit(1)
+		}
+	}
+
+	if flagLevel == 0 {
+		flagLevel = 100
+	}
+
+	pstree.PrintTree(processes, startingPidIndex, "", screenWidth, flagArguments, flagShowPids, flagGraphicsMode, flagWide, 0, flagLevel, flagColorize)
 
 	return nil
 }
