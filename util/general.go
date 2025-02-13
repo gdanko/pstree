@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"os/exec"
+	"os/user"
 	"sort"
 	"strconv"
 	"strings"
@@ -87,4 +88,9 @@ func HasColorSupport() (bool, int) {
 		return false, 0
 	}
 	return true, colors
+}
+
+func UserExists(username string) bool {
+	_, err := user.Lookup(username)
+	return err == nil
 }
