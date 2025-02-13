@@ -77,7 +77,7 @@ var TreeStyles = map[string]TreeChars{
 	},
 }
 
-func PrintTree(processes []Process, idx int, head string, screenWidth int, flagArguments bool, flagShowPids bool, flagGraphicsMode int, flagWide bool, currentLevel int, flagLevel int, flagColorize bool) {
+func PrintTree(processes []Process, me int, head string, screenWidth int, flagArguments bool, flagNoPids bool, flagGraphicsMode int, flagWide bool, currentLevel int, flagLevel int, flagColorize bool) {
 	var (
 		args       string = ""
 		C          TreeChars
@@ -100,15 +100,15 @@ func PrintTree(processes []Process, idx int, head string, screenWidth int, flagA
 	default:
 		C = TreeStyles["ascii"]
 	}
-	if head == "" && !processes[idx].Print {
+	if head == "" && !processes[me].Print {
 		return
 	}
 
 	var part1 string
 	if head == "" {
-		part1 = " "
+		part1 = ""
 	} else {
-		if processes[idx].Sister != -1 {
+		if processes[me].Sister != -1 {
 			part1 = C.BarC
 		} else {
 			part1 = C.BarL
@@ -116,38 +116,38 @@ func PrintTree(processes []Process, idx int, head string, screenWidth int, flagA
 	}
 
 	var part2 string
-	if processes[idx].Child != -1 {
+	if processes[me].Child != -1 {
 		part2 = C.P
 	} else {
 		part2 = C.S2
 	}
 
 	var part3 string
-	if processes[idx].PID == processes[idx].PGID {
+	if processes[me].PID == processes[me].PGID {
 		part3 = C.PGL
 	} else {
 		part3 = C.NPGL
 	}
 
 	linePrefix = fmt.Sprintf("%s%s%s%s%s%s", C.SG, head, part1, part2, part3, C.EG)
-	pidString = util.Int32toStr(processes[idx].PID)
+	pidString = fmt.Sprintf("%05s", util.Int32toStr(processes[me].PID))
 
 	if flagArguments {
-		args = processes[idx].Args
+		args = processes[me].Args
 	}
 
 	if flagColorize {
 		linePrefix = util.ColorYellow(linePrefix)
-		processes[idx].Username = util.ColorCyan(processes[idx].Username)
+		processes[me].Username = util.ColorCyan(processes[me].Username)
 		pidString = util.ColorPurple(pidString)
-		processes[idx].Command = util.ColorBlue(processes[idx].Command)
+		processes[me].Command = util.ColorBlue(processes[me].Command)
 		args = util.ColorRed(args)
 	}
 
-	if flagShowPids {
-		line = fmt.Sprintf("%s %s %s %s %s", linePrefix, pidString, processes[idx].Username, processes[idx].Command, args)
+	if flagNoPids {
+		line = fmt.Sprintf("%s %s %s %s", linePrefix, processes[me].Username, processes[me].Command, args)
 	} else {
-		line = fmt.Sprintf("%s %s %s %s", linePrefix, processes[idx].Username, processes[idx].Command, args)
+		line = fmt.Sprintf("%s %s %s %s %s", linePrefix, pidString, processes[me].Username, processes[me].Command, args)
 	}
 
 	if flagWide {
@@ -161,18 +161,23 @@ func PrintTree(processes []Process, idx int, head string, screenWidth int, flagA
 	}
 
 	var newHead string
-	newHead = head
-	if processes[idx].Sister != -1 {
-		newHead += C.Bar + " "
-	} else {
-		newHead += "  "
-	}
+	newHead = fmt.Sprintf("%s%s ", head,
+		func() string {
+			if head == "" {
+				return ""
+			}
+			if processes[me].Sister != -1 {
+				return C.Bar
+			}
+			return " "
+		}(),
+	)
 
 	// Iterate over children and determine sibling status
-	childIdx := processes[idx].Child
-	for childIdx != -1 {
-		nextChild := processes[childIdx].Sister
-		PrintTree(processes, childIdx, newHead, screenWidth, flagArguments, flagShowPids, flagGraphicsMode, flagWide, currentLevel+1, flagLevel, flagColorize)
-		childIdx = nextChild
+	childme := processes[me].Child
+	for childme != -1 {
+		nextChild := processes[childme].Sister
+		PrintTree(processes, childme, newHead, screenWidth, flagArguments, flagNoPids, flagGraphicsMode, flagWide, currentLevel+1, flagLevel, flagColorize)
+		childme = nextChild
 	}
 }
