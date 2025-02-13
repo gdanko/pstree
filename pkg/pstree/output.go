@@ -65,7 +65,6 @@ var TreeStyles = map[string]TreeChars{
 	"utf8a": {
 		S2:   "\342\224\200\342\224\200",
 		P:    "\342\224\200\342\224\254",
-		PGL:  "=",
 		NPGL: "\342\224\200",
 		BarC: "\342\224\234",
 		Bar:  "\342\224\202",
@@ -74,10 +73,11 @@ var TreeStyles = map[string]TreeChars{
 		EG:   "",
 		Init: "",
 		// PGL:  "●",
+		PGL: "=",
 	},
 }
 
-func PrintTree(processes []Process, idx int, head string, screenWidth int, flagArguments bool, flagShowPids bool, flagGraphicsMode int, flagWide bool, flagColorize bool) {
+func PrintTree(processes []Process, idx int, head string, screenWidth int, flagArguments bool, flagShowPids bool, flagGraphicsMode int, flagWide bool, currentLevel int, flagLevel int, flagColorize bool) {
 	var (
 		args       string = ""
 		C          TreeChars
@@ -85,6 +85,10 @@ func PrintTree(processes []Process, idx int, head string, screenWidth int, flagA
 		linePrefix string
 		pidString  string
 	)
+
+	if currentLevel == flagLevel {
+		return
+	}
 
 	switch flagGraphicsMode {
 	case 1:
@@ -97,7 +101,6 @@ func PrintTree(processes []Process, idx int, head string, screenWidth int, flagA
 		C = TreeStyles["ascii"]
 	}
 	if head == "" && !processes[idx].Print {
-		fmt.Println(111)
 		return
 	}
 
@@ -169,7 +172,7 @@ func PrintTree(processes []Process, idx int, head string, screenWidth int, flagA
 	childIdx := processes[idx].Child
 	for childIdx != -1 {
 		nextChild := processes[childIdx].Sister
-		PrintTree(processes, childIdx, newHead, screenWidth, flagArguments, flagShowPids, flagGraphicsMode, flagWide, flagColorize)
+		PrintTree(processes, childIdx, newHead, screenWidth, flagArguments, flagShowPids, flagGraphicsMode, flagWide, currentLevel+1, flagLevel, flagColorize)
 		childIdx = nextChild
 	}
 }
