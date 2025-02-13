@@ -2,12 +2,9 @@ package pstree
 
 import (
 	"log"
-	"os"
 	"sort"
 	"strings"
 	"syscall"
-
-	"github.com/kr/pretty"
 
 	"github.com/shirou/gopsutil/v4/process"
 )
@@ -26,74 +23,11 @@ type Process struct {
 	Username string
 }
 
-// func indexOf(tree []Process, pid int32) int {
-// 	for i, p := range tree {
-// 		if p.PID == pid {
-// 			return i
-// 		}
-// 	}
-// 	return -1
-// }
-
-// func returnLastElement(input []int32) (last int32) {
-// 	return input[len(input)-1]
-// }
-
-// func FindFirstPid(tree map[int32][]int32) int32 {
-// 	keys := make([]int32, 0, len(tree))
-// 	for k := range tree {
-// 		keys = append(keys, k)
-// 	}
-// 	return util.SortSlice(keys)[0]
-// }
-
-// func pruneTree(tree map[int32][]int32, maxDepth int, startingPid int32) map[int32][]int32 {
-// 	if maxDepth <= 0 {
-// 		// return map[int32][]int32{} // No depth means no results
-// 		return tree // Return entire tree on no depth
-// 	}
-
-// 	result := make(map[int32][]int32)
-// 	queue := []struct {
-// 		pid   int32
-// 		depth int
-// 	}{{startingPid, 0}} // Start from the root process (PID 0)
-
-// 	for len(queue) > 0 {
-// 		node := queue[0]
-// 		queue = queue[1:]
-
-// 		if node.depth >= maxDepth {
-// 			continue
-// 		}
-
-// 		if children, exists := tree[node.pid]; exists {
-// 			result[node.pid] = children
-// 			for _, child := range children {
-// 				queue = append(queue, struct {
-// 					pid   int32
-// 					depth int
-// 				}{child, node.depth + 1})
-// 			}
-// 		}
-// 	}
-// 	return result
-// }
-
 func sortByPid(procs []*process.Process) []*process.Process {
 	sort.Slice(procs, func(i, j int) bool {
 		return procs[i].Pid < procs[j].Pid // Ascending order
 	})
 	return procs
-}
-
-func GetPIDIndex(processes []Process, pid int32) int {
-	for i := range processes {
-		if processes[i].PID == pid {
-			return i
-		}
-	}
-	return -1
 }
 
 func getProcInfo(proc *process.Process) (username string, command string, args string) {
@@ -121,6 +55,37 @@ func getProcInfo(proc *process.Process) (username string, command string, args s
 	}
 
 	return username, command, args
+}
+
+func markParents(processes *[]Process, me int) {
+	parent := (*processes)[me].Parent
+	for parent != -1 {
+		(*processes)[parent].Print = true
+		parent = (*processes)[parent].Parent
+	}
+}
+
+func markChildren(processes *[]Process, me int) {
+	if (*processes)[me].Username == "root" {
+	}
+	var child int
+	(*processes)[me].Print = true
+	if (*processes)[me].Username == "root" {
+	}
+	child = (*processes)[me].Child
+	for child != -1 {
+		markChildren(processes, child)
+		child = (*processes)[child].Sister
+	}
+}
+
+func GetPIDIndex(processes []Process, pid int32) int {
+	for i := range processes {
+		if processes[i].PID == pid {
+			return i
+		}
+	}
+	return -1
 }
 
 func GetProcesses(processes *[]Process) {
@@ -195,30 +160,6 @@ func MakeTree(processes *[]Process) {
 	}
 }
 
-func markParents(processes *[]Process, me int) {
-	parent := (*processes)[me].Parent
-	for parent != -1 {
-		(*processes)[parent].Print = true
-		parent = (*processes)[parent].Parent
-	}
-}
-
-func markChildren(processes *[]Process, me int) {
-	if (*processes)[me].Username == "root" {
-		pretty.Println((*processes)[me])
-	}
-	var child int
-	(*processes)[me].Print = true
-	if (*processes)[me].Username == "root" {
-		pretty.Println((*processes)[me])
-	}
-	child = (*processes)[me].Child
-	for child != -1 {
-		markChildren(processes, child)
-		child = (*processes)[child].Sister
-	}
-}
-
 func MarkProcs(processes *[]Process, flagContains string, flagUsername string, flagExcludeRoot bool, flagPid int32) {
 	var (
 		me      int
@@ -226,7 +167,6 @@ func MarkProcs(processes *[]Process, flagContains string, flagUsername string, f
 		showAll bool = false
 	)
 
-	myPid = int32(os.Getpid())
 	if flagContains == "" && flagUsername == "" && flagExcludeRoot == false {
 		showAll = true
 	}
