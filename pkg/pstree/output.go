@@ -134,7 +134,7 @@ func PrintTree(processes []Process, me int, head string, screenWidth int, flagAr
 	pidString = fmt.Sprintf("%05s", util.Int32toStr(processes[me].PID))
 
 	if flagArguments {
-		if len(args) > 0 {
+		if len(processes[me].Args) > 0 {
 			args = strings.Join(processes[me].Args, "")
 		}
 	}
