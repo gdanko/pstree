@@ -18,7 +18,7 @@ var (
 	displayOptions   pstree.DisplayOptions
 	err              error
 	flagArguments    bool
-	flagColorize     bool
+	flagColor        bool
 	flagContains     string
 	flagCpu          bool
 	flagExcludeRoot  bool
@@ -28,6 +28,7 @@ var (
 	flagMemory       bool
 	flagNoPids       bool
 	flagPid          int32
+	flagRainbow      bool
 	flagThreads      bool
 	flagUsername     string
 	flagVersion      bool
@@ -37,7 +38,7 @@ var (
 	screenWidth      int
 	startingPidIndex int
 	usageTemplate    string
-	version          string = "0.4.1"
+	version          string = "0.4.2"
 	versionString    string
 	rootCmd          = &cobra.Command{
 		Use:    "pstree",
@@ -80,6 +81,10 @@ func pstreeRunCmd(cmd *cobra.Command, args []string) error {
 		return errors.New("flags --user and --exclude-root are mutually exclusive")
 	}
 
+	if flagColor && flagRainbow {
+		return errors.New("flags --color and --rainbow are mutually exclusive")
+	}
+
 	if flagVersion {
 		versionString = fmt.Sprintf(`pstree %s
 Copyright (C) 2024 Gary Danko
@@ -120,10 +125,11 @@ For more information about these matters, see the files named COPYING.`,
 	}
 
 	displayOptions = pstree.DisplayOptions{
-		ColorizeOutput:  flagColorize,
+		ColorizeOutput:  flagColor,
 		GraphicsMode:    flagGraphicsMode,
 		HidePids:        flagNoPids,
 		MaxDepth:        flagLevel,
+		RainbowOutput:   flagRainbow,
 		ShowArguments:   flagArguments,
 		ShowCpuPercent:  flagCpu,
 		ShowMemoryUsage: flagMemory,

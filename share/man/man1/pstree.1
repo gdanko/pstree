@@ -17,6 +17,7 @@
 .Op Fl g, -mode Ar int
 .Op Fl n, -no-pids
 .Op Fl p, -pid Ar PID
+.Op Fl -rainbow
 .Op Fl u, -user Ar username
 .Op Fl w, -wide
 .Sh DESCRIPTION
@@ -43,6 +44,8 @@ Use graphics chars for tree. n=1: IBM-850, n=2: VT100, n=3: UTF-8
 Suppress displaying the PID with each process.
 .It Fl p, -pid
 Show only branches containing process <PID>.
+.It Fl -rainbow
+Display the output in a really annoying rainbow pattern. You've been warned.
 .It Fl t, -threads
 Show the number of threads for each process in the list using the format (t: xx).
 .It Fl u, -user

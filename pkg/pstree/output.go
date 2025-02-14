@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gdanko/pstree/util"
+	"github.com/giancarlosio/gorainbow"
 )
 
 type DisplayOptions struct {
@@ -13,6 +14,7 @@ type DisplayOptions struct {
 	GraphicsMode    int
 	HidePids        bool
 	MaxDepth        int
+	RainbowOutput   bool
 	ShowArguments   bool
 	ShowCpuPercent  bool
 	ShowMemoryUsage bool
@@ -115,7 +117,7 @@ var TreeStyles = map[string]TreeChars{
 }
 
 // pstree.PrintTree(processes, startingPidIndex, "", screenWidth, currentLevel, displayOptions)
-// func PrintTree(processes []Process, me int, head string, screenWidth int, flagArguments bool, flagNoPids bool, flagGraphicsMode int, flagWide bool, currentLevel int, flagLevel int, flagCpu bool, flagThreads bool, flagColorize bool) {
+// func PrintTree(processes []Process, me int, head string, screenWidth int, flagArguments bool, flagNoPids bool, flagGraphicsMode int, flagWide bool, currentLevel int, flagLevel int, flagCpu bool, flagThreads bool, flagColor bool) {
 func PrintTree(processes []Process, me int, head string, screenWidth int, currentLevel int, displayOptions DisplayOptions) {
 	var (
 		args        string = ""
@@ -209,15 +211,24 @@ func PrintTree(processes []Process, me int, head string, screenWidth int, curren
 
 	line = fmt.Sprintf("%s%s%s%s%s %s %s %s", linePrefix, pidString, cpuPercent, memoryUsage, threads, processes[me].Username, processes[me].Command, args)
 
-	if displayOptions.WideDisplay {
-		fmt.Fprintln(os.Stdout, line)
-	} else {
+	if !displayOptions.WideDisplay {
 		if len(line) > screenWidth {
-			fmt.Fprintln(os.Stdout, util.TruncateANSI(line, screenWidth))
+			if displayOptions.RainbowOutput {
+				line = util.TruncateANSI(gorainbow.Rainbow(line), screenWidth)
+			} else {
+				line = util.TruncateANSI(line, screenWidth)
+			}
 		} else {
-			fmt.Fprintln(os.Stdout, line)
+			if displayOptions.RainbowOutput {
+				line = gorainbow.Rainbow(line)
+			}
+		}
+	} else {
+		if displayOptions.RainbowOutput {
+			line = gorainbow.Rainbow(line)
 		}
 	}
+	fmt.Fprintln(os.Stdout, line)
 
 	var newHead string
 	newHead = fmt.Sprintf("%s%s ", head,
