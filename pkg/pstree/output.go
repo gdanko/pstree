@@ -78,7 +78,7 @@ var TreeStyles = map[string]TreeChars{
 	},
 }
 
-func PrintTree(processes []Process, me int, head string, screenWidth int, flagArguments bool, flagNoPids bool, flagGraphicsMode int, flagWide bool, currentLevel int, flagLevel int, flagColorize bool) {
+func PrintTree(processes []Process, me int, head string, screenWidth int, flagArguments bool, flagNoPids bool, flagGraphicsMode int, flagWide bool, currentLevel int, flagLevel int, flagCpuUsage bool, flagColorize bool) {
 	var (
 		args       string = ""
 		C          TreeChars
@@ -180,7 +180,7 @@ func PrintTree(processes []Process, me int, head string, screenWidth int, flagAr
 	childme := processes[me].Child
 	for childme != -1 {
 		nextChild := processes[childme].Sister
-		PrintTree(processes, childme, newHead, screenWidth, flagArguments, flagNoPids, flagGraphicsMode, flagWide, currentLevel+1, flagLevel, flagColorize)
+		PrintTree(processes, childme, newHead, screenWidth, flagArguments, flagNoPids, flagGraphicsMode, flagWide, currentLevel+1, flagLevel, flagCpuUsage, flagColorize)
 		childme = nextChild
 	}
 }

@@ -21,7 +21,9 @@ type Process struct {
 	Groups        []uint32
 	MemoryInfo    *process.MemoryInfoExStat
 	MemoryPercent float32
+	NumFDs        int32
 	NumThreads    int32
+	OpenFiles     []process.OpenFilesStat
 	Parent        int
 	PGID          int32
 	PID           int32
@@ -53,7 +55,9 @@ func generateProcess(proc *process.Process) Process {
 		ppid          int32
 		memoryInfo    *process.MemoryInfoExStat
 		memoryPercent float32
+		numFDs        int32
 		numThreads    int32
+		openFiles     []process.OpenFilesStat
 		uids          []uint32
 		username      string
 	)
@@ -134,6 +138,33 @@ func generateProcess(proc *process.Process) Process {
 		memoryPercent = memoryPercentOut
 	}
 
+	numFDsChannel := make(chan func(ctx context.Context, proc *process.Process) (int32, error))
+	go ProcessNumFDs(numFDsChannel)
+	numFDsOut, err := (<-numFDsChannel)(ctx, proc)
+	if err != nil {
+		numFDs = -1
+	} else {
+		numFDs = numFDsOut
+	}
+
+	openFilesChannel := make(chan func(ctx context.Context, proc *process.Process) ([]process.OpenFilesStat, error))
+	go ProcessOpenFiles(openFilesChannel)
+	openFilesOut, err := (<-openFilesChannel)(ctx, proc)
+	if err != nil {
+		openFiles = []process.OpenFilesStat{}
+	} else {
+		openFiles = openFilesOut
+	}
+
+	numThreadsChannel := make(chan func(ctx context.Context, proc *process.Process) (int32, error))
+	go ProcessPPID(numThreadsChannel)
+	numThreadsOut, err := (<-numThreadsChannel)(ctx, proc)
+	if err != nil {
+		numThreads = -1
+	} else {
+		numThreads = numThreadsOut
+	}
+
 	pgidChannel := make(chan func(proc *process.Process) (int, error))
 	go ProcessPGID(pgidChannel)
 	pgidOut, err := (<-pgidChannel)(proc)
@@ -150,15 +181,6 @@ func generateProcess(proc *process.Process) Process {
 		ppid = -1
 	} else {
 		ppid = ppidOut
-	}
-
-	numThreadsChannel := make(chan func(ctx context.Context, proc *process.Process) (int32, error))
-	go ProcessPPID(numThreadsChannel)
-	numThreadsOut, err := (<-numThreadsChannel)(ctx, proc)
-	if err != nil {
-		numThreads = -1
-	} else {
-		numThreads = numThreadsOut
 	}
 
 	usernameChannel := make(chan func(ctx context.Context, proc *process.Process) (string, error))
@@ -193,17 +215,18 @@ func generateProcess(proc *process.Process) Process {
 		Groups:        groups,
 		MemoryInfo:    memoryInfo,
 		MemoryPercent: memoryPercent,
+		NumFDs:        numFDs,
+		NumThreads:    numThreads,
+		OpenFiles:     openFiles,
 		Parent:        -1,
 		PGID:          int32(pgid),
 		PID:           pid,
 		PPID:          ppid,
 		Print:         false,
 		Sister:        -1,
-		NumThreads:    numThreads,
 		UIDs:          uids,
 		Username:      username,
 	}
-
 }
 
 func markParents(processes *[]Process, me int) {
