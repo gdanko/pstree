@@ -102,10 +102,11 @@ var TreeStyles = map[string]TreeChars{
 	// },
 }
 
-func PrintTree(processes []Process, me int, head string, screenWidth int, flagArguments bool, flagNoPids bool, flagGraphicsMode int, flagWide bool, currentLevel int, flagLevel int, flagCpuUsage bool, flagColorize bool) {
+func PrintTree(processes []Process, me int, head string, screenWidth int, flagArguments bool, flagNoPids bool, flagGraphicsMode int, flagWide bool, currentLevel int, flagLevel int, flagCpuPercent bool, flagColorize bool) {
 	var (
 		args       string = ""
 		C          TreeChars
+		cpuPercent string = ""
 		line       string
 		linePrefix string
 		pidString  string
@@ -155,7 +156,7 @@ func PrintTree(processes []Process, me int, head string, screenWidth int, flagAr
 	}
 
 	linePrefix = fmt.Sprintf("%s%s%s%s%s%s", C.SG, head, part1, part2, part3, C.EG)
-	pidString = fmt.Sprintf("%05s", util.Int32toStr(processes[me].PID))
+	pidString = fmt.Sprintf(" %05s", util.Int32toStr(processes[me].PID))
 
 	if flagArguments {
 		if len(processes[me].Args) > 0 {
@@ -172,10 +173,23 @@ func PrintTree(processes []Process, me int, head string, screenWidth int, flagAr
 	}
 
 	if flagNoPids {
-		line = fmt.Sprintf("%s %s %s %s", linePrefix, processes[me].Username, processes[me].Command, args)
-	} else {
-		line = fmt.Sprintf("%s %s %s %s %s", linePrefix, pidString, processes[me].Username, processes[me].Command, args)
+		pidString = ""
 	}
+
+	if flagCpuPercent {
+		cpuPercent = fmt.Sprintf(" (cpu %.2f%%)", processes[me].CPUPercent)
+		// fmt.Println(processes[me].CPUPercent)
+		// fmt.Println(reflect.TypeOf(processes[me].CPUPercent))
+		// fmt.Printf(" (%.2f)%\n", processes[me].CPUPercent)
+	}
+
+	line = fmt.Sprintf("%s%s%s %s %s %s", linePrefix, pidString, cpuPercent, processes[me].Username, processes[me].Command, args)
+
+	// if flagNoPids {
+	// 	line = fmt.Sprintf("%s %s %s %s", linePrefix, processes[me].Username, processes[me].Command, args)
+	// } else {
+	// 	line = fmt.Sprintf("%s %s %s %s %s", linePrefix, cpuPercent, pidString, processes[me].Username, processes[me].Command, args)
+	// }
 
 	if flagWide {
 		fmt.Fprintln(os.Stdout, line)
@@ -204,7 +218,7 @@ func PrintTree(processes []Process, me int, head string, screenWidth int, flagAr
 	childme := processes[me].Child
 	for childme != -1 {
 		nextChild := processes[childme].Sister
-		PrintTree(processes, childme, newHead, screenWidth, flagArguments, flagNoPids, flagGraphicsMode, flagWide, currentLevel+1, flagLevel, flagCpuUsage, flagColorize)
+		PrintTree(processes, childme, newHead, screenWidth, flagArguments, flagNoPids, flagGraphicsMode, flagWide, currentLevel+1, flagLevel, flagCpuPercent, flagColorize)
 		childme = nextChild
 	}
 }

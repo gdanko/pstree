@@ -18,7 +18,7 @@ var (
 	flagArguments    bool
 	flagColorize     bool
 	flagContains     string
-	flagCpuUsage     bool
+	flagCpuPercent   bool
 	flagExcludeRoot  bool
 	flagFile         string
 	flagGraphicsMode int
@@ -115,7 +115,7 @@ For more information about these matters, see the files named COPYING.`,
 		flagLevel = 100
 	}
 
-	pstree.PrintTree(processes, startingPidIndex, "", screenWidth, flagArguments, flagNoPids, flagGraphicsMode, flagWide, 0, flagLevel, flagCpuUsage, flagColorize)
+	pstree.PrintTree(processes, startingPidIndex, "", screenWidth, flagArguments, flagNoPids, flagGraphicsMode, flagWide, 0, flagLevel, flagCpuPercent, flagColorize)
 
 	return nil
 }

@@ -13,6 +13,7 @@ func GetPersistentFlags(cmd *cobra.Command, colorSupport bool, colorCount int) {
 	cmd.PersistentFlags().IntVarP(&flagGraphicsMode, "mode", "g", 0, "use graphics chars for tree. n=1: IBM-850, n=2: VT100, n=3: UTF-8")
 	cmd.PersistentFlags().IntVarP(&flagLevel, "level", "l", 0, "print tree to <depth> level deep")
 	cmd.PersistentFlags().StringVarP(&flagUsername, "user", "u", "", "show only branches containing processes of <user>; cannot be used with --exclude-root")
+	cmd.PersistentFlags().BoolVarP(&flagCpuPercent, "cpu-percent", "", false, "show CPU percent with each process")
 	cmd.PersistentFlags().BoolVarP(&flagExcludeRoot, "exclude-root", "U", false, "don't show branches containing only root processes; cannot be used with --user")
 	cmd.PersistentFlags().StringVarP(&flagContains, "contains", "s", "", "show only branches containing process with <string> in commandline")
 	cmd.PersistentFlags().Int32VarP(&flagPid, "pid", "p", 0, "show only branches containing process <pid>")
