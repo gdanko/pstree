@@ -48,43 +48,93 @@ func TruncateANSI(text string, maxWidth int) string {
 }
 
 func ColorBlack(text string) string {
-	red := color.New(color.FgBlack).SprintFunc()
-	return red(text)
+	out := color.New(color.FgBlack).SprintFunc()
+	return out(text)
+}
+
+func ColorBoldBlack(text string) string {
+	out := color.New(color.FgBlack).Add(color.Bold).SprintFunc()
+	return out(text)
 }
 
 func ColorBlue(text string) string {
-	red := color.New(color.FgBlue).SprintFunc()
-	return red(text)
+	out := color.New(color.FgBlue).SprintFunc()
+	return out(text)
+}
+
+func ColorBoldBlue(text string) string {
+	out := color.New(color.FgBlue).Add(color.Bold).SprintFunc()
+	return out(text)
 }
 
 func ColorCyan(text string) string {
-	red := color.New(color.FgCyan).SprintFunc()
-	return red(text)
+	out := color.New(color.FgCyan).SprintFunc()
+	return out(text)
+}
+
+func ColorBoldCyan(text string) string {
+	out := color.New(color.FgCyan).Add(color.Bold).SprintFunc()
+	return out(text)
 }
 
 func ColorGreen(text string) string {
-	red := color.New(color.FgGreen).SprintFunc()
-	return red(text)
+	out := color.New(color.FgGreen).SprintFunc()
+	return out(text)
+}
+
+func ColorBoldGreen(text string) string {
+	out := color.New(color.FgGreen).Add(color.Bold).SprintFunc()
+	return out(text)
+}
+
+func ColorOrange(text string) string {
+	out := color.RGB(255, 128, 0).SprintFunc()
+	return out(text)
+}
+
+func ColorBoldOrange(text string) string {
+	out := color.RGB(255, 128, 0).Add(color.Bold).SprintFunc()
+	return out(text)
 }
 
 func ColorPurple(text string) string {
-	red := color.New(color.FgMagenta).SprintFunc()
-	return red(text)
+	out := color.New(color.FgMagenta).SprintFunc()
+	return out(text)
+}
+
+func ColorBoldPurple(text string) string {
+	out := color.New(color.FgMagenta).Add(color.Bold).SprintFunc()
+	return out(text)
 }
 
 func ColorRed(text string) string {
-	red := color.New(color.FgRed).SprintFunc()
-	return red(text)
+	out := color.New(color.FgRed).SprintFunc()
+	return out(text)
+}
+
+func ColorBoldRed(text string) string {
+	out := color.New(color.FgRed).Add(color.Bold).SprintFunc()
+	return out(text)
 }
 
 func ColorWhite(text string) string {
-	red := color.New(color.FgWhite).SprintFunc()
-	return red(text)
+	out := color.New(color.FgWhite).SprintFunc()
+	return out(text)
+}
+
+func ColorBoldWhite(text string) string {
+	out := color.New(color.FgWhite).Add(color.Bold).SprintFunc()
+	return out(text)
 }
 
 func ColorYellow(text string) string {
-	red := color.New(color.FgYellow).SprintFunc()
-	return red(text)
+	out := color.New(color.FgYellow).SprintFunc()
+	return out(text)
+}
+
+func ColorBoldYellow(text string) string {
+	out := color.New(color.FgYellow).Add(color.Bold).SprintFunc()
+	return out(text)
 }
 
 func Color8() string {
