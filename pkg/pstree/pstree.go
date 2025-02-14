@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gdanko/pstree/util"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/process"
 )
@@ -209,7 +210,7 @@ func generateProcess(proc *process.Process) Process {
 		Args:          args,
 		Child:         -1,
 		Command:       command,
-		CPUPercent:    cpuPercent,
+		CPUPercent:    util.RoundFloat(cpuPercent, 2),
 		CPUTimes:      cpuTimes,
 		GIDs:          gids,
 		Groups:        groups,
