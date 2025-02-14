@@ -14,17 +14,21 @@ var (
 	colorCount       int
 	colorizeString   string = ""
 	colorSupport     bool
+	currentLevel     int = 0
+	displayOptions   pstree.DisplayOptions
 	err              error
 	flagArguments    bool
 	flagColorize     bool
 	flagContains     string
-	flagCpuPercent   bool
+	flagCpu          bool
 	flagExcludeRoot  bool
 	flagFile         string
 	flagGraphicsMode int
 	flagLevel        int
+	flagMemory       bool
 	flagNoPids       bool
 	flagPid          int32
+	flagThreads      bool
 	flagUsername     string
 	flagVersion      bool
 	flagWide         bool
@@ -33,7 +37,7 @@ var (
 	screenWidth      int
 	startingPidIndex int
 	usageTemplate    string
-	version          string = "0.3.2"
+	version          string = "0.4.1"
 	versionString    string
 	rootCmd          = &cobra.Command{
 		Use:    "pstree",
@@ -115,7 +119,18 @@ For more information about these matters, see the files named COPYING.`,
 		flagLevel = 100
 	}
 
-	pstree.PrintTree(processes, startingPidIndex, "", screenWidth, flagArguments, flagNoPids, flagGraphicsMode, flagWide, 0, flagLevel, flagCpuPercent, flagColorize)
+	displayOptions = pstree.DisplayOptions{
+		ColorizeOutput:  flagColorize,
+		GraphicsMode:    flagGraphicsMode,
+		HidePids:        flagNoPids,
+		MaxDepth:        flagLevel,
+		ShowArguments:   flagArguments,
+		ShowCpuPercent:  flagCpu,
+		ShowMemoryUsage: flagMemory,
+		ShowNumThreads:  flagThreads,
+		WideDisplay:     flagWide,
+	}
+	pstree.PrintTree(processes, startingPidIndex, "", screenWidth, currentLevel, displayOptions)
 
 	return nil
 }
