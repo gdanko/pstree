@@ -26,3 +26,6 @@ go.work.sum
 
 # ignore tarballs
 *.tgz
+
+# bin dir
+bin
