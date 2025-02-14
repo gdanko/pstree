@@ -50,9 +50,9 @@ func ProcessGroups(c chan func(ctx context.Context, proc *process.Process) (grou
 	})
 }
 
-func ProcessMemoryInfo(c chan func(ctx context.Context, proc *process.Process) (memoryInfo *process.MemoryInfoExStat, err error)) {
-	c <- (func(ctx context.Context, proc *process.Process) (memoryInfo *process.MemoryInfoExStat, err error) {
-		memoryInfo, err = proc.MemoryInfoExWithContext(ctx)
+func ProcessMemoryInfo(c chan func(ctx context.Context, proc *process.Process) (memoryInfo *process.MemoryInfoStat, err error)) {
+	c <- (func(ctx context.Context, proc *process.Process) (memoryInfo *process.MemoryInfoStat, err error) {
+		memoryInfo, err = proc.MemoryInfoWithContext(ctx)
 		return memoryInfo, err
 	})
 }
@@ -85,17 +85,17 @@ func ProcessNumFDs(c chan func(ctx context.Context, proc *process.Process) (numF
 	})
 }
 
-func ProcessOpenFiles(c chan func(ctx context.Context, proc *process.Process) (openFiles []process.OpenFilesStat, err error)) {
-	c <- (func(ctx context.Context, proc *process.Process) (openFiles []process.OpenFilesStat, err error) {
-		openFiles, err = proc.OpenFilesWithContext(ctx)
-		return openFiles, err
-	})
-}
-
 func ProcessNumThreads(c chan func(ctx context.Context, proc *process.Process) (numThreads int32, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (numThreads int32, err error) {
 		numThreads, err = proc.NumThreadsWithContext(ctx)
 		return numThreads, err
+	})
+}
+
+func ProcessOpenFiles(c chan func(ctx context.Context, proc *process.Process) (openFiles []process.OpenFilesStat, err error)) {
+	c <- (func(ctx context.Context, proc *process.Process) (openFiles []process.OpenFilesStat, err error) {
+		openFiles, err = proc.OpenFilesWithContext(ctx)
+		return openFiles, err
 	})
 }
 
