@@ -12,7 +12,7 @@ import (
 
 var (
 	colorCount       int
-	colorizeString   string = ""
+	colorString      string = ""
 	colorSupport     bool
 	currentLevel     int = 0
 	displayOptions   pstree.DisplayOptions
@@ -35,10 +35,11 @@ var (
 	flagWide         bool
 	initialIndent    string = ""
 	processes        []pstree.Process
+	rainbowString    string = ""
 	screenWidth      int
 	startingPidIndex int
 	usageTemplate    string
-	version          string = "0.4.2"
+	version          string = "0.4.3"
 	versionString    string
 	rootCmd          = &cobra.Command{
 		Use:    "pstree",
@@ -56,18 +57,19 @@ func Execute() error {
 func init() {
 	colorSupport, colorCount := util.HasColorSupport()
 	if colorSupport {
-		colorizeString = " [--colorize]"
+		colorString = " [--color]"
+		rainbowString = " [--rainbow]"
 	}
 	usageTemplate = fmt.Sprintf(
-		`Usage: pstree [-aUpw] [-g n]%s [-l n] [--show-pids] 
-	      [--pid n] [-u user] [-s string]
+		`Usage: pstree [-acUmntw]%s [-s, --contains <str>] [-l, --level <int>]
+	      [-g, --mode <int>] [-p, --pid <int>]%s [-u, --user <str>] 
    or: pstree -V
 
 Display a tree of processes.
 
 {{.Flags.FlagUsages}}
 Process group leaders are marked with '='.
-`, colorizeString)
+`, colorString, rainbowString)
 
 	GetPersistentFlags(rootCmd, colorSupport, colorCount)
 	rootCmd.SetUsageTemplate(usageTemplate)
