@@ -8,6 +8,18 @@ import (
 	"github.com/gdanko/pstree/util"
 )
 
+type DisplayOptions struct {
+	ColorizeOutput  bool
+	GraphicsMode    int
+	HidePids        bool
+	MaxDepth        int
+	ShowArguments   bool
+	ShowCpuPercent  bool
+	ShowMemoryUsage bool
+	ShowNumThreads  bool
+	WideDisplay     bool
+}
+
 // Tree characters struct (equivalent to C's `TreeChars`)
 type TreeChars struct {
 	S2, P, PGL, NPGL, BarC, Bar, BarL, SG, EG, Init string
@@ -102,21 +114,25 @@ var TreeStyles = map[string]TreeChars{
 	// },
 }
 
-func PrintTree(processes []Process, me int, head string, screenWidth int, flagArguments bool, flagNoPids bool, flagGraphicsMode int, flagWide bool, currentLevel int, flagLevel int, flagCpuPercent bool, flagColorize bool) {
+// pstree.PrintTree(processes, startingPidIndex, "", screenWidth, currentLevel, displayOptions)
+// func PrintTree(processes []Process, me int, head string, screenWidth int, flagArguments bool, flagNoPids bool, flagGraphicsMode int, flagWide bool, currentLevel int, flagLevel int, flagCpu bool, flagThreads bool, flagColorize bool) {
+func PrintTree(processes []Process, me int, head string, screenWidth int, currentLevel int, displayOptions DisplayOptions) {
 	var (
-		args       string = ""
-		C          TreeChars
-		cpuPercent string = ""
-		line       string
-		linePrefix string
-		pidString  string
+		args        string = ""
+		C           TreeChars
+		cpuPercent  string = ""
+		line        string
+		linePrefix  string
+		memoryUsage string
+		pidString   string
+		threads     string = ""
 	)
 
-	if currentLevel == flagLevel {
+	if currentLevel == displayOptions.MaxDepth {
 		return
 	}
 
-	switch flagGraphicsMode {
+	switch displayOptions.GraphicsMode {
 	case 1:
 		C = TreeStyles["pc850"]
 	case 2:
@@ -158,40 +174,42 @@ func PrintTree(processes []Process, me int, head string, screenWidth int, flagAr
 	linePrefix = fmt.Sprintf("%s%s%s%s%s%s", C.SG, head, part1, part2, part3, C.EG)
 	pidString = fmt.Sprintf(" %05s", util.Int32toStr(processes[me].PID))
 
-	if flagArguments {
+	if displayOptions.ShowArguments {
 		if len(processes[me].Args) > 0 {
 			args = strings.Join(processes[me].Args, "")
 		}
 	}
 
-	if flagColorize {
-		linePrefix = util.ColorYellow(linePrefix)
+	if displayOptions.ShowCpuPercent {
+		cpuPercent = fmt.Sprintf(" (c: %.2f%%)", processes[me].CPUPercent)
+	}
+
+	if displayOptions.ShowMemoryUsage {
+		memoryUsage = fmt.Sprintf(" (m: %s)", util.ByteConverter(processes[me].MemoryInfo.RSS))
+	}
+
+	if displayOptions.ShowNumThreads {
+		threads = fmt.Sprintf(" (t: %d)", processes[me].NumThreads)
+	}
+
+	if displayOptions.ColorizeOutput {
+		linePrefix = util.ColorGreen(linePrefix)
+		cpuPercent = util.ColorYellow(cpuPercent)
+		memoryUsage = util.ColorOrange(memoryUsage)
+		threads = util.ColorWhite(threads)
 		processes[me].Username = util.ColorCyan(processes[me].Username)
 		pidString = util.ColorPurple(pidString)
 		processes[me].Command = util.ColorBlue(processes[me].Command)
 		args = util.ColorRed(args)
 	}
 
-	if flagNoPids {
+	if displayOptions.HidePids {
 		pidString = ""
 	}
 
-	if flagCpuPercent {
-		cpuPercent = fmt.Sprintf(" (cpu %.2f%%)", processes[me].CPUPercent)
-		// fmt.Println(processes[me].CPUPercent)
-		// fmt.Println(reflect.TypeOf(processes[me].CPUPercent))
-		// fmt.Printf(" (%.2f)%\n", processes[me].CPUPercent)
-	}
+	line = fmt.Sprintf("%s%s%s%s%s %s %s %s", linePrefix, pidString, cpuPercent, memoryUsage, threads, processes[me].Username, processes[me].Command, args)
 
-	line = fmt.Sprintf("%s%s%s %s %s %s", linePrefix, pidString, cpuPercent, processes[me].Username, processes[me].Command, args)
-
-	// if flagNoPids {
-	// 	line = fmt.Sprintf("%s %s %s %s", linePrefix, processes[me].Username, processes[me].Command, args)
-	// } else {
-	// 	line = fmt.Sprintf("%s %s %s %s %s", linePrefix, cpuPercent, pidString, processes[me].Username, processes[me].Command, args)
-	// }
-
-	if flagWide {
+	if displayOptions.WideDisplay {
 		fmt.Fprintln(os.Stdout, line)
 	} else {
 		if len(line) > screenWidth {
@@ -218,7 +236,7 @@ func PrintTree(processes []Process, me int, head string, screenWidth int, flagAr
 	childme := processes[me].Child
 	for childme != -1 {
 		nextChild := processes[childme].Sister
-		PrintTree(processes, childme, newHead, screenWidth, flagArguments, flagNoPids, flagGraphicsMode, flagWide, currentLevel+1, flagLevel, flagCpuPercent, flagColorize)
+		PrintTree(processes, childme, newHead, screenWidth, currentLevel, displayOptions)
 		childme = nextChild
 	}
 }
