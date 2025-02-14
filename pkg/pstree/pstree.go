@@ -1,26 +1,35 @@
 package pstree
 
 import (
+	"context"
 	"log"
 	"sort"
 	"strings"
-	"syscall"
+	"time"
 
+	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/process"
 )
 
 type Process struct {
-	Args     string
-	Child    int
-	Command  string
-	Parent   int
-	PGID     int32
-	PID      int32
-	PPID     int32
-	Print    bool
-	Sister   int
-	UID      int
-	Username string
+	Args          []string
+	Child         int
+	Command       string
+	CPUPercent    float64
+	CPUTimes      *cpu.TimesStat
+	GIDs          []uint32
+	Groups        []uint32
+	MemoryInfo    *process.MemoryInfoExStat
+	MemoryPercent float32
+	NumThreads    int32
+	Parent        int
+	PGID          int32
+	PID           int32
+	PPID          int32
+	Print         bool
+	Sister        int
+	UIDs          []uint32
+	Username      string
 }
 
 func sortByPid(procs []*process.Process) []*process.Process {
@@ -30,31 +39,171 @@ func sortByPid(procs []*process.Process) []*process.Process {
 	return procs
 }
 
-func getProcInfo(proc *process.Process) (username string, command string, args string) {
+func generateProcess(proc *process.Process) Process {
 	var (
-		argsSlice []string
-		err       error
+		args          []string
+		command       string
+		cpuPercent    float64
+		cpuTimes      *cpu.TimesStat
+		err           error
+		gids          []uint32
+		groups        []uint32
+		pgid          int
+		pid           int32
+		ppid          int32
+		memoryInfo    *process.MemoryInfoExStat
+		memoryPercent float32
+		numThreads    int32
+		uids          []uint32
+		username      string
 	)
-	username, err = proc.Username()
+
+	pid = proc.Pid
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	argsChannel := make(chan func(ctx context.Context, proc *process.Process) ([]string, error))
+	go ProcessArgs(argsChannel)
+	argsOut, err := (<-argsChannel)(ctx, proc)
 	if err != nil {
-		username = "?"
+		args = []string{}
+	} else {
+		args = argsOut
 	}
 
-	command, err = proc.Exe()
+	commandNameChannel := make(chan func(ctx context.Context, proc *process.Process) (string, error))
+	go ProcessCommandName(commandNameChannel)
+	commandOut, err := (<-commandNameChannel)(ctx, proc)
 	if err != nil {
 		command = "?"
+	} else {
+		command = commandOut
 	}
 
-	argsSlice, err = proc.CmdlineSlice()
+	cpuPercentChannel := make(chan func(ctx context.Context, proc *process.Process) (float64, error))
+	go ProcessCpuPercent(cpuPercentChannel)
+	cpuPercentOut, err := (<-cpuPercentChannel)(ctx, proc)
 	if err != nil {
-		args = ""
+		cpuPercent = -1
+	} else {
+		cpuPercent = cpuPercentOut
 	}
 
-	if len(argsSlice) > 1 {
-		args = strings.Join(argsSlice[1:], " ")
+	cpuTimesChannel := make(chan func(ctx context.Context, proc *process.Process) (*cpu.TimesStat, error))
+	go ProcessCpuTimes(cpuTimesChannel)
+	cpuTimesOut, err := (<-cpuTimesChannel)(ctx, proc)
+	if err != nil {
+		cpuTimes = &cpu.TimesStat{}
+	} else {
+		cpuTimes = cpuTimesOut
 	}
 
-	return username, command, args
+	gidsChannel := make(chan func(ctx context.Context, proc *process.Process) ([]uint32, error))
+	go ProcessGIDs(gidsChannel)
+	gidsOut, err := (<-gidsChannel)(ctx, proc)
+	if err != nil {
+		gids = []uint32{}
+	} else {
+		gids = gidsOut
+	}
+
+	groupsChannel := make(chan func(ctx context.Context, proc *process.Process) ([]uint32, error))
+	go ProcessGroups(groupsChannel)
+	groupsOut, err := (<-groupsChannel)(ctx, proc)
+	if err != nil {
+		groups = []uint32{}
+	} else {
+		groups = groupsOut
+	}
+
+	memoryInfoChannel := make(chan func(ctx context.Context, proc *process.Process) (*process.MemoryInfoExStat, error))
+	go ProcessMemoryInfo(memoryInfoChannel)
+	memoryInfoOut, err := (<-memoryInfoChannel)(ctx, proc)
+	if err != nil {
+		memoryInfo = &process.MemoryInfoExStat{}
+	} else {
+		memoryInfo = memoryInfoOut
+	}
+
+	memoryPercentChannel := make(chan func(ctx context.Context, proc *process.Process) (float32, error))
+	go ProcessMemoryPercent(memoryPercentChannel)
+	memoryPercentOut, err := (<-memoryPercentChannel)(ctx, proc)
+	if err != nil {
+		memoryPercent = -1.0
+	} else {
+		memoryPercent = memoryPercentOut
+	}
+
+	pgidChannel := make(chan func(proc *process.Process) (int, error))
+	go ProcessPGID(pgidChannel)
+	pgidOut, err := (<-pgidChannel)(proc)
+	if err != nil {
+		pgid = -1
+	} else {
+		pgid = pgidOut
+	}
+
+	ppidChannel := make(chan func(ctx context.Context, proc *process.Process) (int32, error))
+	go ProcessPPID(ppidChannel)
+	ppidOut, err := (<-ppidChannel)(ctx, proc)
+	if err != nil {
+		ppid = -1
+	} else {
+		ppid = ppidOut
+	}
+
+	numThreadsChannel := make(chan func(ctx context.Context, proc *process.Process) (int32, error))
+	go ProcessPPID(numThreadsChannel)
+	numThreadsOut, err := (<-numThreadsChannel)(ctx, proc)
+	if err != nil {
+		numThreads = -1
+	} else {
+		numThreads = numThreadsOut
+	}
+
+	usernameChannel := make(chan func(ctx context.Context, proc *process.Process) (string, error))
+	go ProcessUsername(usernameChannel)
+	usernameOut, err := (<-usernameChannel)(ctx, proc)
+	if err != nil {
+		username = "?"
+	} else {
+		username = usernameOut
+	}
+
+	uidsChannel := make(chan func(ctx context.Context, proc *process.Process) ([]uint32, error))
+	go ProcessGIDs(uidsChannel)
+	uidsOut, err := (<-uidsChannel)(ctx, proc)
+	if err != nil {
+		uids = []uint32{}
+	} else {
+		uids = uidsOut
+	}
+
+	if len(args) > 1 {
+		args = args[1:]
+	}
+
+	return Process{
+		Args:          args,
+		Child:         -1,
+		Command:       command,
+		CPUPercent:    cpuPercent,
+		CPUTimes:      cpuTimes,
+		GIDs:          gids,
+		Groups:        groups,
+		MemoryInfo:    memoryInfo,
+		MemoryPercent: memoryPercent,
+		Parent:        -1,
+		PGID:          int32(pgid),
+		PID:           pid,
+		PPID:          ppid,
+		Print:         false,
+		Sister:        -1,
+		NumThreads:    numThreads,
+		UIDs:          uids,
+		Username:      username,
+	}
+
 }
 
 func markParents(processes *[]Process, me int) {
@@ -90,18 +239,10 @@ func GetPIDIndex(processes []Process, pid int32) int {
 
 func GetProcesses(processes *[]Process) {
 	var (
-		args     string
-		command  string
 		err      error
-		pid      int32
-		pgid     int
-		ppid     int32
 		sorted   []*process.Process
 		unsorted []*process.Process
-		username string
 	)
-
-	// Get all processes
 	unsorted, err = process.Processes()
 	if err != nil {
 		log.Fatalf("Failed to get processes: %v", err)
@@ -109,36 +250,8 @@ func GetProcesses(processes *[]Process) {
 
 	sorted = sortByPid(unsorted)
 
-	// Map of parent to children
 	for _, p := range sorted {
-		username, command, args = getProcInfo(p)
-
-		ppid, err = p.Ppid()
-		if err != nil {
-			continue
-		}
-
-		pid = p.Pid
-
-		pgid, err = syscall.Getpgid(int(pid))
-		if err != nil {
-			pgid = -1
-		}
-
-		*processes = append(*processes,
-			Process{
-				Args:     args,
-				Child:    -1,
-				Command:  command,
-				Parent:   -1,
-				PGID:     int32(pgid),
-				PID:      pid,
-				PPID:     ppid,
-				Print:    false,
-				Sister:   -1,
-				UID:      0,
-				Username: username,
-			})
+		*processes = append(*processes, generateProcess(p))
 	}
 }
 

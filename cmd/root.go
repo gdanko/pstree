@@ -32,7 +32,7 @@ var (
 	screenWidth      int
 	startingPidIndex int
 	usageTemplate    string
-	version          string = "0.3.0"
+	version          string = "0.3.2"
 	versionString    string
 	rootCmd          = &cobra.Command{
 		Use:    "pstree",
@@ -54,7 +54,7 @@ func init() {
 	}
 	usageTemplate = fmt.Sprintf(
 		`Usage: pstree [-aUpw] [-g n]%s [-l n] [--show-pids] 
-	      [--pid n] [-u user] [-c string]
+	      [--pid n] [-u user] [-s string]
    or: pstree -V
 
 Display a tree of processes.
@@ -94,8 +94,6 @@ For more information about these matters, see the files named COPYING.`,
 	pstree.MakeTree(&processes)
 	pstree.MarkProcs(&processes, flagContains, flagUsername, flagExcludeRoot, flagPid)
 	pstree.DropProcs(&processes)
-
-	// when --pid is used, we want to print `-+= 1 root /sbin/launchd``
 
 	if flagPid > 1 {
 		startingPidIndex = pstree.GetPIDIndex(processes, flagPid)

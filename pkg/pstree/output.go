@@ -3,6 +3,7 @@ package pstree
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gdanko/pstree/util"
 )
@@ -133,7 +134,9 @@ func PrintTree(processes []Process, me int, head string, screenWidth int, flagAr
 	pidString = fmt.Sprintf("%05s", util.Int32toStr(processes[me].PID))
 
 	if flagArguments {
-		args = processes[me].Args
+		if len(args) > 0 {
+			args = strings.Join(processes[me].Args, "")
+		}
 	}
 
 	if flagColorize {
