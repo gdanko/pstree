@@ -24,11 +24,5 @@ go.work.sum
 # env file
 .env
 
-# pstree binary
-pstree
-
-# sample ps output file
-a.txt
-
 # ignore tarballs
 *.tgz
