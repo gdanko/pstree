@@ -20,7 +20,7 @@ type Process struct {
 	CPUTimes      *cpu.TimesStat
 	GIDs          []uint32
 	Groups        []uint32
-	MemoryInfo    *process.MemoryInfoExStat
+	MemoryInfo    *process.MemoryInfoStat
 	MemoryPercent float32
 	NumFDs        int32
 	NumThreads    int32
@@ -54,7 +54,7 @@ func generateProcess(proc *process.Process) Process {
 		pgid          int
 		pid           int32
 		ppid          int32
-		memoryInfo    *process.MemoryInfoExStat
+		memoryInfo    *process.MemoryInfoStat
 		memoryPercent float32
 		numFDs        int32
 		numThreads    int32
@@ -121,11 +121,11 @@ func generateProcess(proc *process.Process) Process {
 		groups = groupsOut
 	}
 
-	memoryInfoChannel := make(chan func(ctx context.Context, proc *process.Process) (*process.MemoryInfoExStat, error))
+	memoryInfoChannel := make(chan func(ctx context.Context, proc *process.Process) (*process.MemoryInfoStat, error))
 	go ProcessMemoryInfo(memoryInfoChannel)
 	memoryInfoOut, err := (<-memoryInfoChannel)(ctx, proc)
 	if err != nil {
-		memoryInfo = &process.MemoryInfoExStat{}
+		memoryInfo = &process.MemoryInfoStat{}
 	} else {
 		memoryInfo = memoryInfoOut
 	}
@@ -158,7 +158,7 @@ func generateProcess(proc *process.Process) Process {
 	}
 
 	numThreadsChannel := make(chan func(ctx context.Context, proc *process.Process) (int32, error))
-	go ProcessPPID(numThreadsChannel)
+	go ProcessNumThreads(numThreadsChannel)
 	numThreadsOut, err := (<-numThreadsChannel)(ctx, proc)
 	if err != nil {
 		numThreads = -1
