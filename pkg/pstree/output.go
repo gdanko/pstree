@@ -29,10 +29,10 @@ var TreeStyles = map[string]TreeChars{
 	},
 	"pc850": {
 		S2:   "─",
-		P:    "├",
+		P:    "─",
 		PGL:  "¤",
 		NPGL: "─",
-		BarC: "│",
+		BarC: "├",
 		Bar:  "│",
 		BarL: "└",
 		SG:   "",
@@ -40,30 +40,18 @@ var TreeStyles = map[string]TreeChars{
 		Init: "",
 	},
 	"vt100": {
-		S2:   "qq",
-		P:    "qw",
-		PGL:  "`",
-		NPGL: "q",
-		BarC: "t",
-		Bar:  "x",
-		BarL: "m",
+		S2:   "──",
+		P:    "─┬",
+		PGL:  "◆",
+		NPGL: "─",
+		BarC: "├",
+		Bar:  "│",
+		BarL: "└",
 		SG:   "\x0E",
 		EG:   "\x0F",
 		Init: "\033(B\033)0",
 	},
 	"utf8": {
-		S2:   "──",
-		P:    "├─",
-		PGL:  "●",
-		NPGL: "─",
-		BarC: "│",
-		Bar:  "│",
-		BarL: "└─",
-		SG:   "",
-		EG:   "",
-		Init: "",
-	},
-	"utf8a": {
 		S2:   "\342\224\200\342\224\200",
 		P:    "\342\224\200\342\224\254",
 		NPGL: "\342\224\200",
@@ -76,6 +64,42 @@ var TreeStyles = map[string]TreeChars{
 		// PGL:  "●",
 		PGL: "=",
 	},
+	// "pc850-unused": {
+	// 	S2:   "─",
+	// 	P:    "├",
+	// 	PGL:  "¤",
+	// 	NPGL: "─",
+	// 	BarC: "│",
+	// 	Bar:  "│",
+	// 	BarL: "└",
+	// 	SG:   "",
+	// 	EG:   "",
+	// 	Init: "",
+	// },
+	// "utf8-unused": {
+	// 	S2:   "──",
+	// 	P:    "├─",
+	// 	PGL:  "●",
+	// 	NPGL: "─",
+	// 	BarC: "│",
+	// 	Bar:  "│",
+	// 	BarL: "└─",
+	// 	SG:   "",
+	// 	EG:   "",
+	// 	Init: "",
+	// },
+	// "vt100-unused": {
+	// 	S2:   "qq",
+	// 	P:    "qw",
+	// 	PGL:  "`",
+	// 	NPGL: "q",
+	// 	BarC: "t",
+	// 	Bar:  "x",
+	// 	BarL: "m",
+	// 	SG:   "\x0E",
+	// 	EG:   "\x0F",
+	// 	Init: "\033(B\033)0",
+	// },
 }
 
 func PrintTree(processes []Process, me int, head string, screenWidth int, flagArguments bool, flagNoPids bool, flagGraphicsMode int, flagWide bool, currentLevel int, flagLevel int, flagCpuUsage bool, flagColorize bool) {
@@ -97,7 +121,7 @@ func PrintTree(processes []Process, me int, head string, screenWidth int, flagAr
 	case 2:
 		C = TreeStyles["vt100"]
 	case 3:
-		C = TreeStyles["utf8a"]
+		C = TreeStyles["utf8"]
 	default:
 		C = TreeStyles["ascii"]
 	}
