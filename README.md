@@ -18,8 +18,9 @@ It uses [gopsutil](https://github.com/shirou/gopsutil) for gathering process inf
 
 ## Usage
 ```
-Usage: pstree [-aUpw] [-g n] [--colorize] [-l n] [--show-pids]
-              [--pid n] [-u user] [-s string]
+$ pstree --help
+Usage: pstree [-acUmntw] [--color] [-s, --contains <str>] [-l, --level <int>]
+              [-g, --mode <int>] [-p, --pid <int>] [--rainbow] [-u, --user <str>]
    or: pstree -V
 
 Display a tree of processes.
