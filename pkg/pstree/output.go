@@ -10,9 +10,11 @@ import (
 )
 
 type DisplayOptions struct {
+	ColorAttr       string
 	ColorizeOutput  bool
 	GraphicsMode    int
 	HidePids        bool
+	InstalledMemory uint64
 	MaxDepth        int
 	RainbowOutput   bool
 	ShowArguments   bool
@@ -116,8 +118,21 @@ var TreeStyles = map[string]TreeChars{
 	// },
 }
 
-// pstree.PrintTree(processes, startingPidIndex, "", screenWidth, currentLevel, displayOptions)
-// func PrintTree(processes []Process, me int, head string, screenWidth int, flagArguments bool, flagNoPids bool, flagGraphicsMode int, flagWide bool, currentLevel int, flagLevel int, flagCpu bool, flagThreads bool, flagColor bool) {
+func colorGreen(text *string) {
+	coloredText := "\033[32m" + *text + "\033[0m"
+	*text = coloredText
+}
+
+func colorYellow(text *string) {
+	coloredText := "\033[33m" + *text + "\033[0m"
+	*text = coloredText
+}
+
+func colorRed(text *string) {
+	coloredText := "\033[31m" + *text + "\033[0m"
+	*text = coloredText
+}
+
 func PrintTree(processes []Process, me int, head string, screenWidth int, currentLevel int, displayOptions DisplayOptions) {
 	var (
 		args        string = ""
@@ -203,6 +218,41 @@ func PrintTree(processes []Process, me int, head string, screenWidth int, curren
 		pidString = util.ColorPurple(pidString)
 		processes[me].Command = util.ColorBlue(processes[me].Command)
 		args = util.ColorRed(args)
+	} else if displayOptions.ColorAttr != "" {
+		if displayOptions.ColorAttr == "age" {
+			for _, flag := range []*string{&cpuPercent, &memoryUsage, &threads, &processes[me].Username, &pidString, &processes[me].Command, &args} {
+				if processes[me].Age < 60 {
+					colorGreen(flag)
+				} else if processes[me].Age > 60 && processes[me].Age < 3600 {
+					colorYellow(flag)
+				} else {
+					colorRed(flag)
+				}
+			}
+		} else if displayOptions.ColorAttr == "cpu" {
+			displayOptions.ShowCpuPercent = true
+			for _, flag := range []*string{&cpuPercent, &memoryUsage, &threads, &processes[me].Username, &pidString, &processes[me].Command, &args} {
+				if processes[me].CPUPercent < 5 {
+					colorGreen(flag)
+				} else if processes[me].CPUPercent > 5 && processes[me].CPUPercent < 15 {
+					colorYellow(flag)
+				} else {
+					colorRed(flag)
+				}
+			}
+		} else if displayOptions.ColorAttr == "mem" {
+			displayOptions.ShowMemoryUsage = true
+			for _, flag := range []*string{&cpuPercent, &memoryUsage, &threads, &processes[me].Username, &pidString, &processes[me].Command, &args} {
+				percent := (processes[me].MemoryInfo.RSS / displayOptions.InstalledMemory) * 100
+				if percent < 10 {
+					colorGreen(flag)
+				} else if processes[me].MemoryInfo.RSS > 10 && processes[me].MemoryInfo.RSS < 20 {
+					colorYellow(flag)
+				} else {
+					colorRed(flag)
+				}
+			}
+		}
 	}
 
 	if displayOptions.HidePids {

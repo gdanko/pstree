@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gdanko/pstree/util"
 	"github.com/giancarlosio/gorainbow"
@@ -22,11 +23,12 @@ func GetPersistentFlags(cmd *cobra.Command, colorSupport bool, colorCount int) {
 	cmd.PersistentFlags().BoolVarP(&flagNoPids, "no-pids", "n", false, "do not show PIDs")
 	cmd.PersistentFlags().BoolVarP(&flagWide, "wide", "w", false, "wide output, not truncated to window width")
 	if colorSupport {
+		cmd.PersistentFlags().StringVarP(&flagColor, "color", "C", "", fmt.Sprintf("color the process name by given attribute; valid options are: %s;\ncannot be used with --color or --rainbow", strings.Join(validAttributes, ", ")))
 		if colorCount >= 8 && colorCount < 256 {
-			cmd.PersistentFlags().BoolVarP(&flagColor, "color", "", false, fmt.Sprintf("add some %s to the output", util.Color8()))
+			cmd.PersistentFlags().BoolVarP(&flagColorize, "colorize", "", false, fmt.Sprintf("add some %s to the output; cannot be used with --color-attr or --rainbow", util.Color8()))
 		} else if colorCount >= 256 {
-			cmd.PersistentFlags().BoolVarP(&flagColor, "color", "", false, gorainbow.Rainbow("add some beautiful color to the pstree output"))
-			cmd.PersistentFlags().BoolVarP(&flagRainbow, "rainbow", "", false, "please don't")
+			cmd.PersistentFlags().BoolVarP(&flagColorize, "colorize", "", false, gorainbow.Rainbow("add some beautiful color to the pstree output; cannot be used with --color-attr or --rainbow"))
+			cmd.PersistentFlags().BoolVarP(&flagRainbow, "rainbow", "", false, "please don't; cannot be used with --color or --color-attr")
 		}
 	}
 	cmd.PersistentFlags().BoolVarP(&flagVersion, "version", "V", false, "display version information")

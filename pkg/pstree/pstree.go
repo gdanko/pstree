@@ -13,11 +13,13 @@ import (
 )
 
 type Process struct {
+	Age           int64
 	Args          []string
 	Child         int
 	Command       string
 	CPUPercent    float64
 	CPUTimes      *cpu.TimesStat
+	CreateTime    int64
 	GIDs          []uint32
 	Groups        []uint32
 	MemoryInfo    *process.MemoryInfoStat
@@ -48,6 +50,7 @@ func generateProcess(proc *process.Process) Process {
 		command       string
 		cpuPercent    float64
 		cpuTimes      *cpu.TimesStat
+		createTime    int64
 		err           error
 		gids          []uint32
 		groups        []uint32
@@ -101,6 +104,15 @@ func generateProcess(proc *process.Process) Process {
 		cpuTimes = &cpu.TimesStat{}
 	} else {
 		cpuTimes = cpuTimesOut
+	}
+
+	createTimeChannel := make(chan func(ctx context.Context, proc *process.Process) (int64, error))
+	go ProcessCreateTime(createTimeChannel)
+	createTimeOut, err := (<-createTimeChannel)(ctx, proc)
+	if err != nil {
+		createTime = -1
+	} else {
+		createTime = createTimeOut
 	}
 
 	gidsChannel := make(chan func(ctx context.Context, proc *process.Process) ([]uint32, error))
@@ -207,11 +219,13 @@ func generateProcess(proc *process.Process) Process {
 	}
 
 	return Process{
+		Age:           util.GetUnixTimestamp() - createTime,
 		Args:          args,
 		Child:         -1,
 		Command:       command,
 		CPUPercent:    util.RoundFloat(cpuPercent, 2),
 		CPUTimes:      cpuTimes,
+		CreateTime:    createTime,
 		GIDs:          gids,
 		Groups:        groups,
 		MemoryInfo:    memoryInfo,

@@ -4,21 +4,25 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gdanko/pstree/pkg/pstree"
 	"github.com/gdanko/pstree/util"
+	"github.com/shirou/gopsutil/v4/mem"
 	"github.com/spf13/cobra"
 )
 
 var (
 	colorCount       int
+	colorizeString   string = ""
 	colorString      string = ""
 	colorSupport     bool
 	currentLevel     int = 0
 	displayOptions   pstree.DisplayOptions
 	err              error
 	flagArguments    bool
-	flagColor        bool
+	flagColor        string
+	flagColorize     bool
 	flagContains     string
 	flagCpu          bool
 	flagExcludeRoot  bool
@@ -34,12 +38,14 @@ var (
 	flagVersion      bool
 	flagWide         bool
 	initialIndent    string = ""
+	installedMemory  *mem.VirtualMemoryStat
 	processes        []pstree.Process
 	rainbowString    string = ""
 	screenWidth      int
 	startingPidIndex int
 	usageTemplate    string
-	version          string = "0.4.3"
+	validAttributes  []string = []string{"age", "cpu", "mem"}
+	version          string   = "0.5.0"
 	versionString    string
 	rootCmd          = &cobra.Command{
 		Use:    "pstree",
@@ -57,19 +63,22 @@ func Execute() error {
 func init() {
 	colorSupport, colorCount := util.HasColorSupport()
 	if colorSupport {
-		colorString = " [--color]"
+		colorizeString = " [--colorize]"
 		rainbowString = " [--rainbow]"
+		colorString = "[-C, --color-attr <str>]"
+
 	}
 	usageTemplate = fmt.Sprintf(
 		`Usage: pstree [-acUmntw]%s [-s, --contains <str>] [-l, --level <int>]
 	      [-g, --mode <int>] [-p, --pid <int>]%s [-u, --user <str>] 
+	      %s
    or: pstree -V
 
 Display a tree of processes.
 
 {{.Flags.FlagUsages}}
 Process group leaders are marked with '='.
-`, colorString, rainbowString)
+`, colorizeString, rainbowString, colorString)
 
 	GetPersistentFlags(rootCmd, colorSupport, colorCount)
 	rootCmd.SetUsageTemplate(usageTemplate)
@@ -79,12 +88,18 @@ func pstreePreRunCmd(cmd *cobra.Command, args []string) {
 }
 
 func pstreeRunCmd(cmd *cobra.Command, args []string) error {
+	installedMemory, _ = util.GetTotalMemory()
+
 	if flagUsername != "" && flagExcludeRoot {
 		return errors.New("flags --user and --exclude-root are mutually exclusive")
 	}
 
-	if flagColor && flagRainbow {
-		return errors.New("flags --color and --rainbow are mutually exclusive")
+	if (util.BtoI(flagColorize) + util.BtoI(flagRainbow) + util.StoI(flagColor)) > 1 {
+		return errors.New("only one of --color, --rainbow, and --color-attr can be used")
+	}
+
+	if flagColor != "" && !util.Contains(validAttributes, flagColor) {
+		return errors.New(fmt.Sprintf("valid options for --color-attr are: %s", strings.Join(validAttributes, ", ")))
 	}
 
 	if flagVersion {
@@ -127,9 +142,11 @@ For more information about these matters, see the files named COPYING.`,
 	}
 
 	displayOptions = pstree.DisplayOptions{
-		ColorizeOutput:  flagColor,
+		ColorAttr:       flagColor,
+		ColorizeOutput:  flagColorize,
 		GraphicsMode:    flagGraphicsMode,
 		HidePids:        flagNoPids,
+		InstalledMemory: installedMemory.Total,
 		MaxDepth:        flagLevel,
 		RainbowOutput:   flagRainbow,
 		ShowArguments:   flagArguments,

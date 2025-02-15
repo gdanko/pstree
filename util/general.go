@@ -9,7 +9,9 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/shirou/gopsutil/v4/mem"
 	terminal "github.com/wayneashleyberry/terminal-dimensions"
 )
 
@@ -75,6 +77,14 @@ func ExecutePipeline(commandStr string) (int, string, string, error) {
 	return exitCode, strings.TrimRight(stdoutBuf.String(), "\n"), strings.TrimRight(stderrBuf.String(), "\n"), nil
 }
 
+func GetTotalMemory() (*mem.VirtualMemoryStat, error) {
+	v, err := mem.VirtualMemory()
+	if err != nil {
+		return &mem.VirtualMemoryStat{}, err
+	}
+	return v, nil
+}
+
 func StrToInt32(input string) int32 {
 	num, _ := strconv.ParseInt(input, 10, 32)
 	return int32(num)
@@ -90,6 +100,15 @@ func SortSlice(unsorted []int32) []int32 {
 		return unsorted[i] < unsorted[j]
 	})
 	return unsorted
+}
+
+func Contains(elems []string, v string) bool {
+	for _, s := range elems {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }
 
 func GetScreenWidth() int {
@@ -153,4 +172,22 @@ func ByteConverter(num uint64) string {
 		absolute = absolute / 1024
 	}
 	return fmt.Sprintf("%.2f Yi%s", RoundFloat(absolute, 2), suffix)
+}
+
+func BtoI(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
+func StoI(s string) int {
+	if s != "" {
+		return 1
+	}
+	return 0
+}
+
+func GetUnixTimestamp() int64 {
+	return time.Now().Unix()
 }

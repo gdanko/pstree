@@ -36,6 +36,13 @@ func ProcessCpuTimes(c chan func(ctx context.Context, proc *process.Process) (cp
 	})
 }
 
+func ProcessCreateTime(c chan func(ctx context.Context, proc *process.Process) (createTime int64, err error)) {
+	c <- (func(ctx context.Context, proc *process.Process) (createTime int64, err error) {
+		createTime, err = proc.CreateTimeWithContext(ctx)
+		return createTime / 1000, err
+	})
+}
+
 func ProcessGIDs(c chan func(ctx context.Context, proc *process.Process) (gids []uint32, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (gids []uint32, err error) {
 		gids, err = proc.GidsWithContext(ctx)
