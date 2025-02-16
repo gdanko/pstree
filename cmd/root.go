@@ -13,41 +13,41 @@ import (
 )
 
 var (
-	colorCount       int
-	colorizeString   string = ""
-	colorString      string = ""
-	colorSupport     bool
-	currentLevel     int = 0
-	displayOptions   pstree.DisplayOptions
-	err              error
-	flagArguments    bool
-	flagColor        string
-	flagColorize     bool
-	flagContains     string
-	flagCpu          bool
-	flagExcludeRoot  bool
-	flagFile         string
-	flagGraphicsMode int
-	flagLevel        int
-	flagMemory       bool
-	flagNoPids       bool
-	flagPid          int32
-	flagRainbow      bool
-	flagThreads      bool
-	flagUsername     string
-	flagVersion      bool
-	flagWide         bool
-	initialIndent    string = ""
-	installedMemory  *mem.VirtualMemoryStat
-	processes        []pstree.Process
-	rainbowString    string = ""
-	screenWidth      int
-	startingPidIndex int
-	usageTemplate    string
-	validAttributes  []string = []string{"age", "cpu", "mem"}
-	version          string   = "0.5.0"
-	versionString    string
-	rootCmd          = &cobra.Command{
+	colorCount            int
+	colorizeString        string = ""
+	colorString           string = ""
+	colorSupport          bool
+	currentLevel          int = 0
+	displayOptions        pstree.DisplayOptions
+	errorMessage          string
+	flagArguments         bool
+	flagColor             string
+	flagColorize          bool
+	flagContains          string
+	flagCpu               bool
+	flagExcludeRoot       bool
+	flagGraphicsMode      int
+	flagLevel             int
+	flagMemory            bool
+	flagNoPids            bool
+	flagPid               int32
+	flagRainbow           bool
+	flagShowAll           bool
+	flagThreads           bool
+	flagUsername          string
+	flagVersion           bool
+	flagWide              bool
+	installedMemory       *mem.VirtualMemoryStat
+	processes             []pstree.Process
+	rainbowString         string = ""
+	screenWidth           int
+	startingPidIndex      int
+	usageTemplate         string
+	validAttributes       []string = []string{"age", "cpu", "mem"}
+	validAttributesString string   = strings.Join(validAttributes, ", ")
+	version               string   = "0.5.1"
+	versionString         string
+	rootCmd               = &cobra.Command{
 		Use:    "pstree",
 		Short:  "",
 		Long:   "",
@@ -61,7 +61,7 @@ func Execute() error {
 }
 
 func init() {
-	colorSupport, colorCount := util.HasColorSupport()
+	colorSupport, colorCount = util.HasColorSupport()
 	if colorSupport {
 		colorizeString = " [--colorize]"
 		rainbowString = " [--rainbow]"
@@ -69,7 +69,7 @@ func init() {
 
 	}
 	usageTemplate = fmt.Sprintf(
-		`Usage: pstree [-acUmntw]%s [-s, --contains <str>] [-l, --level <int>]
+		`Usage: pstree [-acUmntw] [-all]%s [-s, --contains <str>] [-l, --level <int>]
 	      [-g, --mode <int>] [-p, --pid <int>]%s [-u, --user <str>] 
 	      %s
    or: pstree -V
@@ -99,7 +99,8 @@ func pstreeRunCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	if flagColor != "" && !util.Contains(validAttributes, flagColor) {
-		return errors.New(fmt.Sprintf("valid options for --color-attr are: %s", strings.Join(validAttributes, ", ")))
+		errorMessage = fmt.Sprintf("valid options for --color-attr are: %s", validAttributesString)
+		return errors.New(errorMessage)
 	}
 
 	if flagVersion {
@@ -139,6 +140,13 @@ For more information about these matters, see the files named COPYING.`,
 
 	if flagLevel == 0 {
 		flagLevel = 100
+	}
+
+	if flagShowAll {
+		flagArguments = true
+		flagCpu = true
+		flagMemory = true
+		flagThreads = true
 	}
 
 	displayOptions = pstree.DisplayOptions{
