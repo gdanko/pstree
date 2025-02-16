@@ -12,6 +12,7 @@ import (
 func GetPersistentFlags(cmd *cobra.Command, colorSupport bool, colorCount int) {
 	cmd.PersistentFlags().BoolVarP(&flagArguments, "arguments", "a", false, "show command line arguments")
 	cmd.PersistentFlags().IntVarP(&flagGraphicsMode, "mode", "g", 0, "use graphics chars for tree. n=1: IBM-850, n=2: VT100, n=3: UTF-8")
+	cmd.PersistentFlags().BoolVarP(&flagShowAll, "all", "", false, "equivalent to -a -c -m -t")
 	cmd.PersistentFlags().IntVarP(&flagLevel, "level", "l", 0, "print tree to <depth> level deep")
 	cmd.PersistentFlags().StringVarP(&flagUsername, "user", "u", "", "show only branches containing processes of <user>; cannot be used with --exclude-root")
 	cmd.PersistentFlags().BoolVarP(&flagCpu, "cpu", "c", false, "show CPU utilization percentage with each process, e.g., (c: 0.00%)")
