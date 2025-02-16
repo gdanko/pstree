@@ -9,7 +9,6 @@ import (
 )
 
 var (
-	colorize   string
 	ansiEscape = regexp.MustCompile(`\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])`)
 )
 
