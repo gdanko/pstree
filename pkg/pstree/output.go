@@ -137,12 +137,13 @@ func PrintTree(processes []Process, me int, head string, screenWidth int, curren
 	var (
 		args        string = ""
 		C           TreeChars
-		cpuPercent  string = ""
+		cpuPercent  string
 		line        string
 		linePrefix  string
 		memoryUsage string
+		newHead     string
 		pidString   string
-		threads     string = ""
+		threads     string
 	)
 
 	if currentLevel == displayOptions.MaxDepth {
@@ -280,7 +281,6 @@ func PrintTree(processes []Process, me int, head string, screenWidth int, curren
 	}
 	fmt.Fprintln(os.Stdout, line)
 
-	var newHead string
 	newHead = fmt.Sprintf("%s%s ", head,
 		func() string {
 			if head == "" {

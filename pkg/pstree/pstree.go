@@ -2,12 +2,14 @@ package pstree
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/gdanko/pstree/util"
+	"github.com/kr/pretty"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/process"
 )
@@ -16,6 +18,7 @@ type Process struct {
 	Age           int64
 	Args          []string
 	Child         int
+	Children      *[]Process
 	Command       string
 	CPUPercent    float64
 	CPUTimes      *cpu.TimesStat
@@ -222,6 +225,7 @@ func generateProcess(proc *process.Process) Process {
 		Age:           util.GetUnixTimestamp() - createTime,
 		Args:          args,
 		Child:         -1,
+		Children:      &[]Process{},
 		Command:       command,
 		CPUPercent:    util.RoundFloat(cpuPercent, 2),
 		CPUTimes:      cpuTimes,
@@ -247,22 +251,30 @@ func generateProcess(proc *process.Process) Process {
 func markParents(processes *[]Process, me int) {
 	parent := (*processes)[me].Parent
 	for parent != -1 {
-		(*processes)[parent].Print = true
+		if !(*processes)[parent].Print {
+			fmt.Printf("mP marking %d\n", (*processes)[parent].PID)
+			(*processes)[parent].Print = true
+		}
 		parent = (*processes)[parent].Parent
 	}
 }
 
 func markChildren(processes *[]Process, me int) {
-	if (*processes)[me].Username == "root" {
-	}
 	var child int
-	(*processes)[me].Print = true
-	if (*processes)[me].Username == "root" {
+	if !(*processes)[me].Print {
+		fmt.Printf("mC marking %d\n", (*processes)[me].PID)
+		(*processes)[me].Print = true
+		pretty.Println((*processes)[me])
 	}
 	child = (*processes)[me].Child
 	for child != -1 {
+		fmt.Printf("PID %d has a child and its child (%d), its PID id %d\n", (*processes)[me].PID, child, (*processes)[child].PID)
 		markChildren(processes, child)
+		fmt.Printf("Setting child to index %d\n", child)
 		child = (*processes)[child].Sister
+		if child != -1 {
+			pretty.Println((*processes)[child])
+		}
 	}
 }
 
@@ -318,7 +330,7 @@ func MarkProcs(processes *[]Process, flagContains string, flagUsername string, f
 		showAll bool = false
 	)
 
-	if flagContains == "" && flagUsername == "" && flagExcludeRoot == false {
+	if flagContains == "" && flagUsername == "" && !flagExcludeRoot {
 		showAll = true
 	}
 	for me = range *processes {
