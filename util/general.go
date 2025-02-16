@@ -113,13 +113,12 @@ func Contains(elems []string, v string) bool {
 
 func GetScreenWidth() int {
 	var (
-		err    error
-		length int = 132
-		width  uint
+		err   error
+		width uint
 	)
 	width, err = terminal.Width()
 	if err != nil {
-		return length
+		return 132
 	}
 
 	return int(width)
