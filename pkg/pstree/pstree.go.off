@@ -2,12 +2,15 @@ package pstree
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"os"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/gdanko/pstree/util"
+	"github.com/kr/pretty"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/process"
 )
@@ -16,13 +19,14 @@ type Process struct {
 	Age           int64
 	Args          []string
 	Child         int
-	Children      *[]Process
+	Children      []Process
 	Command       string
 	CPUPercent    float64
 	CPUTimes      *cpu.TimesStat
 	CreateTime    int64
 	GIDs          []uint32
 	Groups        []uint32
+	Level         int
 	MemoryInfo    *process.MemoryInfoStat
 	MemoryPercent float32
 	NumFDs        int32
@@ -47,7 +51,8 @@ func sortByPid(procs []*process.Process) []*process.Process {
 
 func generateProcess(proc *process.Process) Process {
 	var (
-		args          []string
+		args []string
+		// children      []*process.Process
 		command       string
 		cpuPercent    float64
 		cpuTimes      *cpu.TimesStat
@@ -79,6 +84,15 @@ func generateProcess(proc *process.Process) Process {
 	} else {
 		args = argsOut
 	}
+
+	// childrenChannel := make(chan func(ctx context.Context, proc *process.Process) ([]*process.Process, error))
+	// go ProcessChildren(childrenChannel)
+	// childrenOut, err := (<-childrenChannel)(ctx, proc)
+	// if err != nil {
+	// 	children = []*process.Process{}
+	// } else {
+	// 	children = childrenOut
+	// }
 
 	commandNameChannel := make(chan func(ctx context.Context, proc *process.Process) (string, error))
 	go ProcessCommandName(commandNameChannel)
@@ -215,21 +229,15 @@ func generateProcess(proc *process.Process) Process {
 		uids = uidsOut
 	}
 
-	if len(args) > 0 {
-		if args[0] == command {
-			if len(args) == 1 {
-				args = []string{}
-			} else if len(args) > 1 {
-				args = args[1:]
-			}
-		}
+	if len(args) > 1 {
+		args = args[1:]
 	}
 
 	return Process{
 		Age:           util.GetUnixTimestamp() - createTime,
 		Args:          args,
 		Child:         -1,
-		Children:      &[]Process{},
+		Children:      []Process{},
 		Command:       command,
 		CPUPercent:    util.RoundFloat(cpuPercent, 2),
 		CPUTimes:      cpuTimes,
@@ -261,8 +269,12 @@ func markParents(processes *[]Process, me int) {
 }
 
 func markChildren(processes *[]Process, me int) {
+	if (*processes)[me].Username == "root" {
+	}
 	var child int
 	(*processes)[me].Print = true
+	if (*processes)[me].Username == "root" {
+	}
 	child = (*processes)[me].Child
 	for child != -1 {
 		markChildren(processes, child)
@@ -297,6 +309,96 @@ func GetProcesses(processes *[]Process) {
 	}
 }
 
+func AddToTree(processes *[]Process, proc Process, level int) {
+	proc.Level = level
+	for i, p := range *processes {
+		if proc.PPID == (*processes)[i].PID {
+			(*processes)[i].Children = append((*processes)[i].Children, proc)
+		} else {
+			if len((*processes)[i].Children) > 0 {
+				AddToTree(&p.Children, proc, level+1)
+			}
+		}
+	}
+}
+
+func AddToParent(processes *[]Process, proc Process) bool {
+	for i, p := range *processes {
+		fmt.Printf("Comparing %d to %d\n", proc.PPID, (*processes)[i].PID)
+		if proc.PPID == (*processes)[i].PID {
+			(*processes)[i].Children = append((*processes)[i].Children, proc)
+			fmt.Printf("Added %d as a child of %d\n", (*processes)[i].PID, proc.PPID)
+			return true
+		} else {
+			if len((*processes)[i].Children) > 0 {
+				fmt.Printf("Found children for %d\n", (*processes)[i].PID)
+				AddToParent(&p.Children, proc)
+			}
+		}
+		return false
+	}
+	return false
+}
+
+func Remove(processes *[]Process, s int) {
+	*processes = append((*processes)[:s], (*processes)[s+1:]...)
+}
+
+func Reverse(slice []int) []int {
+	for i, j := 0, len(slice)-1; i < j; i, j = i+1, j-1 {
+		slice[i], slice[j] = slice[j], slice[i] //reverse the slice
+	}
+	return slice
+}
+
+func RecurseProcesses(processes *[]Process, pid int) {
+	for _, p := range *processes {
+		if p.PID == int32(pid) {
+			pretty.Println(p)
+			os.Exit(0)
+		} else {
+			if len(p.Children) > 0 {
+				RecurseProcesses(&p.Children, pid)
+			}
+		}
+	}
+}
+
+func GetProcesses3(processes *[]Process) {
+	var (
+		err        error
+		sorted     []*process.Process
+		unsorted   []*process.Process
+		removePids []int
+	)
+	unsorted, err = process.Processes()
+	if err != nil {
+		log.Fatalf("Failed to get processes: %v", err)
+	}
+	sorted = sortByPid(unsorted)
+
+	for _, p := range sorted {
+		*processes = append(*processes, generateProcess(p))
+	}
+
+	for i := range *processes {
+		p := (*processes)[i]
+		fmt.Printf("Trying PID %d\n", p.PID)
+		if p.PPID > 0 {
+			ok := AddToParent(processes, p)
+			if ok {
+				removePids = append(removePids, i)
+			}
+		}
+	}
+
+	for _, pid := range Reverse(removePids) {
+		Remove(processes, pid)
+	}
+	// RecurseProcesses(processes, 32918)
+	os.Exit(0)
+}
+
 func MakeTree(processes *[]Process) {
 	for me := range *processes {
 		parent := GetPIDIndex(*processes, (*processes)[me].PPID)
@@ -322,7 +424,7 @@ func MarkProcs(processes *[]Process, flagContains string, flagUsername string, f
 		showAll bool = false
 	)
 
-	if flagContains == "" && flagUsername == "" && !flagExcludeRoot {
+	if flagContains == "" && flagUsername == "" && flagExcludeRoot == false {
 		showAll = true
 	}
 	for me = range *processes {
