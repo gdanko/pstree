@@ -13,7 +13,7 @@ type DisplayOptions struct {
 	ColorAttr       string
 	ColorizeOutput  bool
 	GraphicsMode    int
-	HidePids        bool
+	IBM850Graphics  bool
 	InstalledMemory uint64
 	MaxDepth        int
 	RainbowOutput   bool
@@ -21,6 +21,10 @@ type DisplayOptions struct {
 	ShowCpuPercent  bool
 	ShowMemoryUsage bool
 	ShowNumThreads  bool
+	ShowPGIDs       bool
+	ShowPIDs        bool
+	UTF8Graphics    bool
+	VT100Graphics   bool
 	WideDisplay     bool
 }
 
@@ -143,6 +147,7 @@ func PrintTree(processes []Process, me int, head string, screenWidth int, curren
 		memoryUsage string
 		newHead     string
 		pidString   string
+		pgidString  string
 		threads     string
 	)
 
@@ -150,16 +155,16 @@ func PrintTree(processes []Process, me int, head string, screenWidth int, curren
 		return
 	}
 
-	switch displayOptions.GraphicsMode {
-	case 1:
+	if displayOptions.IBM850Graphics {
 		C = TreeStyles["pc850"]
-	case 2:
-		C = TreeStyles["vt100"]
-	case 3:
+	} else if displayOptions.UTF8Graphics {
 		C = TreeStyles["utf8"]
-	default:
+	} else if displayOptions.VT100Graphics {
+		C = TreeStyles["vt100"]
+	} else {
 		C = TreeStyles["ascii"]
 	}
+
 	if head == "" && !processes[me].Print {
 		return
 	}
@@ -190,7 +195,14 @@ func PrintTree(processes []Process, me int, head string, screenWidth int, curren
 	}
 
 	linePrefix = fmt.Sprintf("%s%s%s%s%s%s", C.SG, head, part1, part2, part3, C.EG)
-	pidString = fmt.Sprintf(" %05s", util.Int32toStr(processes[me].PID))
+
+	if displayOptions.ShowPIDs {
+		pidString = fmt.Sprintf(" (%05s)", util.Int32toStr(processes[me].PID))
+	}
+
+	if displayOptions.ShowPGIDs {
+		pgidString = fmt.Sprintf(" (%05s)", util.Int32toStr(processes[me].PGID))
+	}
 
 	if displayOptions.ShowArguments {
 		if len(processes[me].Args) > 0 {
@@ -256,11 +268,7 @@ func PrintTree(processes []Process, me int, head string, screenWidth int, curren
 		}
 	}
 
-	if displayOptions.HidePids {
-		pidString = ""
-	}
-
-	line = fmt.Sprintf("%s%s%s%s%s %s %s %s", linePrefix, pidString, cpuPercent, memoryUsage, threads, processes[me].Username, processes[me].Command, args)
+	line = fmt.Sprintf("%s%s%s%s%s%s %s %s %s", linePrefix, pidString, pgidString, cpuPercent, memoryUsage, threads, processes[me].Username, processes[me].Command, args)
 
 	if !displayOptions.WideDisplay {
 		if len(line) > screenWidth {
