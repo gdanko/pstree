@@ -49,7 +49,7 @@ var (
 	usageTemplate         string
 	validAttributes       []string = []string{"age", "cpu", "mem"}
 	validAttributesString string   = strings.Join(validAttributes, ", ")
-	version               string   = "0.5.4"
+	version               string   = "0.5.5"
 	versionString         string
 	rootCmd               = &cobra.Command{
 		Use:    "pstree",
