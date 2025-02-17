@@ -70,7 +70,6 @@ func generateProcess(proc *process.Process) Process {
 		numFDs        int32
 		numThreads    int32
 		openFiles     []process.OpenFilesStat
-		parentProcess Process
 		uids          []uint32
 		username      string
 	)
@@ -215,14 +214,15 @@ func generateProcess(proc *process.Process) Process {
 		pgid = pgidOut
 	}
 
-	parentChannel := make(chan func(ctx context.Context, proc *process.Process) (*process.Process, error))
-	go ProcessParent(parentChannel)
-	parentOut, err := (<-parentChannel)(ctx, proc)
-	if err != nil {
-		parentProcess = Process{}
-	} else {
-		parentProcess = generateProcess(parentOut)
-	}
+	// Expensive
+	// parentChannel := make(chan func(ctx context.Context, proc *process.Process) (*process.Process, error))
+	// go ProcessParent(parentChannel)
+	// parentOut, err := (<-parentChannel)(ctx, proc)
+	// if err != nil {
+	// 	parentProcess = Process{}
+	// } else {
+	// 	parentProcess = generateProcess(parentOut)
+	// }
 
 	ppidChannel := make(chan func(ctx context.Context, proc *process.Process) (int32, error))
 	go ProcessPPID(ppidChannel)
@@ -290,7 +290,6 @@ func generateProcess(proc *process.Process) Process {
 		NumThreads:    numThreads,
 		OpenFiles:     openFiles,
 		Parent:        -1,
-		ParentProcess: &parentProcess,
 		PGID:          int32(pgid),
 		PID:           pid,
 		PPID:          ppid,
