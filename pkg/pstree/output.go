@@ -231,6 +231,7 @@ func PrintTree(logger *slog.Logger, processes []Process, me int, head string, sc
 		memoryUsage = util.ColorOrange(memoryUsage)
 		threads = util.ColorWhite(threads)
 		processes[me].Username = util.ColorCyan(processes[me].Username)
+		pgidString = util.ColorBoldBlue(pgidString)
 		pidString = util.ColorPurple(pidString)
 		processes[me].Command = util.ColorBlue(processes[me].Command)
 		args = util.ColorRed(args)
