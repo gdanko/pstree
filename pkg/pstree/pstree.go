@@ -9,6 +9,7 @@ import (
 
 	"github.com/gdanko/pstree/util"
 	"github.com/shirou/gopsutil/v4/cpu"
+	"github.com/shirou/gopsutil/v4/net"
 	"github.com/shirou/gopsutil/v4/process"
 )
 
@@ -18,9 +19,11 @@ type Process struct {
 	Child         int
 	Children      *[]Process
 	Command       string
+	Connections   []net.ConnectionStat
 	CPUPercent    float64
 	CPUTimes      *cpu.TimesStat
 	CreateTime    int64
+	Environment   []string
 	GIDs          []uint32
 	Groups        []uint32
 	MemoryInfo    *process.MemoryInfoStat
@@ -29,11 +32,13 @@ type Process struct {
 	NumThreads    int32
 	OpenFiles     []process.OpenFilesStat
 	Parent        int
+	ParentProcess *Process
 	PGID          int32
 	PID           int32
 	PPID          int32
 	Print         bool
 	Sister        int
+	Status        []string
 	UIDs          []uint32
 	Username      string
 }
@@ -52,6 +57,7 @@ func generateProcess(proc *process.Process) Process {
 		cpuPercent    float64
 		cpuTimes      *cpu.TimesStat
 		createTime    int64
+		environment   []string
 		err           error
 		gids          []uint32
 		groups        []uint32
@@ -63,6 +69,7 @@ func generateProcess(proc *process.Process) Process {
 		numFDs        int32
 		numThreads    int32
 		openFiles     []process.OpenFilesStat
+		parentProcess Process
 		uids          []uint32
 		username      string
 	)
@@ -89,6 +96,16 @@ func generateProcess(proc *process.Process) Process {
 		command = commandOut
 	}
 
+	// Expensive
+	// connectionsChannel := make(chan func(ctx context.Context, proc *process.Process) ([]net.ConnectionStat, error))
+	// go ProcessConnections(connectionsChannel)
+	// connectionsOut, err := (<-connectionsChannel)(ctx, proc)
+	// if err != nil {
+	// 	connections = []net.ConnectionStat{}
+	// } else {
+	// 	connections = connectionsOut
+	// }
+
 	cpuPercentChannel := make(chan func(ctx context.Context, proc *process.Process) (float64, error))
 	go ProcessCpuPercent(cpuPercentChannel)
 	cpuPercentOut, err := (<-cpuPercentChannel)(ctx, proc)
@@ -114,6 +131,15 @@ func generateProcess(proc *process.Process) Process {
 		createTime = -1
 	} else {
 		createTime = createTimeOut
+	}
+
+	environmentChannel := make(chan func(ctx context.Context, proc *process.Process) ([]string, error))
+	go ProcessEnvironment(environmentChannel)
+	environmentOut, err := (<-environmentChannel)(ctx, proc)
+	if err != nil {
+		environment = []string{}
+	} else {
+		environment = environmentOut
 	}
 
 	gidsChannel := make(chan func(ctx context.Context, proc *process.Process) ([]uint32, error))
@@ -188,6 +214,15 @@ func generateProcess(proc *process.Process) Process {
 		pgid = pgidOut
 	}
 
+	parentChannel := make(chan func(ctx context.Context, proc *process.Process) (*process.Process, error))
+	go ProcessParent(parentChannel)
+	parentOut, err := (<-parentChannel)(ctx, proc)
+	if err != nil {
+		parentProcess = Process{}
+	} else {
+		parentProcess = generateProcess(parentOut)
+	}
+
 	ppidChannel := make(chan func(ctx context.Context, proc *process.Process) (int32, error))
 	go ProcessPPID(ppidChannel)
 	ppidOut, err := (<-ppidChannel)(ctx, proc)
@@ -196,6 +231,16 @@ func generateProcess(proc *process.Process) Process {
 	} else {
 		ppid = ppidOut
 	}
+
+	// Expensive
+	// statusChannel := make(chan func(ctx context.Context, proc *process.Process) ([]string, error))
+	// go ProcessStatus(statusChannel)
+	// statusOut, err := (<-statusChannel)(ctx, proc)
+	// if err != nil {
+	// 	status = []string{}
+	// } else {
+	// 	status = statusOut
+	// }
 
 	usernameChannel := make(chan func(ctx context.Context, proc *process.Process) (string, error))
 	go ProcessUsername(usernameChannel)
@@ -231,9 +276,11 @@ func generateProcess(proc *process.Process) Process {
 		Child:         -1,
 		Children:      &[]Process{},
 		Command:       command,
+		Connections:   []net.ConnectionStat{},
 		CPUPercent:    util.RoundFloat(cpuPercent, 2),
 		CPUTimes:      cpuTimes,
 		CreateTime:    createTime,
+		Environment:   environment,
 		GIDs:          gids,
 		Groups:        groups,
 		MemoryInfo:    memoryInfo,
@@ -242,6 +289,7 @@ func generateProcess(proc *process.Process) Process {
 		NumThreads:    numThreads,
 		OpenFiles:     openFiles,
 		Parent:        -1,
+		ParentProcess: &parentProcess,
 		PGID:          int32(pgid),
 		PID:           pid,
 		PPID:          ppid,
