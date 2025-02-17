@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func GetPersistentFlags(cmd *cobra.Command, colorSupport bool, colorCount int) {
+func GetPersistentFlags(cmd *cobra.Command, colorSupport bool, colorCount int, username string) {
 	cmd.PersistentFlags().BoolVarP(&flagArguments, "arguments", "a", false, "show command line arguments")
 	cmd.PersistentFlags().BoolVarP(&flagIBM850, "ibm-850", "i", false, "use IBM-850 line drawing characters")
 	cmd.PersistentFlags().BoolVarP(&flagUTF8, "utf-8", "u", false, "use UTF-8 (Unicode) line drawing characters")
@@ -34,6 +34,9 @@ func GetPersistentFlags(cmd *cobra.Command, colorSupport bool, colorCount int) {
 			cmd.PersistentFlags().BoolVarP(&flagColorize, "colorize", "", false, gorainbow.Rainbow("add some beautiful color to the pstree output; cannot be used with --color-attr or --rainbow"))
 			cmd.PersistentFlags().BoolVarP(&flagRainbow, "rainbow", "", false, "please don't; cannot be used with --color or --color-attr")
 		}
+	}
+	if username == "gdanko" || username == "gary.danko" {
+		cmd.PersistentFlags().BoolVarP(&flagDebug, "debug", "d", false, "show debugging data")
 	}
 	cmd.PersistentFlags().BoolVarP(&flagVersion, "version", "V", false, "display version information")
 }

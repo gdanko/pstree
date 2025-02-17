@@ -2,6 +2,7 @@ package pstree
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -137,7 +138,7 @@ func colorRed(text *string) {
 	*text = coloredText
 }
 
-func PrintTree(processes []Process, me int, head string, screenWidth int, currentLevel int, displayOptions DisplayOptions) {
+func PrintTree(logger *slog.Logger, processes []Process, me int, head string, screenWidth int, currentLevel int, displayOptions DisplayOptions) {
 	var (
 		args        string = ""
 		C           TreeChars
@@ -305,7 +306,7 @@ func PrintTree(processes []Process, me int, head string, screenWidth int, curren
 	childme := processes[me].Child
 	for childme != -1 {
 		nextChild := processes[childme].Sister
-		PrintTree(processes, childme, newHead, screenWidth, currentLevel, displayOptions)
+		PrintTree(logger, processes, childme, newHead, screenWidth, currentLevel, displayOptions)
 		childme = nextChild
 	}
 }

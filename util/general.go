@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"fmt"
+
 	"math"
 	"os/exec"
 	"os/user"
@@ -189,4 +190,12 @@ func StoI(s string) int {
 
 func GetUnixTimestamp() int64 {
 	return time.Now().Unix()
+}
+
+func DetermineUsername() string {
+	username, err := user.Current()
+	if err != nil {
+		return ""
+	}
+	return username.Username
 }

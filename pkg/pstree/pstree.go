@@ -3,6 +3,7 @@ package pstree
 import (
 	"context"
 	"log"
+	"log/slog"
 	"sort"
 	"strings"
 	"time"
@@ -300,7 +301,7 @@ func generateProcess(proc *process.Process) Process {
 	}
 }
 
-func markParents(processes *[]Process, me int) {
+func markParents(logger *slog.Logger, processes *[]Process, me int) {
 	parent := (*processes)[me].Parent
 	for parent != -1 {
 		(*processes)[parent].Print = true
@@ -308,17 +309,17 @@ func markParents(processes *[]Process, me int) {
 	}
 }
 
-func markChildren(processes *[]Process, me int) {
+func markChildren(logger *slog.Logger, processes *[]Process, me int) {
 	var child int
 	(*processes)[me].Print = true
 	child = (*processes)[me].Child
 	for child != -1 {
-		markChildren(processes, child)
+		markChildren(logger, processes, child)
 		child = (*processes)[child].Sister
 	}
 }
 
-func GetPIDIndex(processes []Process, pid int32) int {
+func GetPIDIndex(logger *slog.Logger, processes []Process, pid int32) int {
 	for i := range processes {
 		if processes[i].PID == pid {
 			return i
@@ -327,7 +328,7 @@ func GetPIDIndex(processes []Process, pid int32) int {
 	return -1
 }
 
-func GetProcesses(processes *[]Process) {
+func GetProcesses(logger *slog.Logger, processes *[]Process) {
 	var (
 		err      error
 		sorted   []*process.Process
@@ -345,9 +346,9 @@ func GetProcesses(processes *[]Process) {
 	}
 }
 
-func MakeTree(processes *[]Process) {
+func MakeTree(logger *slog.Logger, processes *[]Process) {
 	for me := range *processes {
-		parent := GetPIDIndex(*processes, (*processes)[me].PPID)
+		parent := GetPIDIndex(logger, *processes, (*processes)[me].PPID)
 		if parent != me && parent != -1 { // Ensure it's not self-referential
 			(*processes)[me].Parent = parent
 			if (*processes)[parent].Child == -1 {
@@ -363,7 +364,7 @@ func MakeTree(processes *[]Process) {
 	}
 }
 
-func MarkProcs(processes *[]Process, flagContains string, flagUsername string, flagExcludeRoot bool, flagPid int32) {
+func MarkProcs(logger *slog.Logger, processes *[]Process, flagContains string, flagUsername string, flagExcludeRoot bool, flagPid int32) {
 	var (
 		me      int
 		myPid   int32
@@ -381,14 +382,14 @@ func MarkProcs(processes *[]Process, flagContains string, flagUsername string, f
 				flagExcludeRoot && (*processes)[me].Username != "root" ||
 				(*processes)[me].PID == flagPid ||
 				(flagContains != "" && strings.Contains((*processes)[me].Command, flagContains) && ((*processes)[me].PID != myPid)) {
-				markParents(processes, me)
-				markChildren(processes, me)
+				markParents(logger, processes, me)
+				markChildren(logger, processes, me)
 			}
 		}
 	}
 }
 
-func DropProcs(processes *[]Process) {
+func DropProcs(logger *slog.Logger, processes *[]Process) {
 	for me := range *processes {
 		if (*processes)[me].Print {
 			var child, sister int

@@ -3,11 +3,14 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 
+	"github.com/gdanko/pstree/pkg/logger"
 	"github.com/gdanko/pstree/pkg/pstree"
 	"github.com/gdanko/pstree/util"
+	"github.com/kr/pretty"
 	"github.com/shirou/gopsutil/v4/mem"
 	"github.com/spf13/cobra"
 )
@@ -25,6 +28,7 @@ var (
 	flagColorize          bool
 	flagContains          string
 	flagCpu               bool
+	flagDebug             bool
 	flagExcludeRoot       bool
 	flagGraphicsMode      int
 	flagIBM850            bool
@@ -47,9 +51,10 @@ var (
 	screenWidth           int
 	startingPidIndex      int
 	usageTemplate         string
+	username              string
 	validAttributes       []string = []string{"age", "cpu", "mem"}
 	validAttributesString string   = strings.Join(validAttributes, ", ")
-	version               string   = "0.5.7"
+	version               string   = "0.5.8"
 	versionString         string
 	rootCmd               = &cobra.Command{
 		Use:    "pstree",
@@ -65,6 +70,7 @@ func Execute() error {
 }
 
 func init() {
+	username = util.DetermineUsername()
 	colorSupport, colorCount = util.HasColorSupport()
 	if colorSupport {
 		colorizeString = " [--colorize]"
@@ -84,7 +90,7 @@ Display a tree of processes.
 Process group leaders are marked with '='.
 `, colorString, colorizeString, rainbowString)
 
-	GetPersistentFlags(rootCmd, colorSupport, colorCount)
+	GetPersistentFlags(rootCmd, colorSupport, colorCount, username)
 	rootCmd.SetUsageTemplate(usageTemplate)
 }
 
@@ -92,6 +98,11 @@ func pstreePreRunCmd(cmd *cobra.Command, args []string) {
 }
 
 func pstreeRunCmd(cmd *cobra.Command, args []string) error {
+	if flagDebug {
+		logger.Init(slog.LevelDebug)
+	} else {
+		logger.Init(slog.LevelInfo)
+	}
 	installedMemory, _ = util.GetTotalMemory()
 
 	if flagUsername != "" && flagExcludeRoot {
@@ -126,13 +137,13 @@ For more information about these matters, see the files named COPYING.`,
 	}
 
 	screenWidth = util.GetScreenWidth()
-	pstree.GetProcesses(&processes)
-	pstree.MakeTree(&processes)
-	pstree.MarkProcs(&processes, flagContains, flagUsername, flagExcludeRoot, flagPid)
-	pstree.DropProcs(&processes)
+	pstree.GetProcesses(logger.Logger, &processes)
+	pstree.MakeTree(logger.Logger, &processes)
+	pstree.MarkProcs(logger.Logger, &processes, flagContains, flagUsername, flagExcludeRoot, flagPid)
+	pstree.DropProcs(logger.Logger, &processes)
 
 	if flagPid > 1 {
-		startingPidIndex = pstree.GetPIDIndex(processes, flagPid)
+		startingPidIndex = pstree.GetPIDIndex(logger.Logger, processes, flagPid)
 		if startingPidIndex == -1 {
 			fmt.Printf("PID %d does not exist.\n", flagPid)
 			os.Exit(1)
@@ -177,7 +188,12 @@ For more information about these matters, see the files named COPYING.`,
 		VT100Graphics:   flagVT100,
 		WideDisplay:     flagWide,
 	}
-	pstree.PrintTree(processes, startingPidIndex, "", screenWidth, currentLevel, displayOptions)
+
+	if flagDebug {
+		pretty.Println(processes)
+	} else {
+		pstree.PrintTree(logger.Logger, processes, startingPidIndex, "", screenWidth, currentLevel, displayOptions)
+	}
 
 	return nil
 }
