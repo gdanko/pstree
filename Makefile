@@ -1,7 +1,7 @@
 GOPATH := $(shell go env GOPATH)
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
-pstree_VERSION := "0.5.10"
+PSTREE_VERSION := 0.5.11
 
 GOOS ?= $(shell uname | tr '[:upper:]' '[:lower:]')
 GOARCH ?=$(shell arch)
@@ -15,7 +15,7 @@ mod-tidy:
 	go mod tidy
 
 .PHONY: build OS ARCH
-build: guard-pstree_VERSION mod-tidy clean
+build: guard-PSTREE_VERSION mod-tidy clean
 	@echo "================================================="
 	@echo "Building pstree"
 	@echo "=================================================\n"
@@ -25,7 +25,7 @@ build: guard-pstree_VERSION mod-tidy clean
 	fi
 	GOOS=${GOOS} GOARCH=${GOARCH} go build -o "bin/pstree"
 	sleep 2
-	tar -czvf "pstree_${pstree_VERSION}_${GOOS}_${GOARCH}.tgz" bin; \
+	tar -czvf "pstree_${PSTREE_VERSION}_${GOOS}_${GOARCH}.tgz" bin; \
 
 .PHONY: clean
 clean:
