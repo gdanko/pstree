@@ -2,6 +2,8 @@ package pstree
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 	"log/slog"
 	"sort"
@@ -408,4 +410,103 @@ func DropProcs(logger *slog.Logger, processes *[]Process) {
 			(*processes)[me].Sister = sister
 		}
 	}
+}
+
+func MarkdMeAndParent(logger *slog.Logger, processes []Process, subset *[]Process, pid int32) {
+
+}
+
+func MarkProcs2(logger *slog.Logger, processes []Process, processesSubset *[]Process, flagContains string, flagUsername string, flagExcludeRoot bool, flagPid int32) {
+	var (
+		me      int
+		myPid   int32
+		showAll bool = false
+	)
+
+	if flagContains == "" && flagUsername == "" && !flagExcludeRoot {
+		showAll = true
+	}
+	for me = range *processesSubset {
+		if showAll {
+			(*processesSubset)[me].Print = true
+		} else {
+			if (*processesSubset)[me].Username == flagUsername ||
+				flagExcludeRoot && (*processesSubset)[me].Username != "root" ||
+				(*processesSubset)[me].PID == flagPid ||
+				(flagContains != "" && strings.Contains((*processesSubset)[me].Command, flagContains) && ((*processesSubset)[me].PID != myPid)) {
+				markParents(logger, processesSubset, me)
+				markChildren(logger, processesSubset, me)
+			} else {
+				children := (*processesSubset)[me].Children
+				if len(*children) > 0 {
+					MarkProcs2(logger, processes, processesSubset, flagContains, flagUsername, flagExcludeRoot, flagPid)
+				}
+			}
+		}
+	}
+}
+
+func GetProcesses2(logger *slog.Logger, processes *[]Process) {
+	tree := make(map[int][]int)
+	unsorted, err := process.Processes()
+	if err != nil {
+		fmt.Println("Error fetching processes:", err)
+		return
+	}
+	sorted := sortByPid(unsorted)
+
+	for _, p := range sorted {
+		ppid, err := p.Ppid()
+		if err == nil {
+			tree[int(ppid)] = append(tree[int(ppid)], int(p.Pid))
+		}
+	}
+
+	// On systems supporting PID 0, ensure it doesn't list itself as a child
+	if children, exists := tree[0]; exists {
+		for i, pid := range children {
+			if pid == 0 {
+				tree[0] = append(children[:i], children[i+1:]...)
+				break
+			}
+		}
+	}
+
+	keys := make([]int, 0, len(tree))
+	for key := range tree {
+		keys = append(keys, key)
+	}
+	sort.Ints(keys)
+
+	visited := make(map[int]bool)
+	for _, pid := range keys {
+		if pid > 0 {
+			TraverseTree(logger, processes, sorted, tree, pid, visited)
+		}
+	}
+}
+
+func TraverseTree(logger *slog.Logger, processes *[]Process, sorted []*process.Process, tree map[int][]int, pid int, visited map[int]bool) {
+	if visited[pid] {
+		return
+	}
+	newProc, err := FindByPid(logger, sorted, int32(pid))
+	if err != nil {
+		panic(err)
+	}
+	*processes = append(*processes, newProc)
+	visited[pid] = true
+
+	for _, neighbor := range tree[pid] {
+		TraverseTree(logger, newProc.Children, sorted, tree, neighbor, visited)
+	}
+}
+
+func FindByPid(logger *slog.Logger, processes []*process.Process, pid int32) (Process, error) {
+	for _, proc := range processes {
+		if proc.Pid == pid {
+			return generateProcess(proc), nil
+		}
+	}
+	return Process{}, errors.New("couldn't find process")
 }

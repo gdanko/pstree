@@ -137,10 +137,15 @@ For more information about these matters, see the files named COPYING.`,
 	}
 
 	screenWidth = util.GetScreenWidth()
-	pstree.GetProcesses(logger.Logger, &processes)
-	pstree.MakeTree(logger.Logger, &processes)
-	pstree.MarkProcs(logger.Logger, &processes, flagContains, flagUsername, flagExcludeRoot, flagPid)
-	pstree.DropProcs(logger.Logger, &processes)
+	// pstree.GetProcesses(logger.Logger, &processes)
+	// pstree.MakeTree(logger.Logger, &processes)
+	// pstree.MarkProcs(logger.Logger, &processes, flagContains, flagUsername, flagExcludeRoot, flagPid)
+	// pstree.DropProcs(logger.Logger, &processes)
+	pstree.GetProcesses2(logger.Logger, &processes)
+	// pstree.MarkProcs2(logger.Logger, processes, &processes, flagContains, flagUsername, flagExcludeRoot, flagPid)
+	pstree.MarkdMeAndParent(logger.Logger, processes, &processes, 42034)
+	pretty.Println(processes)
+	os.Exit(0)
 
 	if flagPid > 1 {
 		startingPidIndex = pstree.GetPIDIndex(logger.Logger, processes, flagPid)
