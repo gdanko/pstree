@@ -5,6 +5,7 @@ import (
 	"syscall"
 
 	"github.com/shirou/gopsutil/v4/cpu"
+	"github.com/shirou/gopsutil/v4/net"
 	"github.com/shirou/gopsutil/v4/process"
 )
 
@@ -19,6 +20,13 @@ func ProcessCommandName(c chan func(ctx context.Context, proc *process.Process) 
 	c <- (func(ctx context.Context, proc *process.Process) (command string, err error) {
 		command, err = proc.ExeWithContext(ctx)
 		return command, err
+	})
+}
+
+func ProcessConnections(c chan func(ctx context.Context, proc *process.Process) (connections []net.ConnectionStat, err error)) {
+	c <- (func(ctx context.Context, proc *process.Process) (connections []net.ConnectionStat, err error) {
+		connections, err = proc.ConnectionsWithContext(ctx)
+		return connections, err
 	})
 }
 
@@ -40,6 +48,13 @@ func ProcessCreateTime(c chan func(ctx context.Context, proc *process.Process) (
 	c <- (func(ctx context.Context, proc *process.Process) (createTime int64, err error) {
 		createTime, err = proc.CreateTimeWithContext(ctx)
 		return createTime / 1000, err
+	})
+}
+
+func ProcessEnvironment(c chan func(ctx context.Context, proc *process.Process) (environment []string, err error)) {
+	c <- (func(ctx context.Context, proc *process.Process) (environment []string, err error) {
+		environment, err = proc.EnvironWithContext(ctx)
+		return environment, err
 	})
 }
 
@@ -68,6 +83,13 @@ func ProcessMemoryPercent(c chan func(ctx context.Context, proc *process.Process
 	c <- (func(ctx context.Context, proc *process.Process) (memoryPercent float32, err error) {
 		memoryPercent, err = proc.MemoryPercentWithContext(ctx)
 		return memoryPercent, err
+	})
+}
+
+func ProcessParent(c chan func(ctx context.Context, proc *process.Process) (parent *process.Process, err error)) {
+	c <- (func(ctx context.Context, proc *process.Process) (parent *process.Process, err error) {
+		parent, err = proc.ParentWithContext(ctx)
+		return parent, err
 	})
 }
 
@@ -103,6 +125,13 @@ func ProcessOpenFiles(c chan func(ctx context.Context, proc *process.Process) (o
 	c <- (func(ctx context.Context, proc *process.Process) (openFiles []process.OpenFilesStat, err error) {
 		openFiles, err = proc.OpenFilesWithContext(ctx)
 		return openFiles, err
+	})
+}
+
+func ProcessStatus(c chan func(ctx context.Context, proc *process.Process) (status []string, err error)) {
+	c <- (func(ctx context.Context, proc *process.Process) (status []string, err error) {
+		status, err = proc.StatusWithContext(ctx)
+		return status, err
 	})
 }
 
