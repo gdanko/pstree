@@ -143,6 +143,8 @@ func PrintTree(logger *slog.Logger, processes []Process, me int, head string, sc
 		args        string = ""
 		C           TreeChars
 		cpuPercent  string
+		flag        *string
+		flags       []*string
 		line        string
 		linePrefix  string
 		memoryUsage string
@@ -233,8 +235,9 @@ func PrintTree(logger *slog.Logger, processes []Process, me int, head string, sc
 		processes[me].Command = util.ColorBlue(processes[me].Command)
 		args = util.ColorRed(args)
 	} else if displayOptions.ColorAttr != "" {
+		flags = []*string{&cpuPercent, &memoryUsage, &threads, &processes[me].Username, &pidString, &pgidString, &processes[me].Command, &args}
 		if displayOptions.ColorAttr == "age" {
-			for _, flag := range []*string{&cpuPercent, &memoryUsage, &threads, &processes[me].Username, &pidString, &processes[me].Command, &args} {
+			for _, flag = range flags {
 				if processes[me].Age < 60 {
 					colorGreen(flag)
 				} else if processes[me].Age > 60 && processes[me].Age < 3600 {
@@ -245,7 +248,7 @@ func PrintTree(logger *slog.Logger, processes []Process, me int, head string, sc
 			}
 		} else if displayOptions.ColorAttr == "cpu" {
 			displayOptions.ShowCpuPercent = true
-			for _, flag := range []*string{&cpuPercent, &memoryUsage, &threads, &processes[me].Username, &pidString, &processes[me].Command, &args} {
+			for _, flag = range flags {
 				if processes[me].CPUPercent < 5 {
 					colorGreen(flag)
 				} else if processes[me].CPUPercent > 5 && processes[me].CPUPercent < 15 {
@@ -256,7 +259,7 @@ func PrintTree(logger *slog.Logger, processes []Process, me int, head string, sc
 			}
 		} else if displayOptions.ColorAttr == "mem" {
 			displayOptions.ShowMemoryUsage = true
-			for _, flag := range []*string{&cpuPercent, &memoryUsage, &threads, &processes[me].Username, &pidString, &processes[me].Command, &args} {
+			for _, flag = range flags {
 				percent := (processes[me].MemoryInfo.RSS / displayOptions.InstalledMemory) * 100
 				if percent < 10 {
 					colorGreen(flag)
