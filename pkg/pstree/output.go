@@ -24,6 +24,7 @@ type DisplayOptions struct {
 	ShowNumThreads  bool
 	ShowPGIDs       bool
 	ShowPIDs        bool
+	ShowProcessAge  bool
 	UTF8Graphics    bool
 	VT100Graphics   bool
 	WideDisplay     bool
@@ -85,42 +86,6 @@ var TreeStyles = map[string]TreeChars{
 		// PGL:  "●",
 		PGL: "=",
 	},
-	// "pc850-unused": {
-	// 	S2:   "─",
-	// 	P:    "├",
-	// 	PGL:  "¤",
-	// 	NPGL: "─",
-	// 	BarC: "│",
-	// 	Bar:  "│",
-	// 	BarL: "└",
-	// 	SG:   "",
-	// 	EG:   "",
-	// 	Init: "",
-	// },
-	// "utf8-unused": {
-	// 	S2:   "──",
-	// 	P:    "├─",
-	// 	PGL:  "●",
-	// 	NPGL: "─",
-	// 	BarC: "│",
-	// 	Bar:  "│",
-	// 	BarL: "└─",
-	// 	SG:   "",
-	// 	EG:   "",
-	// 	Init: "",
-	// },
-	// "vt100-unused": {
-	// 	S2:   "qq",
-	// 	P:    "qw",
-	// 	PGL:  "`",
-	// 	NPGL: "q",
-	// 	BarC: "t",
-	// 	Bar:  "x",
-	// 	BarL: "m",
-	// 	SG:   "\x0E",
-	// 	EG:   "\x0F",
-	// 	Init: "\033(B\033)0",
-	// },
 }
 
 func colorGreen(text *string) {
@@ -140,6 +105,7 @@ func colorRed(text *string) {
 
 func PrintTree(logger *slog.Logger, processes []Process, me int, head string, screenWidth int, currentLevel int, displayOptions DisplayOptions) {
 	var (
+		ageString   string = ""
 		args        string = ""
 		C           TreeChars
 		cpuPercent  string
@@ -199,6 +165,19 @@ func PrintTree(logger *slog.Logger, processes []Process, me int, head string, sc
 
 	linePrefix = fmt.Sprintf("%s%s%s%s%s%s", C.SG, head, part1, part2, part3, C.EG)
 
+	if displayOptions.ShowProcessAge {
+		duration := util.FindDuration(processes[me].Age)
+		ageSlice := []string{}
+		ageSlice = append(ageSlice, fmt.Sprintf("%02d", duration.Days))
+		ageSlice = append(ageSlice, fmt.Sprintf("%02d", duration.Hours))
+		ageSlice = append(ageSlice, fmt.Sprintf("%02d", duration.Minutes))
+		ageSlice = append(ageSlice, fmt.Sprintf("%02d", duration.Seconds))
+		ageString = fmt.Sprintf(
+			" (%s)",
+			strings.Join(ageSlice, ":"),
+		)
+	}
+
 	if displayOptions.ShowPIDs {
 		pidString = fmt.Sprintf(" (%05s)", util.Int32toStr(processes[me].PID))
 	}
@@ -233,11 +212,13 @@ func PrintTree(logger *slog.Logger, processes []Process, me int, head string, sc
 		processes[me].Username = util.ColorCyan(processes[me].Username)
 		pgidString = util.ColorBoldBlue(pgidString)
 		pidString = util.ColorPurple(pidString)
+		ageString = util.ColorBoldOrange(ageString)
 		processes[me].Command = util.ColorBlue(processes[me].Command)
 		args = util.ColorRed(args)
 	} else if displayOptions.ColorAttr != "" {
-		flags = []*string{&cpuPercent, &memoryUsage, &threads, &processes[me].Username, &pidString, &pgidString, &processes[me].Command, &args}
+		flags = []*string{&cpuPercent, &memoryUsage, &threads, &processes[me].Username, &pidString, &pgidString, &ageString, &processes[me].Command, &args}
 		if displayOptions.ColorAttr == "age" {
+			displayOptions.ShowProcessAge = true
 			for _, flag = range flags {
 				if processes[me].Age < 60 {
 					colorGreen(flag)
@@ -273,7 +254,7 @@ func PrintTree(logger *slog.Logger, processes []Process, me int, head string, sc
 		}
 	}
 
-	line = fmt.Sprintf("%s%s%s%s%s%s %s %s %s", linePrefix, pidString, pgidString, cpuPercent, memoryUsage, threads, processes[me].Username, processes[me].Command, args)
+	line = fmt.Sprintf("%s%s%s%s%s%s%s %s %s %s", linePrefix, pidString, pgidString, ageString, cpuPercent, memoryUsage, threads, processes[me].Username, processes[me].Command, args)
 
 	if !displayOptions.WideDisplay {
 		if len(line) > screenWidth {

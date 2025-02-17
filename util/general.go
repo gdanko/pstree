@@ -16,6 +16,13 @@ import (
 	terminal "github.com/wayneashleyberry/terminal-dimensions"
 )
 
+type Duration struct {
+	Days    int64
+	Hours   int64
+	Minutes int64
+	Seconds int64
+}
+
 func ExecutePipeline(commandStr string) (int, string, string, error) {
 	commands := strings.Split(commandStr, "|")
 	var cmds []*exec.Cmd
@@ -198,4 +205,17 @@ func DetermineUsername() string {
 		return ""
 	}
 	return username.Username
+}
+
+func FindDuration(seconds int64) (duration Duration) {
+	days := int64(seconds / 86400)
+	hours := int64(((seconds - (days * 86400)) / 3600))
+	minutes := int64(((seconds - days*86400 - hours*3600) / 60))
+	secs := int64((seconds - (days * 86400) - (hours * 3600) - (minutes * 60)))
+	return Duration{
+		Days:    days,
+		Hours:   hours,
+		Minutes: minutes,
+		Seconds: secs,
+	}
 }

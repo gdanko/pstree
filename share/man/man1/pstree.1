@@ -4,6 +4,7 @@
 pstree \- display a tree of processes
 .SH SYNOPSIS
 .B pstree
+[\fB--age\fR]
 [\fB--all\fR]
 [\fB-a\fR | \fB--arguments\fR]
 [\fB-C\fR | \fB--color\fR \fIattr\fR]
@@ -30,8 +31,11 @@ pstree \- display a tree of processes
 shows running processes as a tree. The tree is rooted at launchd. If --pid is specified, the tree will be rooted at the specified PID. If --user is specified, all process trees rooted at processes owned by that user are shown.
 .SH OPTIONS
 .TP
+.B \--age
+Show the age of each process in the list using the format (dd:hh:mm:ss).
+.TP
 .B \--all
-Equivalent to -a -c -g -m -p -t
+Equivalent to -a --age -c -g -m -p -t
 .TP
 .B \-a, \--arguments
 Show command line arguments after the process name.

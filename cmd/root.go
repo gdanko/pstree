@@ -23,6 +23,7 @@ var (
 	currentLevel          int = 0
 	displayOptions        pstree.DisplayOptions
 	errorMessage          string
+	flagAge               bool
 	flagArguments         bool
 	flagColor             string
 	flagColorize          bool
@@ -54,7 +55,7 @@ var (
 	username              string
 	validAttributes       []string = []string{"age", "cpu", "mem"}
 	validAttributesString string   = strings.Join(validAttributes, ", ")
-	version               string   = "0.5.10"
+	version               string   = "0.5.11"
 	versionString         string
 	rootCmd               = &cobra.Command{
 		Use:    "pstree",
@@ -79,7 +80,7 @@ func init() {
 
 	}
 	usageTemplate = fmt.Sprintf(
-		`Usage: pstree [-acUimgptuvw] [-all]%s %s
+		`Usage: pstree [-acUimgptuvw] [--age] [-all]%s %s
           [-s, --contains <pattern>] [-l, --level <level>]
           [--pid <pid>]%s [--user <user>]
    or: pstree -V
@@ -184,6 +185,7 @@ For more information about these matters, see the files named COPYING.`,
 		ShowNumThreads:  flagThreads,
 		ShowPGIDs:       flagShowPgids,
 		ShowPIDs:        flagShowPids,
+		ShowProcessAge:  flagAge,
 		UTF8Graphics:    flagUTF8,
 		VT100Graphics:   flagVT100,
 		WideDisplay:     flagWide,
