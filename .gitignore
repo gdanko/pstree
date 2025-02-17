@@ -32,3 +32,6 @@ bin
 
 # .vscode directory
 .vscode
+
+# .bak files
+*.bak
