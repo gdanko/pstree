@@ -19,27 +19,36 @@ It uses [gopsutil](https://github.com/shirou/gopsutil) for gathering process inf
 ## Usage
 ```
 $ pstree --help
-Usage: pstree [-acUmntw] [--color] [-s, --contains <str>] [-l, --level <int>]
-              [-g, --mode <int>] [-p, --pid <int>] [--rainbow] [-u, --user <str>]
+Usage: pstree [-acUimgptuvw] [--age] [-all] [-C, --color <attr>]  [--colorize]
+          [-s, --contains <pattern>] [-l, --level <level>]
+          [--pid <pid>] [--rainbow] [--user <user>]
    or: pstree -V
 
 Display a tree of processes.
 
+      --age               show the age of the process using the format (dd:hh:mm:ss)
+      --all               equivalent to -a --age -c -g -m -p -t
   -a, --arguments         show command line arguments
-      --color             add some beautiful color to the pstree output
-  -s, --contains string   show only branches containing process with <string> in commandline
+  -C, --color string      color the process name by given attribute; valid options are: age, cpu, mem;
+                          cannot be used with --color or --rainbow
+      --colorize          add some beautiful color to the pstree output; cannot be used with --color-attr or --rainbow
+  -s, --contains string   show only branches containing process with <pattern> in commandline
   -c, --cpu               show CPU utilization percentage with each process, e.g., (c: 0.00%)
+  -d, --debug             show debugging data
   -U, --exclude-root      don't show branches containing only root processes; cannot be used with --user
   -h, --help              help for pstree
-  -l, --level int         print tree to <depth> level deep
+  -i, --ibm-850           use IBM-850 line drawing characters
+  -l, --level int         print tree to <level> level deep
   -m, --memory            show the memory usage with each process, e.g., (m: x.y MiB)
-  -g, --mode int          use graphics chars for tree. n=1: IBM-850, n=2: VT100, n=3: UTF-8
-  -n, --no-pids           do not show PIDs
-  -p, --pid int32         show only branches containing process <pid>
-      --rainbow           please don't
+  -g, --pgid              show process group ids
+      --pid int32         show only branches containing process <pid>
+      --rainbow           please don't; cannot be used with --color or --color-attr
+  -p, --show-pids         show process ids
   -t, --threads           show the number of threads with each process, e.g., (t: xx)
-  -u, --user string       show only branches containing processes of <user>; cannot be used with --exclude-root
+      --user string       show only branches containing processes of <user>; cannot be used with --exclude-root
+  -u, --utf-8             use UTF-8 (Unicode) line drawing characters
   -V, --version           display version information
+  -v, --vt-100            use VT-100 line drawing characters
   -w, --wide              wide output, not truncated to window width
 
 Process group leaders are marked with '='.

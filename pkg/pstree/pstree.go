@@ -2,6 +2,7 @@ package pstree
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"log/slog"
 	"sort"
@@ -49,6 +50,33 @@ func sortByPid(procs []*process.Process) []*process.Process {
 		return procs[i].Pid < procs[j].Pid // Ascending order
 	})
 	return procs
+}
+
+func getPidFromIndex(processes *[]Process, index int) (pid int32) {
+	for i := range *processes {
+		if i == index {
+			return (*processes)[i].PID
+		}
+	}
+	return int32(-1)
+}
+
+func FindPrintable(processes *[]Process) (printable []Process) {
+	for i := range *processes {
+		if (*processes)[i].Print {
+			printable = append(printable, (*processes)[i])
+		}
+	}
+	return printable
+}
+
+func GetPIDIndex(logger *slog.Logger, processes []Process, pid int32) int {
+	for i := range processes {
+		if processes[i].PID == pid {
+			return i
+		}
+	}
+	return -1
 }
 
 func generateProcess(proc *process.Process) Process {
@@ -301,30 +329,26 @@ func generateProcess(proc *process.Process) Process {
 }
 
 func markParents(logger *slog.Logger, processes *[]Process, me int) {
+	logger.Debug(fmt.Sprintf("Entering markParents with with me=%d", getPidFromIndex(processes, me)))
 	parent := (*processes)[me].Parent
+	logger.Debug(fmt.Sprintf("Marking %d as a parent of %d", getPidFromIndex(processes, parent), getPidFromIndex(processes, me)))
 	for parent != -1 {
+		logger.Debug(fmt.Sprintf("Marking pid %d's Print attribute as true", getPidFromIndex(processes, parent)))
 		(*processes)[parent].Print = true
 		parent = (*processes)[parent].Parent
 	}
 }
 
 func markChildren(logger *slog.Logger, processes *[]Process, me int) {
+	logger.Debug(fmt.Sprintf("Entering markChildren with with me=%d", getPidFromIndex(processes, me)))
 	var child int
+	logger.Debug(fmt.Sprintf("Marking pid %d's Print attribute as true", getPidFromIndex(processes, me)))
 	(*processes)[me].Print = true
 	child = (*processes)[me].Child
 	for child != -1 {
 		markChildren(logger, processes, child)
 		child = (*processes)[child].Sister
 	}
-}
-
-func GetPIDIndex(logger *slog.Logger, processes []Process, pid int32) int {
-	for i := range processes {
-		if processes[i].PID == pid {
-			return i
-		}
-	}
-	return -1
 }
 
 func GetProcesses(logger *slog.Logger, processes *[]Process) {
@@ -346,6 +370,7 @@ func GetProcesses(logger *slog.Logger, processes *[]Process) {
 }
 
 func MakeTree(logger *slog.Logger, processes *[]Process) {
+	logger.Debug("Entering MakeTree")
 	for me := range *processes {
 		parent := GetPIDIndex(logger, *processes, (*processes)[me].PPID)
 		if parent != me && parent != -1 { // Ensure it's not self-referential
@@ -364,31 +389,59 @@ func MakeTree(logger *slog.Logger, processes *[]Process) {
 }
 
 func MarkProcs(logger *slog.Logger, processes *[]Process, flagContains string, flagUsername string, flagExcludeRoot bool, flagPid int32) {
+	logger.Debug("Entering MakeProcs")
 	var (
 		me      int
 		myPid   int32
 		showAll bool = false
 	)
 
-	if flagContains == "" && flagUsername == "" && !flagExcludeRoot {
+	if flagContains == "" && flagUsername == "" && !flagExcludeRoot && flagPid < 1 {
 		showAll = true
 	}
 	for me = range *processes {
 		if showAll {
 			(*processes)[me].Print = true
 		} else {
-			if (*processes)[me].Username == flagUsername ||
-				flagExcludeRoot && (*processes)[me].Username != "root" ||
-				(*processes)[me].PID == flagPid ||
-				(flagContains != "" && strings.Contains((*processes)[me].Command, flagContains) && ((*processes)[me].PID != myPid)) {
+			if (*processes)[me].Username == flagUsername {
+				logger.Debug("flageUsername == process.Username")
+				markParents(logger, processes, me)
+				markChildren(logger, processes, me)
+			} else if (*processes)[me].PID == flagPid {
+				logger.Debug("flagPid == process.PID")
+				if (flagExcludeRoot && (*processes)[me].Username != "root") || (!flagExcludeRoot) {
+					logger.Debug("(flagExcludeRoot && process.Username != root) || !flagExcludeRoot")
+					markParents(logger, processes, me)
+					markChildren(logger, processes, me)
+				}
+			} else if flagContains != "" && strings.Contains((*processes)[me].Command, flagContains) && ((*processes)[me].PID != myPid) {
+				logger.Debug("flagContains is set && process.Command contains flagContains && process.PID != myPid")
+				if (flagExcludeRoot && (*processes)[me].Username != "root") || (!flagExcludeRoot) {
+					logger.Debug("(flagExcludeRoot && process.Username != root) || !flagExcludeRoot")
+					markParents(logger, processes, me)
+					markChildren(logger, processes, me)
+				}
+			} else if flagContains != "" && !strings.Contains((*processes)[me].Command, flagContains) && ((*processes)[me].PID != myPid) {
+				logger.Debug("flagContains is set && process.Command does not contain flagContains && process.PID != myPid")
+			} else if flagExcludeRoot && (*processes)[me].Username != "root" {
+				logger.Debug("flagExcludeRoot && process.Username != root")
 				markParents(logger, processes, me)
 				markChildren(logger, processes, me)
 			}
+			// }
+			// if (*processes)[me].Username == flagUsername ||
+			// 	flagExcludeRoot && (*processes)[me].Username != "root" ||
+			// 	(*processes)[me].PID == flagPid ||
+			// 	(flagContains != "" && strings.Contains((*processes)[me].Command, flagContains) && ((*processes)[me].PID != myPid)) {
+			// 	markParents(logger, flagExcludeRoot, processes, me)
+			// 	markChildren(logger, flagExcludeRoot, processes, me)
+			// }
 		}
 	}
 }
 
 func DropProcs(logger *slog.Logger, processes *[]Process) {
+	logger.Debug("Entering DropProcs")
 	for me := range *processes {
 		if (*processes)[me].Print {
 			var child, sister int
