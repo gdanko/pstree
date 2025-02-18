@@ -10,7 +10,6 @@ import (
 	"github.com/gdanko/pstree/pkg/logger"
 	"github.com/gdanko/pstree/pkg/pstree"
 	"github.com/gdanko/pstree/util"
-	"github.com/kr/pretty"
 	"github.com/shirou/gopsutil/v4/mem"
 	"github.com/spf13/cobra"
 )
@@ -50,12 +49,11 @@ var (
 	processes             []pstree.Process
 	rainbowString         string = ""
 	screenWidth           int
-	startingPidIndex      int
 	usageTemplate         string
 	username              string
 	validAttributes       []string = []string{"age", "cpu", "mem"}
 	validAttributesString string   = strings.Join(validAttributes, ", ")
-	version               string   = "0.5.11"
+	version               string   = "0.6.0"
 	versionString         string
 	rootCmd               = &cobra.Command{
 		Use:    "pstree",
@@ -76,7 +74,7 @@ func init() {
 	if colorSupport {
 		colorizeString = " [--colorize]"
 		rainbowString = " [--rainbow]"
-		colorString = "[-C, --color <attr>]"
+		colorString = " [-C, --color <attr>]"
 
 	}
 	usageTemplate = fmt.Sprintf(
@@ -106,8 +104,9 @@ func pstreeRunCmd(cmd *cobra.Command, args []string) error {
 	}
 	installedMemory, _ = util.GetTotalMemory()
 
-	if flagUsername != "" && flagExcludeRoot {
-		return errors.New("flags --user and --exclude-root are mutually exclusive")
+	if flagUsername == "root" && flagExcludeRoot {
+		fmt.Fprintln(os.Stdout, "why would you do that?")
+		os.Exit(1)
 	}
 
 	if (util.BtoI(flagColorize) + util.BtoI(flagRainbow) + util.StoI(flagColor)) > 1 {
@@ -142,14 +141,6 @@ For more information about these matters, see the files named COPYING.`,
 	pstree.MakeTree(logger.Logger, &processes)
 	pstree.MarkProcs(logger.Logger, &processes, flagContains, flagUsername, flagExcludeRoot, flagPid)
 	pstree.DropProcs(logger.Logger, &processes)
-
-	if flagPid > 1 {
-		startingPidIndex = pstree.GetPIDIndex(logger.Logger, processes, flagPid)
-		if startingPidIndex == -1 {
-			fmt.Printf("PID %d does not exist.\n", flagPid)
-			os.Exit(1)
-		}
-	}
 
 	if flagUsername != "" {
 		if !util.UserExists(flagUsername) {
@@ -190,12 +181,7 @@ For more information about these matters, see the files named COPYING.`,
 		VT100Graphics:   flagVT100,
 		WideDisplay:     flagWide,
 	}
-
-	if flagDebug {
-		pretty.Println(processes)
-	} else {
-		pstree.PrintTree(logger.Logger, processes, startingPidIndex, "", screenWidth, currentLevel, displayOptions)
-	}
+	pstree.PrintTree(logger.Logger, processes, 0, "", screenWidth, currentLevel, displayOptions)
 
 	return nil
 }
