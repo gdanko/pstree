@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-
-	"github.com/fatih/color"
 )
 
 var (
@@ -45,104 +43,99 @@ func TruncateANSI(text string, maxWidth int) string {
 	// Append reset code to prevent ANSI bleed
 	return result.String() + "\x1b[0m"
 }
-
-func ColorBlack(text string) string {
-	out := color.New(color.FgBlack).SprintFunc()
-	return out(text)
+func colorMyText(red, green, blue int, text *string) {
+	coloredText := fmt.Sprintf("\033[38;2;%d;%d;%dm%s\033[0m", red, green, blue, *text)
+	*text = coloredText
 }
 
-func ColorBoldBlack(text string) string {
-	out := color.New(color.FgBlack).Add(color.Bold).SprintFunc()
-	return out(text)
+func colorMyTextBold(red, green, blue int, text *string) {
+	coloredText := fmt.Sprintf("\033[1;38;2;%d;%d;%dm%s\033[0m", red, green, blue, *text)
+	*text = coloredText
 }
 
-func ColorBlue(text string) string {
-	out := color.New(color.FgBlue).SprintFunc()
-	return out(text)
+func ColorBlack(text *string) {
+	colorMyText(0, 0, 0, text)
 }
 
-func ColorBoldBlue(text string) string {
-	out := color.New(color.FgBlue).Add(color.Bold).SprintFunc()
-	return out(text)
+func ColorBoldBlack(text *string) {
+	colorMyTextBold(0, 0, 0, text)
 }
 
-func ColorCyan(text string) string {
-	out := color.New(color.FgCyan).SprintFunc()
-	return out(text)
+func ColorBlue(text *string) {
+	colorMyText(0, 0, 238, text)
 }
 
-func ColorBoldCyan(text string) string {
-	out := color.New(color.FgCyan).Add(color.Bold).SprintFunc()
-	return out(text)
+func ColorBoldBlue(text *string) {
+	colorMyTextBold(0, 0, 238, text)
 }
 
-func ColorGreen(text string) string {
-	out := color.New(color.FgGreen).SprintFunc()
-	return out(text)
+func ColorCyan(text *string) {
+	colorMyText(0, 205, 205, text)
 }
 
-func ColorBoldGreen(text string) string {
-	out := color.New(color.FgGreen).Add(color.Bold).SprintFunc()
-	return out(text)
+func ColorBoldCyan(text *string) {
+	colorMyTextBold(0, 205, 205, text)
 }
 
-func ColorOrange(text string) string {
-	out := color.RGB(255, 128, 0).SprintFunc()
-	return out(text)
+func ColorGreen(text *string) {
+	colorMyText(0, 205, 0, text)
 }
 
-func ColorBoldOrange(text string) string {
-	out := color.RGB(255, 128, 0).Add(color.Bold).SprintFunc()
-	return out(text)
+func ColorBoldGreen(text *string) {
+	colorMyTextBold(0, 205, 0, text)
 }
 
-func ColorPurple(text string) string {
-	out := color.New(color.FgMagenta).SprintFunc()
-	return out(text)
+func ColorOrange(text *string) {
+	colorMyText(255, 128, 0, text)
 }
 
-func ColorBoldPurple(text string) string {
-	out := color.New(color.FgMagenta).Add(color.Bold).SprintFunc()
-	return out(text)
+func ColorBoldOrange(text *string) {
+	colorMyTextBold(255, 128, 0, text)
 }
 
-func ColorRed(text string) string {
-	out := color.New(color.FgRed).SprintFunc()
-	return out(text)
+func ColorPurple(text *string) {
+	colorMyText(205, 0, 205, text)
 }
 
-func ColorBoldRed(text string) string {
-	out := color.New(color.FgRed).Add(color.Bold).SprintFunc()
-	return out(text)
+func ColorBoldPurple(text *string) {
+	colorMyTextBold(205, 0, 205, text)
 }
 
-func ColorWhite(text string) string {
-	out := color.New(color.FgWhite).SprintFunc()
-	return out(text)
+func ColorRed(text *string) {
+	colorMyText(205, 0, 0, text)
 }
 
-func ColorBoldWhite(text string) string {
-	out := color.New(color.FgWhite).Add(color.Bold).SprintFunc()
-	return out(text)
+func ColoBoldRed(text *string) {
+	colorMyTextBold(205, 0, 0, text)
 }
 
-func ColorYellow(text string) string {
-	out := color.New(color.FgYellow).SprintFunc()
-	return out(text)
+func ColorWhite(text *string) {
+	colorMyText(229, 229, 229, text)
 }
 
-func ColorBoldYellow(text string) string {
-	out := color.New(color.FgYellow).Add(color.Bold).SprintFunc()
-	return out(text)
+func ColorBoldWhite(text *string) {
+	colorMyTextBold(229, 229, 229, text)
+}
+
+func ColorYellow(text *string) {
+	colorMyText(205, 205, 0, text)
+}
+
+func ColorBoldYellow(text *string) {
+	colorMyTextBold(205, 205, 0, text)
 }
 
 func Color8() string {
-	return fmt.Sprintf(
-		"%s%s%s%s%s",
-		ColorRed("c"),
-		ColorYellow("o"),
-		ColorGreen("l"),
-		ColorBlue("o"),
-		ColorPurple("r"),
-	)
+	l1 := "c"
+	l2 := "o"
+	l3 := "l"
+	l4 := "o"
+	l5 := "r"
+	ColorRed(&l1)
+	ColorYellow(&l2)
+	ColorGreen(&l3)
+	ColorBlue(&l4)
+	ColorPurple((&l5))
+
+	return fmt.Sprintf("%s%s%s%s%s", l1, l2, l3, l4, l5)
 }
