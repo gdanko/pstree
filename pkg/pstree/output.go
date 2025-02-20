@@ -17,13 +17,13 @@ type DisplayOptions struct {
 	IBM850Graphics  bool
 	InstalledMemory uint64
 	MaxDepth        int
+	NoPids          bool
 	RainbowOutput   bool
 	ShowArguments   bool
 	ShowCpuPercent  bool
 	ShowMemoryUsage bool
 	ShowNumThreads  bool
 	ShowPGIDs       bool
-	ShowPIDs        bool
 	ShowProcessAge  bool
 	UTF8Graphics    bool
 	VT100Graphics   bool
@@ -163,12 +163,13 @@ func PrintTree(logger *slog.Logger, processes []Process, me int, head string, sc
 		)
 	}
 
-	if displayOptions.ShowPIDs {
-		pidString = fmt.Sprintf(" (%05s)", util.Int32toStr(processes[me].PID))
+	if !displayOptions.NoPids {
+		pidString = fmt.Sprintf(" %05s", util.Int32toStr(processes[me].PID))
+
 	}
 
 	if displayOptions.ShowPGIDs {
-		pgidString = fmt.Sprintf(" (%05s)", util.Int32toStr(processes[me].PGID))
+		pgidString = fmt.Sprintf(" %05s", util.Int32toStr(processes[me].PGID))
 	}
 
 	if displayOptions.ShowArguments {
@@ -178,15 +179,15 @@ func PrintTree(logger *slog.Logger, processes []Process, me int, head string, sc
 	}
 
 	if displayOptions.ShowCpuPercent {
-		cpuPercent = fmt.Sprintf(" (c: %.2f%%)", processes[me].CPUPercent)
+		cpuPercent = fmt.Sprintf(" (c:%.2f%%)", processes[me].CPUPercent)
 	}
 
 	if displayOptions.ShowMemoryUsage {
-		memoryUsage = fmt.Sprintf(" (m: %s)", util.ByteConverter(processes[me].MemoryInfo.RSS))
+		memoryUsage = fmt.Sprintf(" (m:%s)", util.ByteConverter(processes[me].MemoryInfo.RSS))
 	}
 
 	if displayOptions.ShowNumThreads {
-		threads = fmt.Sprintf(" (t: %d)", processes[me].NumThreads)
+		threads = fmt.Sprintf(" (t:%d)", processes[me].NumThreads)
 	}
 
 	if displayOptions.ColorizeOutput {
@@ -197,7 +198,7 @@ func PrintTree(logger *slog.Logger, processes []Process, me int, head string, sc
 		util.ColorCyan(&processes[me].Username)
 		util.ColorBoldBlue(&pgidString)
 		util.ColorPurple(&pidString)
-		util.ColorBoldOrange(&ageString)
+		util.ColorBoldGreen(&ageString)
 		util.ColorBlue(&processes[me].Command)
 		util.ColorRed(&args)
 	} else if displayOptions.ColorAttr != "" {
