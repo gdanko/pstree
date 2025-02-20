@@ -69,7 +69,7 @@ function modify_manpage() {
     echo "Updating data and version in $FILENAME"
     execute_sed "$FILENAME" "$SEARCH" "$REPLACE" "$VERIFICATION"
     echo "Generating the HTML version of the man page"
-    groff -Thtml -mandoc "$FILENAME" > "${REPO_ROOT}/docs/pstree.1.html"
+    groff -Thtml -mandoc "$FILENAME" > "${REPO_ROOT}/doc/pstree.1.html"
 }
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
