@@ -17,7 +17,7 @@ func GetPersistentFlags(cmd *cobra.Command, colorSupport bool, colorCount int, u
 	cmd.PersistentFlags().BoolVarP(&flagShowAll, "all", "", false, "equivalent to -a --age -c -g -m -t")
 	cmd.PersistentFlags().IntVarP(&flagLevel, "level", "l", 0, "print tree to <level> level deep")
 	cmd.PersistentFlags().BoolVarP(&flagShowPgids, "pgid", "g", false, "show process group IDs")
-	cmd.PersistentFlags().StringVarP(&flagUsername, "user", "", "", "show only branches containing processes of <user>; cannot be used with --exclude-root")
+	cmd.PersistentFlags().StringSliceVarP(&flagUsername, "user", "", []string{}, "show only branches containing processes of <user>; this option can be used more than and cannot be used with --exclude-root")
 	cmd.PersistentFlags().BoolVarP(&flagCpu, "cpu", "c", false, "show CPU utilization percentage with each process, e.g., (c:0.00%)")
 	cmd.PersistentFlags().BoolVarP(&flagAge, "age", "", false, "show the age of the process using the format (dd:hh:mm:ss)")
 	cmd.PersistentFlags().BoolVarP(&flagThreads, "threads", "t", false, "show the number of threads with each process, e.g., (t:xx)")
