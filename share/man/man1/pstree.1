@@ -1,5 +1,5 @@
 .ad b
-.TH PSTREE 1 "February 16, 2025" "0.5.4" "pstree Manual"
+.TH PSTREE 1 "February 19, 2025" "0.6.1" "User Commands"
 .SH NAME
 pstree \- display a tree of processes
 .SH SYNOPSIS
@@ -16,10 +16,10 @@ pstree \- display a tree of processes
 [\fB-i\fR | \fB--ibm-850\fR]
 [\fB-l\fR | \fB--level\fR \fIlevel\fR]
 [\fB-m\fR | \fB--memory\fR]
+[\fB--no-pids\fR]
 [\fB-g\fR | \fB--pgid\fR]
-[\fB--pid\fR \fIpid\fR]
+[\fB-p\fR | \fB--pid\fR \fIpid\fR]
 [\fB--rainbow\fR]
-[\fB-p\fR | \fB--show-pids\fR]
 [\fB-t\fR | \fB--threads\fR]
 [\fB--user\fR \fIuser\fR]
 [\fB-u\fR | \fB--utf-8\fR]
@@ -35,7 +35,7 @@ shows running processes as a tree. The tree is rooted at launchd. If --pid is sp
 Show the age of each process in the list using the format (dd:hh:mm:ss).
 .TP
 .B \--all
-Equivalent to -a --age -c -g -m -p -t
+Equivalent to -a --age -c -g -m -t
 .TP
 .B \-a, \--arguments
 Show command line arguments after the process name.
@@ -50,7 +50,7 @@ Colorize the pstree output. This option is only visible in the help if your term
 Show only branches containing processes with \fIpattern\fR in the command line.
 .TP
 .B \-c, \--cpu
-Show the CPU utilization for each process in the list using the format (c: 0.00%).
+Show the CPU utilization for each process in the list using the format (c:0.00%).
 .TP
 .B \-U, \--exclude-root
 Don't show branches containing only root processes. This option cannot be used with \fB--user\fR.
@@ -65,23 +65,23 @@ Use IBM-850 line drawing characters.
 Traverse the tree \fIlevel\fR levels deep.
 .TP
 .B \-m, \--memory
-Show the memory usage for each process in the list using the format (m: 0.00 MiB).
+Show the memory usage for each process in the list using the format (m:0.00 MiB).
+.TP
+.B \--no-pids
+Do not show process IDs.
 .TP
 .B \-g, \--pgid
-Show PGIDs.  Process Group IDs are shown as decimal numbers in parentheses after each process name. If this option is selected, the PGID will be displayed after the PID.
+Show PGIDs. Process Group IDs are shown as decimal numbers after each process ID.
 .TP
-.B \--pid \fIPID\fR
+.B \-p, \--pid \fIPID\fR
 Show only branches containing process \fIPID\fR.
 .TP
 .B --rainbow
 Colorize the 
 Display the output in a really annoying rainbow pattern. You've been warned. This option is not available if your terminal doesn't support 256 color output. This option cannot be used with either \fB--color\fR or \fB--colorize\fR.
 .TP
-.B \-p, \--pids
-Show PIDs. Process IDs are shown as decimal numbers in parentheses after each process name.
-.TP
 .B \-t, \--threads
-Show the number of threads for each process in the list using the format (t: xx).
+Show the number of threads for each process in the list using the format (t:xx).
 .TP
 .B \--user \fIuser\fR
 If this option is used, all process trees rooted at processes owned by \fIuser\fR are shown. This option cannot be used with \fB--exclude-root\fR.
