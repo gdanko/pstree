@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/gdanko/pstree/pkg/logger"
@@ -40,7 +41,7 @@ var (
 	flagShowPgids         bool
 	flagNoPids            bool
 	flagThreads           bool
-	flagUsername          string
+	flagUsername          []string
 	flagUTF8              bool
 	flagVersion           bool
 	flagVT100             bool
@@ -53,7 +54,7 @@ var (
 	username              string
 	validAttributes       []string = []string{"age", "cpu", "mem"}
 	validAttributesString string   = strings.Join(validAttributes, ", ")
-	version               string   = "0.6.1"
+	version               string   = "0.6.2"
 	versionString         string
 	rootCmd               = &cobra.Command{
 		Use:    "pstree",
@@ -80,7 +81,7 @@ func init() {
 	usageTemplate = fmt.Sprintf(
 		`Usage: pstree [-acUimgtuvw] [--age] [-all]%s%s
           [-s, --contains <pattern>] [-l, --level <level>]
-          [--no-pids] [-p, --pid <pid>]%s [--user <user>]
+          [--no-pids] [-p, --pid <pid>]%s [--user <user> ...]
    or: pstree -V
 
 Display a tree of processes.
@@ -104,7 +105,7 @@ func pstreeRunCmd(cmd *cobra.Command, args []string) error {
 	}
 	installedMemory, _ = util.GetTotalMemory()
 
-	if flagUsername == "root" && flagExcludeRoot {
+	if slices.Contains(flagUsername, "root") && flagExcludeRoot {
 		fmt.Fprintln(os.Stdout, "why would you do that?")
 		os.Exit(1)
 	}
@@ -142,10 +143,17 @@ For more information about these matters, see the files named COPYING.`,
 	pstree.MarkProcs(logger.Logger, &processes, flagContains, flagUsername, flagExcludeRoot, flagPid)
 	pstree.DropProcs(logger.Logger, &processes)
 
-	if flagUsername != "" {
-		if !util.UserExists(flagUsername) {
-			fmt.Printf("User '%s' does not exist.\n", flagUsername)
-			os.Exit(1)
+	for i, username := range flagUsername {
+		if !util.UserExists(username) {
+			excluded := []int{}
+			excluded = append(excluded, i)
+			logger.Logger.Warn(fmt.Sprintf("user '%s' does not exist, excluding", username))
+			if len(excluded) > 0 {
+				slices.Reverse(excluded)
+				for i := range excluded {
+					flagUsername = util.DeleteSliceElement(flagUsername, i)
+				}
+			}
 		}
 	}
 
