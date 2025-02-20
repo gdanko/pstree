@@ -388,7 +388,7 @@ func MakeTree(logger *slog.Logger, processes *[]Process) {
 	}
 }
 
-func MarkProcs(logger *slog.Logger, processes *[]Process, flagContains string, flagUsername string, flagExcludeRoot bool, flagPid int32) {
+func MarkProcs(logger *slog.Logger, processes *[]Process, flagContains string, flagUsername []string, flagExcludeRoot bool, flagPid int32) {
 	logger.Debug("Entering MakeProcs")
 	var (
 		me      int
@@ -396,17 +396,20 @@ func MarkProcs(logger *slog.Logger, processes *[]Process, flagContains string, f
 		showAll bool = false
 	)
 
-	if flagContains == "" && flagUsername == "" && !flagExcludeRoot && flagPid < 1 {
+	if flagContains == "" && len(flagUsername) == 0 && !flagExcludeRoot && flagPid < 1 {
 		showAll = true
 	}
 	for me = range *processes {
 		if showAll {
 			(*processes)[me].Print = true
 		} else {
-			if (*processes)[me].Username == flagUsername {
-				logger.Debug("flageUsername == process.Username")
-				markParents(logger, processes, me)
-				markChildren(logger, processes, me)
+			if len(flagUsername) > 0 {
+				for _, username := range flagUsername {
+					if (*processes)[me].Username == username {
+						markParents(logger, processes, me)
+						markChildren(logger, processes, me)
+					}
+				}
 			} else if (*processes)[me].PID == flagPid {
 				logger.Debug("flagPid == process.PID")
 				if (flagExcludeRoot && (*processes)[me].Username != "root") || (!flagExcludeRoot) {
