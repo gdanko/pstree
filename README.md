@@ -10,7 +10,7 @@ It uses [gopsutil](https://github.com/shirou/gopsutil) for gathering process inf
 * Clone this repository
 * `cd` to the repository root
 * Type `make build` and the binary will live under `bin` in the repository root
-* You will need to manually copy `share/man/man1/pstree.1` to your MANPATH
+* You will need to manually copy `share/man/man1/pstree.1` to your `$MANPATH`
 * If you're using macOS, you can also use homebrew
     * `brew tap gdanko/homebrew`
     * `brew update`
@@ -19,32 +19,32 @@ It uses [gopsutil](https://github.com/shirou/gopsutil) for gathering process inf
 ## Usage
 ```
 $ pstree --help
-Usage: pstree [-acUimgptuvw] [--age] [-all] [-C, --color <attr>]  [--colorize]
+Usage: pstree [-acUimgtuvw] [--age] [-all] [-C, --color <attr>] [--colorize]
           [-s, --contains <pattern>] [-l, --level <level>]
-          [--pid <pid>] [--rainbow] [--user <user>]
+          [--no-pids] [-p, --pid <pid>] [--rainbow] [--user <user>]
    or: pstree -V
 
 Display a tree of processes.
 
       --age               show the age of the process using the format (dd:hh:mm:ss)
-      --all               equivalent to -a --age -c -g -m -p -t
+      --all               equivalent to -a --age -c -g -m -t
   -a, --arguments         show command line arguments
   -C, --color string      color the process name by given attribute; valid options are: age, cpu, mem;
                           cannot be used with --color or --rainbow
       --colorize          add some beautiful color to the pstree output; cannot be used with --color-attr or --rainbow
-  -s, --contains string   show only branches containing process with <pattern> in commandline
-  -c, --cpu               show CPU utilization percentage with each process, e.g., (c: 0.00%)
+  -s, --contains string   show only branches containing processes with <pattern> in the command line
+  -c, --cpu               show CPU utilization percentage with each process, e.g., (c:0.00%)
   -d, --debug             show debugging data
   -U, --exclude-root      don't show branches containing only root processes; cannot be used with --user
   -h, --help              help for pstree
   -i, --ibm-850           use IBM-850 line drawing characters
   -l, --level int         print tree to <level> level deep
-  -m, --memory            show the memory usage with each process, e.g., (m: x.y MiB)
-  -g, --pgid              show process group ids
-      --pid int32         show only branches containing process <pid>
+  -m, --memory            show the memory usage with each process, e.g., (m:x.y MiB)
+      --no-pids           do not show process IDs
+  -g, --pgid              show process group IDs
+  -p, --pid int32         show only branches containing process <pid>
       --rainbow           please don't; cannot be used with --color or --color-attr
-  -p, --show-pids         show process ids
-  -t, --threads           show the number of threads with each process, e.g., (t: xx)
+  -t, --threads           show the number of threads with each process, e.g., (t:xx)
       --user string       show only branches containing processes of <user>; cannot be used with --exclude-root
   -u, --utf-8             use UTF-8 (Unicode) line drawing characters
   -V, --version           display version information
