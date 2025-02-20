@@ -38,7 +38,7 @@ var (
 	flagRainbow           bool
 	flagShowAll           bool
 	flagShowPgids         bool
-	flagShowPids          bool
+	flagNoPids            bool
 	flagThreads           bool
 	flagUsername          string
 	flagUTF8              bool
@@ -53,7 +53,7 @@ var (
 	username              string
 	validAttributes       []string = []string{"age", "cpu", "mem"}
 	validAttributesString string   = strings.Join(validAttributes, ", ")
-	version               string   = "0.6.0"
+	version               string   = "0.6.1"
 	versionString         string
 	rootCmd               = &cobra.Command{
 		Use:    "pstree",
@@ -78,9 +78,9 @@ func init() {
 
 	}
 	usageTemplate = fmt.Sprintf(
-		`Usage: pstree [-acUimgptuvw] [--age] [-all]%s %s
+		`Usage: pstree [-acUimgtuvw] [--age] [-all]%s%s
           [-s, --contains <pattern>] [-l, --level <level>]
-          [--pid <pid>]%s [--user <user>]
+          [--no-pids] [-p, --pid <pid>]%s [--user <user>]
    or: pstree -V
 
 Display a tree of processes.
@@ -154,11 +154,11 @@ For more information about these matters, see the files named COPYING.`,
 	}
 
 	if flagShowAll {
+		flagAge = true
 		flagArguments = true
 		flagCpu = true
 		flagMemory = true
 		flagShowPgids = true
-		flagShowPids = true
 		flagThreads = true
 	}
 
@@ -169,13 +169,13 @@ For more information about these matters, see the files named COPYING.`,
 		IBM850Graphics:  flagIBM850,
 		InstalledMemory: installedMemory.Total,
 		MaxDepth:        flagLevel,
+		NoPids:          flagNoPids,
 		RainbowOutput:   flagRainbow,
 		ShowArguments:   flagArguments,
 		ShowCpuPercent:  flagCpu,
 		ShowMemoryUsage: flagMemory,
 		ShowNumThreads:  flagThreads,
 		ShowPGIDs:       flagShowPgids,
-		ShowPIDs:        flagShowPids,
 		ShowProcessAge:  flagAge,
 		UTF8Graphics:    flagUTF8,
 		VT100Graphics:   flagVT100,
