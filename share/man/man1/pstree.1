@@ -1,5 +1,5 @@
 .ad b
-.TH PSTREE 1 "February 19, 2025" "0.6.1" "User Commands"
+.TH PSTREE 1 "February 19, 2025" "0.6.2" "User Commands"
 .SH NAME
 pstree \- display a tree of processes
 .SH SYNOPSIS
@@ -21,7 +21,7 @@ pstree \- display a tree of processes
 [\fB-p\fR | \fB--pid\fR \fIpid\fR]
 [\fB--rainbow\fR]
 [\fB-t\fR | \fB--threads\fR]
-[\fB--user\fR \fIuser\fR]
+[\fB--user\fR \fIuser\fR ...]
 [\fB-u\fR | \fB--utf-8\fR]
 [\fB-v\fR | \fB--vt-100-8\fR]
 [\fB-V\fR | \fB--version-8\fR]
@@ -41,7 +41,7 @@ Equivalent to -a --age -c -g -m -t
 Show command line arguments after the process name.
 .TP
 .B \-C, \--color \fIattribute\fR
-Color the process name by given attribute. Currently pstree accepts the values age, cpu, and me. With \fBage\fR, processes newer than 60 seconds are green, newer than an hour are yellow, and the remaining are red. With \fBcpu\fR, processes using less than 5% CPU are green, greater than 5% and less than 15% are yellow, and the remaining are red. With \fBmem\fR, processes using less than 10% memory are green, greater than 10% and less than 20% are yellow, and the remaining are red. This option cannot be used with either \fB--colorize\fR or \fB--rainbow\fR. 
+Color the process name by given attribute. Currently pstree accepts the values \fBage\fR, \fBcpu\fR, and \fBmem\fR. With \fBage\fR, processes newer than 60 seconds are green, newer than an hour are yellow, and the remaining are red. With \fBcpu\fR, processes using less than 5% CPU are green, greater than 5% and less than 15% are yellow, and the remaining are red. With \fBmem\fR, processes using less than 10% memory are green, greater than 10% and less than 20% are yellow, and the remaining are red. This option cannot be used with either \fB--colorize\fR or \fB--rainbow\fR.
 .TP
 .B --colorize
 Colorize the pstree output. This option is only visible in the help if your terminal supports color. This option is not available if your terminal doesn't support at least 8 color output. This option cannot be used with either \fB--color\fR or \fB--rainbow\fR.
@@ -84,7 +84,7 @@ Display the output in a really annoying rainbow pattern. You've been warned. Thi
 Show the number of threads for each process in the list using the format (t:xx).
 .TP
 .B \--user \fIuser\fR
-If this option is used, all process trees rooted at processes owned by \fIuser\fR are shown. This option cannot be used with \fB--exclude-root\fR.
+If this option is used, all process trees rooted at processes owned by \fIuser\fR are shown. This option can be used muiltiple times and cannot be used with \fB--exclude-root\fR.
 .TP
 .B \-u, \--utf-8
 Use UTF-8 (Unicode) line drawing characters.
@@ -110,13 +110,13 @@ To show processes owner by \fBbob\fR and also display the command line arguments
 pstree --user bob -a
 .EE
 
-To show the process ID, process group ID, command line arguments, use a wide format, and use UTF-8 graphics:
+To show the process group ID, command line arguments, use a wide format, and use UTF-8 graphics:
 .PP
 .EX
-pstree -p -g -a -w -u
+pstree -g -a -w -u
 .EE
 .SH SEE ALSO
-\fBps\fR(1), \fBtop\fR(1)
+\fBps\fR(1), \fBtop\fR(1), \fBlaunchd\fR(8)
 .SH AUTHOR
 Written by Gary Danko
 .SH BUGS
