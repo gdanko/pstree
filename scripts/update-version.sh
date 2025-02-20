@@ -1,5 +1,77 @@
 #/bin/bash
 
+function file_exists() {
+    FILENAME=$1
+    if [[ ! -f "$FILENAME" ]]; then
+        echo "Error: $FILENAME not found. Cannot continue"
+        exit 1
+    fi  
+}
+
+function backup_file() {
+    local SRC=$1
+    echo "Backing up $SRC as $SRC.bak"
+    cp "$SRC" "$SRC.bak"
+    if [ $? -ne 0 ]; then
+        echo "Failed to backup $SRC. Cannot continue"
+        exit 1
+    fi  
+}
+
+function execute_sed() {
+    local FILENAME=$1
+    local SEARCH=$2
+    local REPLACE=$3
+    local VERIFICATION=$4
+    /usr/bin/sed -i "" "s/$SEARCH/$REPLACE/" $FILENAME
+    if [ $? -ne 0 ]; then
+        echo "Failed to update $A1. Cannot continue"
+        exit 1
+    fi
+
+    echo "Verifying the changes to $FILENAME"
+    /usr/bin/grep -E "$VERIFICATION" $FILENAME 1>/dev/null
+    if [ $? -ne 0 ]; then
+        echo "Failed to update $FILENAME. Cannot continue"
+        exit 1
+    fi
+}
+
+function modify_makefile() {
+    local FILENAME=$1
+    local NEW_VERSION=$2 
+    local SEARCH="^PSTREE_VERSION := [0-9]*\.[0-9]*\.[0-9]*"
+    local REPLACE="PSTREE_VERSION := $NEW_VERSION"
+    local VERIFICATION="^PSTREE_VERSION\s*:=\s*$NEW_VERSION"
+    echo "Updating PSTREE_VERSION in $FILENAME to $NEW_VERSION"
+    execute_sed "$FILENAME" "$SEARCH" "$REPLACE" "$VERIFICATION"
+}
+
+function modify_root_cmd() {
+    local FILENAME=$1
+    local NEW_VERSION=$2
+    local SEARCH="^[[:space:]]*version[[:space:]]*string[[:space:]]*=[[:space:]]*\"[0-9]*\.[0-9]*\.[0-9]*\""
+    local REPLACE="\tversion               string = \"$NEW_VERSION\""
+    local VERIFICATION="^[[:space:]]*version[[:space:]]*string[[:space:]]*=[[:space:]]*\"$NEW_VERSION\""
+    echo "Updating version in $FILENAME to $NEW_VERSION"
+    execute_sed "$FILENAME" "$SEARCH" "$REPLACE" "$VERIFICATION"
+    echo Reformatting $FILENAME
+    go fmt $FILENAME
+}
+
+function modify_manpage() {
+    local FILENAME=$1
+    local NEW_VERSION=$2
+    local NEWDATE=$(date +"%B %d, %Y")
+    local SEARCH="^.TH PSTREE 1 \".*\" \".*\" \"User Commands\""
+    local REPLACE=".TH PSTREE 1 \"$NEWDATE\" \"$NEW_VERSION\" \"User Commands\""
+    local VERIFICATION="^.TH PSTREE 1 \"$NEWDATE\" \"$NEW_VERSION\""
+    echo "Updating data and version in $FILENAME"
+    execute_sed "$FILENAME" "$SEARCH" "$REPLACE" "$VERIFICATION"
+    echo "Generating the HTML version of the man page"
+    groff -Thtml -mandoc "$FILENAME" > "${REPO_ROOT}/docs/pstree.1.html"
+}
+
 REPO_ROOT=$(git rev-parse --show-toplevel)
 if [ -z $REPO_ROOT ]; then
     echo "Failed to determine the repo root. Cannot continue."
@@ -11,65 +83,23 @@ if [ -z $PSTREE_VERSION ]; then
     exit 1
 fi
 
-# Makefile
+# ${REPO_ROOT}/Makefile
 MAKEFILE="${REPO_ROOT}/Makefile"
-MAKEFILE_BACKUP="$MAKEFILE.bak"
+file_exists $MAKEFILE
+backup_file $MAKEFILE
+modify_makefile $MAKEFILE $PSTREE_VERSION
+echo
 
-if [[ ! -f "$MAKEFILE" ]]; then
-    echo "Error: $MAKEFILE not found."
-    exit 1
-fi
-
-echo "Backing up $MAKEFILE to $MAKEFILE_BACKUP"
-cp $MAKEFILE $MAKEFILE_BACKUP
-if [ $? -ne 0 ]; then
-    echo "Failed to backup $MAKEFILE. Cannot continue"
-    exit 1
-fi
-
-echo "Updating PSTREE_VERSION in $MAKEFILE to $PSTREE_VERSION"
-sed -i "s/^PSTREE_VERSION\s:*=\s*.*/PSTREE_VERSION := $PSTREE_VERSION/" "$MAKEFILE"
-if [ $? -ne 0 ]; then
-    echo "Failed to update $MAKEFILE. Cannot continue"
-    exit 1
-fi
-
-echo "Verifying the changes to $MAKEFILE"
-grep -E "^PSTREE_VERSION\s*:=\s*$PSTREE_VERSION" "$MAKEFILE" 1>/dev/null
-if [ $? -ne 0 ]; then
-    echo "Failed to update $MAKEFILE. Cannot continue"
-    exit 1
-fi
-
-# root.go
+# ${REPO_ROOT}/cmd/root.go
 ROOT_CMD="${REPO_ROOT}/cmd/root.go"
-ROOT_CMD_BACKUP="$ROOT_CMD.bak"
+file_exists $ROOT_CMD
+backup_file $ROOT_CMD
+modify_root_cmd $ROOT_CMD $PSTREE_VERSION
+echo
 
-if [[ ! -f "$ROOT_CMD" ]]; then
-    echo "Error: $ROOT_CMD not found."
-    exit 1
-fi
-
-echo "Backing up $ROOT_CMD to $ROOT_CMD_BACKUP"
-cp $ROOT_CMD $ROOT_CMD_BACKUP
-if [ $? -ne 0 ]; then
-    echo "Failed to backup $ROOT_CMD. Cannot continue"
-    exit 1
-fi
-
-echo "Updating version in $ROOT_CMD to $PSTREE_VERSION"
-sed -i "s/^\s*version\s*string\s*=\s*\".*\"/\tversion               string = \"$PSTREE_VERSION\"/" "$ROOT_CMD"
-if [ $? -ne 0 ]; then
-    echo "Failed to update $ROOT_CMD. Cannot continue"
-    exit 1
-fi
-
-echo Reformatting $ROOT_CMD
-go fmt $ROOT_CMD
-
-echo "Verifying the changes to $ROOT_CMD"
-grep -E "^\s*version\s*string\s*=\s*\"$PSTREE_VERSION\"" "$ROOT_CMD" 1>/dev/null
-if [ $? -ne 0 ]; then
-    echo "Failed to update $ROOT_CMD. Cannot continue"
-    exit 1
-fi
+# ${REPO_ROOT}/share/man/man1/pstree.1
+MANPAGE="${REPO_ROOT}/share/man/man1/pstree.1"
+file_exists $MANPAGE
+backup_file $MANPAGE
+modify_manpage $MANPAGE $PSTREE_VERSION
+echo
