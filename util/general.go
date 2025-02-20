@@ -219,3 +219,7 @@ func FindDuration(seconds int64) (duration Duration) {
 		Seconds: secs,
 	}
 }
+
+func DeleteSliceElement(slice []string, index int) []string {
+	return append(slice[:index], slice[index+1:]...)
+}
