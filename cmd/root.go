@@ -11,7 +11,6 @@ import (
 	"github.com/gdanko/pstree/pkg/logger"
 	"github.com/gdanko/pstree/pkg/pstree"
 	"github.com/gdanko/pstree/util"
-	"github.com/kr/pretty"
 	"github.com/shirou/gopsutil/v4/mem"
 	"github.com/spf13/cobra"
 )
@@ -233,9 +232,6 @@ For more information about these matters, see the files named COPYING.`,
 		VT100Graphics:   flagVT100,
 		WideDisplay:     flagWide,
 	}
-
-	pretty.Println(pstree.FindPrintable(&processes))
-
 	pstree.PrintTree(logger.Logger, processes, 0, "", screenWidth, currentLevel, displayOptions)
 
 	return nil
