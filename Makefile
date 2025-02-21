@@ -1,7 +1,7 @@
 GOPATH := $(shell go env GOPATH)
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
-PSTREE_VERSION := 0.6.2
+PSTREE_VERSION := 0.6.3
 
 GOOS ?= $(shell uname | tr '[:upper:]' '[:lower:]')
 GOARCH ?=$(shell arch)
@@ -34,6 +34,9 @@ clean:
 	@echo "=================================================\n"
 	@if [ -f bin/pstree ]; then \
 		rm -f bin/pstree; \
+	fi
+	@if [ -f pstree ]; then \
+		rm -f pstree; \
 	fi; \
 
 .PHONY: clean-all
