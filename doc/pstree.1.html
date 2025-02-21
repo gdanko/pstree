@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.23.0 -->
-<!-- CreationDate: Wed Feb 19 21:35:29 2025 -->
+<!-- CreationDate: Thu Feb 20 13:56:30 2025 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -54,7 +54,8 @@ display a tree of processes</p>
 <b>--exclude-root</b>] [<b>-h</b> | <b>--help</b>]
 [<b>-i</b> | <b>--ibm-850</b>] [<b>-l</b> | <b>--level</b>
 <i>level</i>] [<b>-m</b> | <b>--memory</b>]
-[<b>--no-pids</b>] [<b>-g</b> | <b>--pgid</b>] [<b>-p</b> |
+[<b>--no-pids</b>] [<b>-o</b> | <b>--order-by</b>
+<i>field</i>] [<b>-g</b> | <b>--pgid</b>] [<b>-p</b> |
 <b>--pid</b> <i>pid</i>] [<b>--rainbow</b>] [<b>-t</b> |
 <b>--threads</b>] [<b>--user</b> <i>user</i> ...] [<b>-u</b>
 | <b>--utf-8</b>] [<b>-v</b> | <b>--vt-100-8</b>] [<b>-V</b>
@@ -122,7 +123,9 @@ less than 5% CPU are green, greater than 5% and less than
 processes using less than 10% memory are green, greater than
 10% and less than 20% are yellow, and the remaining are red.
 This option cannot be used with either <b>--colorize</b> or
-<b>--rainbow</b>.</p>
+<b>--rainbow</b>. The field for the specified attribute will
+automatically be enabled in the process list. In other
+words, <b>pstree -C age</b> implies <b>--age</b>.</p>
 
 <p style="margin-left:9%;"><b>--colorize</b></p>
 
@@ -178,6 +181,13 @@ process in the list using the format (m:0.00 MiB).</p>
 <p style="margin-left:9%;"><b>&minus;-no-pids</b></p>
 
 <p style="margin-left:18%;">Do not show process IDs.</p>
+
+<p style="margin-left:9%;"><b>&minus;o,
+&minus;-order-by</b> <i>field</i></p>
+
+<p style="margin-left:18%;">Sort processes by a given
+field. Available options are: age, cpu, mem, pid, threads,
+user.</p>
 
 <p style="margin-left:9%;"><b>&minus;g,
 &minus;-pgid</b></p>
@@ -250,16 +260,16 @@ help:</p>
 <p style="margin-left:9%; margin-top: 1em">pstree
 --help</p>
 
-<p style="margin-left:9%; margin-top: 1em">To show
-processes owner by <b>bob</b> and also display the command
-line arguments:</p>
+<p style="margin-left:9%; margin-top: 1em">Show processes
+owned by <b>bob</b> and <b>fred</b> and also display their
+command line arguments:</p>
 
 <p style="margin-left:9%; margin-top: 1em">pstree --user
-bob -a</p>
+bob --user fred -a</p>
 
-<p style="margin-left:9%; margin-top: 1em">To show the
-process group ID, command line arguments, use a wide format,
-and use UTF-8 graphics:</p>
+<p style="margin-left:9%; margin-top: 1em">Show the process
+group ID, command line arguments, use a wide format, and use
+UTF-8 graphics:</p>
 
 <p style="margin-left:9%; margin-top: 1em">pstree -g -a -w
 -u</p>

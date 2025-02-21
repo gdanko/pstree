@@ -1,5 +1,5 @@
 .ad b
-.TH PSTREE 1 "February 19, 2025" "0.6.2" "User Commands"
+.TH PSTREE 1 "February 20, 2025" "0.6.3" "User Commands"
 .SH NAME
 pstree \- display a tree of processes
 .SH SYNOPSIS
@@ -17,6 +17,7 @@ pstree \- display a tree of processes
 [\fB-l\fR | \fB--level\fR \fIlevel\fR]
 [\fB-m\fR | \fB--memory\fR]
 [\fB--no-pids\fR]
+[\fB-o\fR | \fB--order-by\fR \fIfield\fR]
 [\fB-g\fR | \fB--pgid\fR]
 [\fB-p\fR | \fB--pid\fR \fIpid\fR]
 [\fB--rainbow\fR]
@@ -41,7 +42,7 @@ Equivalent to -a --age -c -g -m -t
 Show command line arguments after the process name.
 .TP
 .B \-C, \--color \fIattribute\fR
-Color the process name by given attribute. Currently pstree accepts the values \fBage\fR, \fBcpu\fR, and \fBmem\fR. With \fBage\fR, processes newer than 60 seconds are green, newer than an hour are yellow, and the remaining are red. With \fBcpu\fR, processes using less than 5% CPU are green, greater than 5% and less than 15% are yellow, and the remaining are red. With \fBmem\fR, processes using less than 10% memory are green, greater than 10% and less than 20% are yellow, and the remaining are red. This option cannot be used with either \fB--colorize\fR or \fB--rainbow\fR.
+Color the process name by given attribute. Currently pstree accepts the values \fBage\fR, \fBcpu\fR, and \fBmem\fR. With \fBage\fR, processes newer than 60 seconds are green, newer than an hour are yellow, and the remaining are red. With \fBcpu\fR, processes using less than 5% CPU are green, greater than 5% and less than 15% are yellow, and the remaining are red. With \fBmem\fR, processes using less than 10% memory are green, greater than 10% and less than 20% are yellow, and the remaining are red. This option cannot be used with either \fB--colorize\fR or \fB--rainbow\fR. The field for the specified attribute will automatically be enabled in the process list. In other words, \fBpstree -C age\fR implies \fB--age\fR.
 .TP
 .B --colorize
 Colorize the pstree output. This option is only visible in the help if your terminal supports color. This option is not available if your terminal doesn't support at least 8 color output. This option cannot be used with either \fB--color\fR or \fB--rainbow\fR.
@@ -69,6 +70,9 @@ Show the memory usage for each process in the list using the format (m:0.00 MiB)
 .TP
 .B \--no-pids
 Do not show process IDs.
+.TP
+.B \-o, \--order-by \fIfield\fR
+Sort processes by a given field. Available options are: age, cpu, mem, pid, threads, user.
 .TP
 .B \-g, \--pgid
 Show PGIDs. Process Group IDs are shown as decimal numbers after each process ID.
@@ -104,13 +108,13 @@ To display help:
 pstree --help
 .EE
 
-To show processes owner by \fBbob\fR and also display the command line arguments:
+Show processes owned by \fBbob\fR and \fBfred\fR and also display their command line arguments:
 .PP
 .EX
-pstree --user bob -a
+pstree --user bob --user fred -a
 .EE
 
-To show the process group ID, command line arguments, use a wide format, and use UTF-8 graphics:
+Show the process group ID, command line arguments, use a wide format, and use UTF-8 graphics:
 .PP
 .EX
 pstree -g -a -w -u
