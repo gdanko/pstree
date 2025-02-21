@@ -40,7 +40,7 @@ function execute_sed() {
 function modify_makefile() {
     local FILENAME=$1
     local NEW_VERSION=$2 
-    local SEARCH="^PSTREE_VERSION := [0-9]*\.[0-9]*\.[0-9]*"
+    local SEARCH="^PSTREE_VERSION := [0-9\.]*"
     local REPLACE="PSTREE_VERSION := $NEW_VERSION"
     local VERIFICATION="^PSTREE_VERSION\s*:=\s*$NEW_VERSION"
     echo "Updating PSTREE_VERSION in $FILENAME to $NEW_VERSION"
@@ -50,7 +50,7 @@ function modify_makefile() {
 function modify_root_cmd() {
     local FILENAME=$1
     local NEW_VERSION=$2
-    local SEARCH="^[[:space:]]*version[[:space:]]*string[[:space:]]*=[[:space:]]*\"[0-9]*\.[0-9]*\.[0-9]*\""
+    local SEARCH="^[[:space:]]*version[[:space:]]*string[[:space:]]*=[[:space:]]*\"[0-9\.]*\""
     local REPLACE="\tversion               string = \"$NEW_VERSION\""
     local VERIFICATION="^[[:space:]]*version[[:space:]]*string[[:space:]]*=[[:space:]]*\"$NEW_VERSION\""
     echo "Updating version in $FILENAME to $NEW_VERSION"
@@ -70,6 +70,16 @@ function modify_manpage() {
     execute_sed "$FILENAME" "$SEARCH" "$REPLACE" "$VERIFICATION"
     echo "Generating the HTML version of the man page"
     groff -Thtml -mandoc "$FILENAME" > "${REPO_ROOT}/doc/pstree.1.html"
+}
+
+function modify_readme() {
+    local FILENAME=$1
+    local NEW_VERSION=$2
+    local SEARCH="pstree .Revision: [0-9\.]* . by Gary Danko (C) 2025"
+    local REPLACE="pstree \$Revision: $NEW_VERSION \$ by Gary Danko \(C\) 2025"
+    local VERIFICATION="pstree .Revision: $NEW_VERSION . by Gary Danko \(C\) 2025"
+    echo "Updating PSTREE_VERSION in $FILENAME to $NEW_VERSION"
+    execute_sed "$FILENAME" "$SEARCH" "$REPLACE" "$VERIFICATION"
 }
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
@@ -102,4 +112,12 @@ MANPAGE="${REPO_ROOT}/share/man/man1/pstree.1"
 file_exists $MANPAGE
 backup_file $MANPAGE
 modify_manpage $MANPAGE $PSTREE_VERSION
+echo
+
+
+# ${REPO_ROOT}/README.md
+README="${REPO_ROOT}/README.md"
+file_exists $README
+backup_file $README
+modify_readme $README $PSTREE_VERSION
 echo
