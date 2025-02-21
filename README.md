@@ -19,9 +19,12 @@ It uses [gopsutil](https://github.com/shirou/gopsutil) for gathering process inf
 ## Usage
 ```
 $ pstree --help
+pstree $Revision: 0.6.3 $ by Gary Danko (C) 2025
+
 Usage: pstree [-acUimgtuvw] [--age] [-all] [-C, --color <attr>] [--colorize]
           [-s, --contains <pattern>] [-l, --level <level>]
-          [--no-pids] [-p, --pid <pid>] [--rainbow] [--user <user>]
+          [--no-pids] [-o, --order-by <field>] [-p, --pid <pid>]
+          [--rainbow] [--user <user> ...]
    or: pstree -V
 
 Display a tree of processes.
@@ -30,8 +33,8 @@ Display a tree of processes.
       --all               equivalent to -a --age -c -g -m -t
   -a, --arguments         show command line arguments
   -C, --color string      color the process name by given attribute; valid options are: age, cpu, mem;
-                          cannot be used with --color or --rainbow
-      --colorize          add some beautiful color to the pstree output; cannot be used with --color-attr or --rainbow
+                          cannot be used with --colorize or --rainbow
+      --colorize          add some beautiful color to the pstree output; cannot be used with --color or --rainbow
   -s, --contains string   show only branches containing processes with <pattern> in the command line
   -c, --cpu               show CPU utilization percentage with each process, e.g., (c:0.00%)
   -d, --debug             show debugging data
@@ -41,11 +44,12 @@ Display a tree of processes.
   -l, --level int         print tree to <level> level deep
   -m, --memory            show the memory usage with each process, e.g., (m:x.y MiB)
       --no-pids           do not show process IDs
+  -o, --order-by string   sort the results by <field>; valid options are: age, cpu, mem, pid, threads, user
   -g, --pgid              show process group IDs
   -p, --pid int32         show only branches containing process <pid>
-      --rainbow           please don't; cannot be used with --color or --color-attr
+      --rainbow           please don't; cannot be used with --color or --colorize
   -t, --threads           show the number of threads with each process, e.g., (t:xx)
-      --user string       show only branches containing processes of <user>; cannot be used with --exclude-root
+      --user strings      show only branches containing processes of <user>; this option can be used more than and cannot be used with --exclude-root
   -u, --utf-8             use UTF-8 (Unicode) line drawing characters
   -V, --version           display version information
   -v, --vt-100            use VT-100 line drawing characters
