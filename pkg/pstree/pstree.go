@@ -2,6 +2,7 @@ package pstree
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"log/slog"
@@ -45,14 +46,14 @@ type Process struct {
 	Username      string
 }
 
-func sortByPid(procs []*process.Process) []*process.Process {
+func SortByPid(procs []*process.Process) []*process.Process {
 	sort.Slice(procs, func(i, j int) bool {
 		return procs[i].Pid < procs[j].Pid // Ascending order
 	})
 	return procs
 }
 
-func getPidFromIndex(processes *[]Process, index int) (pid int32) {
+func GetPidFromIndex(processes *[]Process, index int) (pid int32) {
 	for i := range *processes {
 		if i == index {
 			return (*processes)[i].PID
@@ -68,6 +69,52 @@ func FindPrintable(processes *[]Process) (printable []Process) {
 		}
 	}
 	return printable
+}
+
+func GetProcessByPid(processes *[]Process, pid int32) (proc Process, err error) {
+	for i := range *processes {
+		if (*processes)[i].PID == pid {
+			return (*processes)[i], nil
+		}
+	}
+	errorMessage := fmt.Sprintf("the process with the PID %d was not found", pid)
+	return Process{}, errors.New(errorMessage)
+}
+
+func SortProcsByAge(processes *[]Process) {
+	sort.Slice(*processes, func(i, j int) bool {
+		return (*processes)[i].Age < (*processes)[j].Age
+	})
+}
+
+func SortProcsByCpu(processes *[]Process) {
+	sort.Slice(*processes, func(i, j int) bool {
+		return (*processes)[i].CPUPercent < (*processes)[j].CPUPercent
+	})
+}
+
+func SortProcsByMemory(processes *[]Process) {
+	sort.Slice(*processes, func(i, j int) bool {
+		return float64((*processes)[i].MemoryInfo.RSS) < float64((*processes)[j].MemoryInfo.RSS)
+	})
+}
+
+func SortProcsByUsername(processes *[]Process) {
+	sort.Slice(*processes, func(i, j int) bool {
+		return (*processes)[i].Username < (*processes)[j].Username
+	})
+}
+
+func SortProcsByPid(processes *[]Process) {
+	sort.Slice(*processes, func(i, j int) bool {
+		return (*processes)[i].PID < (*processes)[j].PID
+	})
+}
+
+func SortProcsByNumThreads(processes *[]Process) {
+	sort.Slice(*processes, func(i, j int) bool {
+		return (*processes)[i].NumThreads < (*processes)[j].NumThreads
+	})
 }
 
 func GetPIDIndex(logger *slog.Logger, processes []Process, pid int32) int {
@@ -329,20 +376,20 @@ func generateProcess(proc *process.Process) Process {
 }
 
 func markParents(logger *slog.Logger, processes *[]Process, me int) {
-	logger.Debug(fmt.Sprintf("Entering markParents with with me=%d", getPidFromIndex(processes, me)))
+	logger.Debug(fmt.Sprintf("Entering markParents with with me=%d", GetPidFromIndex(processes, me)))
 	parent := (*processes)[me].Parent
-	logger.Debug(fmt.Sprintf("Marking %d as a parent of %d", getPidFromIndex(processes, parent), getPidFromIndex(processes, me)))
+	logger.Debug(fmt.Sprintf("Marking %d as a parent of %d", GetPidFromIndex(processes, parent), GetPidFromIndex(processes, me)))
 	for parent != -1 {
-		logger.Debug(fmt.Sprintf("Marking pid %d's Print attribute as true", getPidFromIndex(processes, parent)))
+		logger.Debug(fmt.Sprintf("Marking pid %d's Print attribute as true", GetPidFromIndex(processes, parent)))
 		(*processes)[parent].Print = true
 		parent = (*processes)[parent].Parent
 	}
 }
 
 func markChildren(logger *slog.Logger, processes *[]Process, me int) {
-	logger.Debug(fmt.Sprintf("Entering markChildren with with me=%d", getPidFromIndex(processes, me)))
+	logger.Debug(fmt.Sprintf("Entering markChildren with with me=%d", GetPidFromIndex(processes, me)))
 	var child int
-	logger.Debug(fmt.Sprintf("Marking pid %d's Print attribute as true", getPidFromIndex(processes, me)))
+	logger.Debug(fmt.Sprintf("Marking pid %d's Print attribute as true", GetPidFromIndex(processes, me)))
 	(*processes)[me].Print = true
 	child = (*processes)[me].Child
 	for child != -1 {
@@ -362,7 +409,7 @@ func GetProcesses(logger *slog.Logger, processes *[]Process) {
 		log.Fatalf("Failed to get processes: %v", err)
 	}
 
-	sorted = sortByPid(unsorted)
+	sorted = SortByPid(unsorted)
 
 	for _, p := range sorted {
 		*processes = append(*processes, generateProcess(p))
