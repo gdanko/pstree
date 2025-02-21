@@ -11,55 +11,58 @@ import (
 	"github.com/gdanko/pstree/pkg/logger"
 	"github.com/gdanko/pstree/pkg/pstree"
 	"github.com/gdanko/pstree/util"
+	"github.com/kr/pretty"
 	"github.com/shirou/gopsutil/v4/mem"
 	"github.com/spf13/cobra"
 )
 
 var (
-	colorCount            int
-	colorizeString        string = ""
-	colorString           string = ""
-	colorSupport          bool
-	currentLevel          int = 0
-	displayOptions        pstree.DisplayOptions
-	errorMessage          string
-	flagAge               bool
-	flagArguments         bool
-	flagColor             string
-	flagColorize          bool
-	flagContains          string
-	flagCpu               bool
-	flagDebug             bool
-	flagExcludeRoot       bool
-	flagGraphicsMode      int
-	flagIBM850            bool
-	flagLevel             int
-	flagMemory            bool
-	flagPid               int32
-	flagRainbow           bool
-	flagShowAll           bool
-	flagShowPgids         bool
-	flagNoPids            bool
-	flagThreads           bool
-	flagUsername          []string
-	flagUTF8              bool
-	flagVersion           bool
-	flagVT100             bool
-	flagWide              bool
-	installedMemory       *mem.VirtualMemoryStat
-	processes             []pstree.Process
-	rainbowString         string = ""
-	screenWidth           int
-	usageTemplate         string
-	username              string
-	validAttributes       []string = []string{"age", "cpu", "mem"}
-	validAttributesString string   = strings.Join(validAttributes, ", ")
-	version               string   = "0.6.2"
-	versionString         string
-	rootCmd               = &cobra.Command{
+	colorCount       int
+	colorizeString   string = ""
+	colorString      string = ""
+	colorSupport     bool
+	currentLevel     int = 0
+	displayOptions   pstree.DisplayOptions
+	errorMessage     string
+	flagAge          bool
+	flagArguments    bool
+	flagColor        string
+	flagColorize     bool
+	flagContains     string
+	flagCpu          bool
+	flagDebug        bool
+	flagExcludeRoot  bool
+	flagGraphicsMode int
+	flagIBM850       bool
+	flagLevel        int
+	flagMemory       bool
+	flagPid          int32
+	flagRainbow      bool
+	flagShowAll      bool
+	flagShowPgids    bool
+	flagNoPids       bool
+	flagOrderBy      string
+	flagThreads      bool
+	flagUsername     []string
+	flagUTF8         bool
+	flagVersion      bool
+	flagVT100        bool
+	flagWide         bool
+	installedMemory  *mem.VirtualMemoryStat
+	processes        []pstree.Process
+	rainbowString    string = ""
+	screenWidth      int
+	sorted           []pstree.Process
+	usageTemplate    string
+	username         string
+	validAttributes  []string = []string{"age", "cpu", "mem"}
+	validOrderBy     []string = []string{"age", "cpu", "mem", "pid", "threads", "user"}
+	version          string   = "0.6.3"
+	versionString    string
+	rootCmd          = &cobra.Command{
 		Use:    "pstree",
 		Short:  "",
-		Long:   "",
+		Long:   fmt.Sprintf("pstree $Revision: %s $ by Gary Danko (C) 2025", version),
 		PreRun: pstreePreRunCmd,
 		RunE:   pstreeRunCmd,
 	}
@@ -81,7 +84,8 @@ func init() {
 	usageTemplate = fmt.Sprintf(
 		`Usage: pstree [-acUimgtuvw] [--age] [-all]%s%s
           [-s, --contains <pattern>] [-l, --level <level>]
-          [--no-pids] [-p, --pid <pid>]%s [--user <user> ...]
+          [--no-pids] [-o, --order-by <field>] [-p, --pid <pid>]
+         %s [--user <user> ...]
    or: pstree -V
 
 Display a tree of processes.
@@ -118,8 +122,8 @@ func pstreeRunCmd(cmd *cobra.Command, args []string) error {
 		return errors.New("only one of --ibm-850, --utf-8, and --vt-100 can be used")
 	}
 
-	if flagColor != "" && !util.Contains(validAttributes, flagColor) {
-		errorMessage = fmt.Sprintf("valid options for --color-attr are: %s", validAttributesString)
+	if flagColor != "" && !slices.Contains(validAttributes, flagColor) {
+		errorMessage = fmt.Sprintf("valid options for --color-attr are: %s", strings.Join(validAttributes, ", "))
 		return errors.New(errorMessage)
 	}
 
@@ -137,12 +141,6 @@ For more information about these matters, see the files named COPYING.`,
 		os.Exit(0)
 	}
 
-	screenWidth = util.GetScreenWidth()
-	pstree.GetProcesses(logger.Logger, &processes)
-	pstree.MakeTree(logger.Logger, &processes)
-	pstree.MarkProcs(logger.Logger, &processes, flagContains, flagUsername, flagExcludeRoot, flagPid)
-	pstree.DropProcs(logger.Logger, &processes)
-
 	for i, username := range flagUsername {
 		if !util.UserExists(username) {
 			excluded := []int{}
@@ -156,6 +154,52 @@ For more information about these matters, see the files named COPYING.`,
 			}
 		}
 	}
+
+	screenWidth = util.GetScreenWidth()
+	pstree.GetProcesses(logger.Logger, &processes)
+
+	if flagOrderBy != "" {
+		if !slices.Contains(validOrderBy, flagOrderBy) {
+			errorMessage = fmt.Sprintf("valid options for --order-by are: %s", strings.Join(validOrderBy, ", "))
+			return errors.New(errorMessage)
+		}
+		proc, err := pstree.GetProcessByPid(&processes, 1)
+		if err != nil {
+			panic(err)
+		}
+		sorted = []pstree.Process{proc}
+		switch flagOrderBy {
+		case "age":
+			flagAge = true
+			pstree.SortProcsByAge(&processes)
+		case "cpu":
+			flagCpu = true
+			pstree.SortProcsByCpu(&processes)
+		case "mem":
+			flagMemory = true
+			pstree.SortProcsByMemory(&processes)
+		case "pid":
+			pstree.SortProcsByPid(&processes)
+		case "threads":
+			flagThreads = true
+			pstree.SortProcsByNumThreads(&processes)
+		case "user":
+			pstree.SortProcsByUsername(&processes)
+		default:
+			sorted = processes
+		}
+
+		for _, proc := range processes {
+			if proc.PID != 1 {
+				sorted = append(sorted, proc)
+			}
+		}
+		processes = sorted
+	}
+
+	pstree.MakeTree(logger.Logger, &processes)
+	pstree.MarkProcs(logger.Logger, &processes, flagContains, flagUsername, flagExcludeRoot, flagPid)
+	pstree.DropProcs(logger.Logger, &processes)
 
 	if flagLevel == 0 {
 		flagLevel = 100
@@ -189,6 +233,9 @@ For more information about these matters, see the files named COPYING.`,
 		VT100Graphics:   flagVT100,
 		WideDisplay:     flagWide,
 	}
+
+	pretty.Println(pstree.FindPrintable(&processes))
+
 	pstree.PrintTree(logger.Logger, processes, 0, "", screenWidth, currentLevel, displayOptions)
 
 	return nil
