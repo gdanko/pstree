@@ -218,31 +218,6 @@ func ProcessNumThreads(c chan func(ctx context.Context, proc *process.Process) (
 	})
 }
 
-// ProcessThreadNames returns a function that gets the names of threads for a process.
-//
-// Parameters:
-//   - c: Channel to send the function through
-func ProcessThreadNames(c chan func(ctx context.Context, proc *process.Process) (threadNames []string, err error)) {
-	c <- (func(ctx context.Context, proc *process.Process) (threadNames []string, err error) {
-		threadNames = []string{}
-
-		// Get thread information
-		threads, err := proc.ThreadsWithContext(ctx)
-		if err != nil {
-			return threadNames, err
-		}
-
-		// Extract thread names
-		for tid := range threads {
-			// On macOS, thread IDs are meaningful and can be used to identify threads
-			threadName := fmt.Sprintf("%d", tid)
-			threadNames = append(threadNames, threadName)
-		}
-
-		return threadNames, nil
-	})
-}
-
 // ProcessOpenFiles sends a function to the provided channel that retrieves information about files opened by a process.
 // This function is designed to be used with goroutines to gather process information concurrently.
 //
