@@ -56,7 +56,7 @@ func GetPersistentFlags(cmd *cobra.Command, colorSupport bool, colorCount int, u
 	}
 
 	// Optional information
-	cmd.PersistentFlags().BoolVarP(&flagShowAll, "all", "A", false, "equivalent to -a -c -g -G -m -O -p -t -T; cannot be used with --user-transitions")
+	cmd.PersistentFlags().BoolVarP(&flagShowAll, "all", "A", false, "equivalent to -a -c -g -G -m -O -p -t -T; cannot be used with --uid-transitions or --user-transitions")
 	cmd.PersistentFlags().BoolVarP(&flagCompactNot, "compact-not", "n", false, "do not compact identical subtrees in output")
 	cmd.PersistentFlags().BoolVarP(&flagCpu, "cpu", "c", false, "show CPU utilization percentage with each process, e.g., (c:0.00%)")
 	cmd.PersistentFlags().BoolVarP(&flagMemory, "memory", "m", false, "show the memory usage with each process, e.g., (m:x.y MiB)")

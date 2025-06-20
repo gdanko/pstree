@@ -27,7 +27,7 @@ Display a tree of processes.
 
 Application Options:
   -G, --age                show the age of the process using the format (dd:hh:mm:ss)
-  -A, --all                equivalent to -a -c -g -G -m -O -p -t -I; cannot be used with --user-transitions
+  -A, --all                equivalent to -a -c -g -G -m -O -p -t -I; cannot be used with --uid-transitions or --user-transitions
   -a, --arguments          show command line arguments
   -k, --color string       color the process name by given attribute; valid options are: age, cpu, mem;
                            cannot be used with --colorize or --rainbow
