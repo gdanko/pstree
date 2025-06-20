@@ -31,7 +31,7 @@ func TruncateANSI(text string, maxWidth int) string {
 			i += loc[1]
 		} else {
 			// Otherwise, process visible characters
-			if visibleChars >= maxWidth {
+			if visibleChars >= maxWidth-3 {
 				break
 			}
 			result.WriteByte(text[i])
@@ -39,6 +39,7 @@ func TruncateANSI(text string, maxWidth int) string {
 			i++
 		}
 	}
+	result.WriteString("...")
 
 	// Append reset code to prevent ANSI bleed
 	return result.String() + "\x1b[0m"
@@ -77,6 +78,14 @@ func ColorBoldCyan(text *string) {
 	colorMyTextBold(0, 205, 205, text)
 }
 
+func ColorGray(text *string) {
+	colorMyText(128, 128, 128, text)
+}
+
+func ColorBoldGray(text *string) {
+	colorMyTextBold(128, 128, 128, text)
+}
+
 func ColorGreen(text *string) {
 	colorMyText(0, 205, 0, text)
 }
@@ -101,11 +110,19 @@ func ColorBoldPurple(text *string) {
 	colorMyTextBold(205, 0, 205, text)
 }
 
+func ColorMagenta(text *string) {
+	colorMyText(205, 0, 205, text)
+}
+
+func ColorBoldMagenta(text *string) {
+	colorMyTextBold(205, 0, 205, text)
+}
+
 func ColorRed(text *string) {
 	colorMyText(205, 0, 0, text)
 }
 
-func ColoBoldRed(text *string) {
+func ColorBoldRed(text *string) {
 	colorMyTextBold(205, 0, 0, text)
 }
 
