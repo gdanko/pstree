@@ -17,35 +17,46 @@ import (
 )
 
 type Process struct {
-	Age           int64
-	Args          []string
-	Child         int
-	Children      *[]Process
-	Command       string
-	Connections   []net.ConnectionStat
-	CPUPercent    float64
-	CPUTimes      *cpu.TimesStat
-	CreateTime    int64
-	Environment   []string
-	GIDs          []uint32
-	Groups        []uint32
-	MemoryInfo    *process.MemoryInfoStat
-	MemoryPercent float32
-	NumFDs        int32
-	NumThreads    int32
-	OpenFiles     []process.OpenFilesStat
-	Parent        int
-	ParentProcess *Process
-	PGID          int32
-	PID           int32
-	PPID          int32
-	Print         bool
-	Sister        int
-	Status        []string
-	UIDs          []uint32
-	Username      string
+	Age                 int64
+	Args                []string
+	Child               int
+	Children            *[]Process
+	Command             string
+	Connections         []net.ConnectionStat
+	CPUPercent          float64
+	CPUTimes            *cpu.TimesStat
+	CreateTime          int64
+	Environment         []string
+	GIDs                []uint32
+	Groups              []uint32
+	HasUIDTransition    bool
+	IsCurrentOrAncestor bool
+	MemoryInfo          *process.MemoryInfoStat
+	MemoryPercent       float32
+	NumFDs              int32
+	NumThreads          int32
+	OpenFiles           []process.OpenFilesStat
+	Parent              int
+	ParentProcess       *Process
+	ParentUID           uint32
+	ParentUsername      string
+	PGID                int32
+	PID                 int32
+	PPID                int32
+	Print               bool
+	Sister              int
+	Status              []string
+	UIDs                []uint32
+	Username            string
 }
 
+// SortByPid sorts a slice of process.Process pointers by their PID in ascending order.
+//
+// Parameters:
+//   - procs: Slice of process pointers to be sorted
+//
+// Returns:
+//   - Sorted slice of process pointers
 func SortByPid(procs []*process.Process) []*process.Process {
 	sort.Slice(procs, func(i, j int) bool {
 		return procs[i].Pid < procs[j].Pid // Ascending order
@@ -53,6 +64,14 @@ func SortByPid(procs []*process.Process) []*process.Process {
 	return procs
 }
 
+// GetPidFromIndex retrieves the PID of a process at the specified index in the processes slice.
+//
+// Parameters:
+//   - processes: Pointer to a slice of Process structs
+//   - index: The index of the process in the slice
+//
+// Returns:
+//   - The PID of the process at the specified index, or -1 if the index is out of bounds
 func GetPidFromIndex(processes *[]Process, index int) (pid int32) {
 	for i := range *processes {
 		if i == index {
@@ -62,6 +81,13 @@ func GetPidFromIndex(processes *[]Process, index int) (pid int32) {
 	return int32(-1)
 }
 
+// FindPrintable returns a slice containing only the processes that have their Print flag set to true.
+//
+// Parameters:
+//   - processes: Pointer to a slice of Process structs
+//
+// Returns:
+//   - A new slice containing only the processes marked as printable
 func FindPrintable(processes *[]Process) (printable []Process) {
 	for i := range *processes {
 		if (*processes)[i].Print {
@@ -71,6 +97,15 @@ func FindPrintable(processes *[]Process) (printable []Process) {
 	return printable
 }
 
+// GetProcessByPid finds and returns a process with the specified PID from the processes slice.
+//
+// Parameters:
+//   - processes: Pointer to a slice of Process structs
+//   - pid: The PID of the process to find
+//
+// Returns:
+//   - The Process struct for the specified PID
+//   - An error if the process with the given PID was not found
 func GetProcessByPid(processes *[]Process, pid int32) (proc Process, err error) {
 	for i := range *processes {
 		if (*processes)[i].PID == pid {
@@ -81,42 +116,75 @@ func GetProcessByPid(processes *[]Process, pid int32) (proc Process, err error) 
 	return Process{}, errors.New(errorMessage)
 }
 
+// SortProcsByAge sorts the processes slice by process age in ascending order.
+//
+// Parameters:
+//   - processes: Pointer to a slice of Process structs to be sorted
 func SortProcsByAge(processes *[]Process) {
 	sort.Slice(*processes, func(i, j int) bool {
 		return (*processes)[i].Age < (*processes)[j].Age
 	})
 }
 
+// SortProcsByCpu sorts the processes slice by CPU usage percentage in ascending order.
+//
+// Parameters:
+//   - processes: Pointer to a slice of Process structs to be sorted
 func SortProcsByCpu(processes *[]Process) {
 	sort.Slice(*processes, func(i, j int) bool {
 		return (*processes)[i].CPUPercent < (*processes)[j].CPUPercent
 	})
 }
 
+// SortProcsByMemory sorts the processes slice by memory usage (RSS) in ascending order.
+//
+// Parameters:
+//   - processes: Pointer to a slice of Process structs to be sorted
 func SortProcsByMemory(processes *[]Process) {
 	sort.Slice(*processes, func(i, j int) bool {
 		return float64((*processes)[i].MemoryInfo.RSS) < float64((*processes)[j].MemoryInfo.RSS)
 	})
 }
 
+// SortProcsByUsername sorts the processes slice by username in ascending alphabetical order.
+//
+// Parameters:
+//   - processes: Pointer to a slice of Process structs to be sorted
 func SortProcsByUsername(processes *[]Process) {
 	sort.Slice(*processes, func(i, j int) bool {
 		return (*processes)[i].Username < (*processes)[j].Username
 	})
 }
 
+// SortProcsByPid sorts the processes slice by PID in ascending order.
+//
+// Parameters:
+//   - processes: Pointer to a slice of Process structs to be sorted
 func SortProcsByPid(processes *[]Process) {
 	sort.Slice(*processes, func(i, j int) bool {
 		return (*processes)[i].PID < (*processes)[j].PID
 	})
 }
 
+// SortProcsByNumThreads sorts the processes slice by the number of threads in ascending order.
+//
+// Parameters:
+//   - processes: Pointer to a slice of Process structs to be sorted
 func SortProcsByNumThreads(processes *[]Process) {
 	sort.Slice(*processes, func(i, j int) bool {
 		return (*processes)[i].NumThreads < (*processes)[j].NumThreads
 	})
 }
 
+// GetPIDIndex finds the index of a process with the specified PID in the processes slice.
+//
+// Parameters:
+//   - logger: Logger instance for debug information
+//   - processes: Slice of Process structs to search
+//   - pid: The PID to search for
+//
+// Returns:
+//   - The index of the process with the specified PID, or -1 if not found
 func GetPIDIndex(logger *slog.Logger, processes []Process, pid int32) int {
 	for i := range processes {
 		if processes[i].PID == pid {
@@ -126,6 +194,97 @@ func GetPIDIndex(logger *slog.Logger, processes []Process, pid int32) int {
 	return -1
 }
 
+// MarkCurrentAndAncestors marks the current process and all its ancestors.
+// This function identifies the current process by its PID and marks it and all
+// its ancestors with IsCurrentOrAncestor=true for highlighting in the display.
+//
+// Parameters:
+//   - logger: Logger instance for debug information
+//   - processes: Pointer to a slice of Process structs
+//   - currentPid: The PID of the current process to highlight
+func MarkCurrentAndAncestors(logger *slog.Logger, processes *[]Process, currentPid int32) {
+	if currentPid <= 0 {
+		return
+	}
+
+	logger.Debug(fmt.Sprintf("Marking current process %d and its ancestors", currentPid))
+
+	// Find the current process index
+	currentIndex := GetPIDIndex(logger, *processes, currentPid)
+	if currentIndex == -1 {
+		logger.Debug(fmt.Sprintf("Current process %d not found", currentPid))
+		return
+	}
+
+	// Mark the current process
+	(*processes)[currentIndex].IsCurrentOrAncestor = true
+
+	// Mark all ancestors
+	parent := (*processes)[currentIndex].Parent
+	for parent != -1 {
+		logger.Debug(fmt.Sprintf("Marking pid %d as ancestor of current process", GetPidFromIndex(processes, parent)))
+		(*processes)[parent].IsCurrentOrAncestor = true
+		parent = (*processes)[parent].Parent
+	}
+}
+
+// MarkUIDTransitions identifies and marks processes where the user ID changes from the parent process.
+// This function compares the UIDs of each process with its parent and sets HasUIDTransition=true
+// when a transition is detected. It also stores the parent UID for display purposes.
+//
+// Parameters:
+//   - logger: Logger instance for debug information
+//   - processes: Pointer to a slice of Process structs
+func MarkUIDTransitions(logger *slog.Logger, processes *[]Process) {
+	logger.Debug("Marking UID transitions between processes - START")
+
+	for i := range *processes {
+		// Skip the root process (which has no parent)
+		if (*processes)[i].Parent == -1 {
+			continue
+		}
+
+		// Get parent index
+		parentIdx := (*processes)[i].Parent
+
+		// Compare UIDs between process and its parent
+		if len((*processes)[i].UIDs) > 0 && len((*processes)[parentIdx].UIDs) > 0 {
+			// Store parent UID regardless of transition
+			(*processes)[i].ParentUID = (*processes)[parentIdx].UIDs[0]
+			(*processes)[i].ParentUsername = (*processes)[parentIdx].Username
+
+			// Compare the first UID (effective UID)
+			if (*processes)[i].UIDs[0] != (*processes)[parentIdx].UIDs[0] {
+				logger.Debug(fmt.Sprintf("UID transition detected: Process %d (UID %d) has different UID from parent %d (UID %d)",
+					(*processes)[i].PID, (*processes)[i].UIDs[0],
+					(*processes)[parentIdx].PID, (*processes)[parentIdx].UIDs[0]))
+				(*processes)[i].HasUIDTransition = true
+			}
+			if (*processes)[i].Username != (*processes)[parentIdx].Username {
+				logger.Debug(fmt.Sprintf("Username transition detected: Process %d (%s) has different username from parent %d (%s)",
+					(*processes)[i].PID, (*processes)[i].Username,
+					(*processes)[parentIdx].PID, (*processes)[parentIdx].Username))
+				(*processes)[i].HasUIDTransition = true
+			}
+		} else if (*processes)[i].Username != (*processes)[parentIdx].Username {
+			// Fallback to username comparison if UIDs are not available
+			logger.Debug(fmt.Sprintf("Username transition detected: Process %d (%s) has different username from parent %d (%s)",
+				(*processes)[i].PID, (*processes)[i].Username,
+				(*processes)[parentIdx].PID, (*processes)[parentIdx].Username))
+			(*processes)[i].HasUIDTransition = true
+		}
+	}
+}
+
+// generateProcess creates a Process struct from a process.Process pointer.
+// It collects various process attributes using goroutines and channels for concurrent execution
+// to improve performance when gathering process information.
+//
+// Parameters:
+//   - proc: Pointer to a process.Process struct from which to generate the Process
+//
+// Returns:
+//   - A new Process struct populated with information from the input process
 func generateProcess(proc *process.Process) Process {
 	var (
 		args          []string
@@ -328,7 +487,7 @@ func generateProcess(proc *process.Process) Process {
 	}
 
 	uidsChannel := make(chan func(ctx context.Context, proc *process.Process) ([]uint32, error))
-	go ProcessGIDs(uidsChannel)
+	go ProcessUIDs(uidsChannel)
 	uidsOut, err := (<-uidsChannel)(ctx, proc)
 	if err != nil {
 		uids = []uint32{}
@@ -375,6 +534,14 @@ func generateProcess(proc *process.Process) Process {
 	}
 }
 
+// markParents marks all parent processes of a given process as printable.
+// This function recursively traverses up the process tree, marking each parent
+// process with Print=true until it reaches the root process (or a process with no parent).
+//
+// Parameters:
+//   - logger: Logger instance for debug information
+//   - processes: Pointer to a slice of Process structs
+//   - me: Index of the process whose parents should be marked
 func markParents(logger *slog.Logger, processes *[]Process, me int) {
 	logger.Debug(fmt.Sprintf("Entering markParents with with me=%d", GetPidFromIndex(processes, me)))
 	parent := (*processes)[me].Parent
@@ -386,6 +553,14 @@ func markParents(logger *slog.Logger, processes *[]Process, me int) {
 	}
 }
 
+// markChildren marks a process and all its child processes as printable.
+// This function recursively traverses down the process tree, marking each child
+// process with Print=true, and continues with any sibling processes.
+//
+// Parameters:
+//   - logger: Logger instance for debug information
+//   - processes: Pointer to a slice of Process structs
+//   - me: Index of the process whose children should be marked
 func markChildren(logger *slog.Logger, processes *[]Process, me int) {
 	logger.Debug(fmt.Sprintf("Entering markChildren with with me=%d", GetPidFromIndex(processes, me)))
 	var child int
@@ -398,6 +573,13 @@ func markChildren(logger *slog.Logger, processes *[]Process, me int) {
 	}
 }
 
+// GetProcesses retrieves information about all processes running on the system.
+// It populates the provided processes slice with detailed information about each process,
+// including their relationships, resource usage, and other attributes.
+//
+// Parameters:
+//   - logger: Logger instance for debug information
+//   - processes: Pointer to a slice of Process structs to populate
 func GetProcesses(logger *slog.Logger, processes *[]Process) {
 	var (
 		err      error
@@ -416,6 +598,13 @@ func GetProcesses(logger *slog.Logger, processes *[]Process) {
 	}
 }
 
+// MakeTree builds the process tree structure by establishing parent-child relationships.
+// It organizes processes into a hierarchical tree structure based on their parent-child
+// relationships, setting up the Parent, Child, and Sister fields for each process.
+//
+// Parameters:
+//   - logger: Logger instance for debug information
+//   - processes: Pointer to a slice of Process structs to organize into a tree
 func MakeTree(logger *slog.Logger, processes *[]Process) {
 	logger.Debug("Entering MakeTree")
 	for me := range *processes {
@@ -435,6 +624,17 @@ func MakeTree(logger *slog.Logger, processes *[]Process) {
 	}
 }
 
+// MarkProcs marks processes that should be displayed based on filtering criteria.
+// It applies various filters such as process name pattern matching, username filtering,
+// root process exclusion, and PID filtering to determine which processes should be displayed.
+//
+// Parameters:
+//   - logger: Logger instance for debug information
+//   - processes: Pointer to a slice of Process structs to mark
+//   - flagContains: String pattern to match in process command lines
+//   - flagUsername: Slice of usernames to filter processes by
+//   - flagExcludeRoot: Boolean indicating whether to exclude root processes
+//   - flagPid: PID to filter processes by (0 means no filtering by PID)
 func MarkProcs(logger *slog.Logger, processes *[]Process, flagContains string, flagUsername []string, flagExcludeRoot bool, flagPid int32) {
 	logger.Debug("Entering MakeProcs")
 	var (
@@ -490,6 +690,13 @@ func MarkProcs(logger *slog.Logger, processes *[]Process, flagContains string, f
 	}
 }
 
+// DropProcs removes processes that are not marked for display from the process tree.
+// It modifies the process tree structure to maintain proper parent-child relationships
+// while excluding processes that should not be displayed.
+//
+// Parameters:
+//   - logger: Logger instance for debug information
+//   - processes: Pointer to a slice of Process structs to filter
 func DropProcs(logger *slog.Logger, processes *[]Process) {
 	logger.Debug("Entering DropProcs")
 	for me := range *processes {
