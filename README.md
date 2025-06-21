@@ -19,7 +19,7 @@ It uses [gopsutil](https://github.com/shirou/gopsutil) for gathering process inf
 ## Usage
 ```
 $ pstree --help
-pstree $Revision: 0.7.4 $ by Gary Danko (C) 2025
+pstree $Revision: 0.7.6 $ by Gary Danko (C) 2025
 
 Usage: pstree [OPTIONS]
 
@@ -48,6 +48,7 @@ Application Options:
   -r, --rainbow            please don't; cannot be used with --color or --colorize
   -O, --show-owner         show the owner of the process
   -p, --show-pids          show PIDs
+  -S, --show-pgls          show process group leader indicators
   -t, --threads            show the number of threads with each process, e.g., (t:xx)
   -I, --uid-transitions    show processes where the user ID changes from the parent process, e.g., (uid→uid); cannot be used with --user-transitions
       --user strings       show only branches containing processes of <user>; this option can be used more than and cannot be used with --exclude-root
