@@ -57,7 +57,7 @@ var (
 	username                string
 	validAttributes         []string = []string{"age", "cpu", "mem"}
 	validOrderBy            []string = []string{"age", "cpu", "mem", "pid", "threads", "user"}
-	version                 string   = "0.7.2"
+	version                 string   = "0.7.4"
 	versionString           string
 	rootCmd                 = &cobra.Command{
 		Use:    "pstree",
