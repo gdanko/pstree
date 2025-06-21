@@ -19,7 +19,7 @@ It uses [gopsutil](https://github.com/shirou/gopsutil) for gathering process inf
 ## Usage
 ```
 $ pstree --help
-pstree $Revision: 0.7.7 $ by Gary Danko (C) 2025
+pstree $Revision: 0.7.8 $ by Gary Danko (C) 2025
 
 Usage: pstree [OPTIONS]
 
