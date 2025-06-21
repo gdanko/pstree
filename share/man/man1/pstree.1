@@ -1,5 +1,5 @@
 .ad b
-.TH PSTREE 1 "June 20, 2025" "0.7.0" "User Commands"
+.TH PSTREE 1 "June 20, 2025" "0.7.2" "User Commands"
 .SH NAME
 pstree \- display a tree of processes
 .SH SYNOPSIS
@@ -45,7 +45,7 @@ Show command line arguments after the process name.
 Equivalent to -a -c -g -G -m -O -p -t -I. This option cannot be used with \fB--uid-transitions\fR or \fB--user-transitions\fR.
 .TP
 .B \-c, \--cpu
-Show the CPU utilization for each process in the list using the format (c:0.00%).
+Show the CPU utilization for each process in the list using the format (c:0.00%). This option implies \fB--compact-not\fR, since some of the results may be buried in collapsed subtrees.
 .TP
 .B \-C, \--colorize
 Colorize the pstree output. This option is only visible in the help if your terminal supports color. This option is not available if your terminal doesn't support at least 8 color output. This option cannot be used with \fB--color\fR or \fB--rainbow\fR.
@@ -72,13 +72,13 @@ Use IBM-850 line drawing characters.
 Show processes where the user ID changes from the parent process, e.g., (uid→uid). This makes it easy to identify privilege escalations or drops in the process tree. This option cannot be used with \fB--user-transitions\fR.
 .TP
 .B \-k, \--color \fIattr\fR
-Color the process name by the given attribute. Valid options are: age, cpu, mem. This option is only visible in the help if your terminal supports color. This option is not available if your terminal doesn't support at least 8 color output. This option cannot be used with \fB--colorize\fR or \fB--rainbow\fR.
+Color the process name by the given attribute. Valid options are: age, cpu, mem. This option is not available if your terminal doesn't support at least 8 color output. This option implies \fB--compact-not\fR, since some of the offenders may be buried in collapsed subtrees. This option cannot be used with \fB--colorize\fR or \fB--rainbow\fR.
 .TP
 .B \-l, \--level \fIlevel\fR
 Print tree to \fIlevel\fR level deep.
 .TP
 .B \-m, \--memory
-Show the memory usage for each process in the list using the format (m:0.00 MiB).
+Show the memory usage for each process in the list using the format (m:0.00 MiB). This option implies \fB--compact-not\fR, since some of the results may be buried in collapsed subtrees.
 .TP
 .B \-n, \--compact-not
 Do not compact identical subtrees in output. By default, identical process subtrees are shown only once with a count indicating how many instances exist (e.g., "process---N*[process]"). This option disables compaction, showing each process individually.
@@ -99,7 +99,7 @@ Show only branches containing process \fIPID\fR.
 Display the output in a really annoying rainbow pattern. You've been warned. This option is not available if your terminal doesn't support 256 color output. This option cannot be used with \fB--color\fR or \fB--colorize\fR.
 .TP
 .B \-s, \--contains \fIpattern\fR
-Show only branches containing processes with \fIpattern\fR in the command line.
+Show only branches containing processes with \fIpattern\fR in the command line. This option implies \fB--compact-not\fR, since some of the results may be buried in collapsed subtrees.
 .TP
 .B \-t, \--threads
 Show the number of threads for each process in the list using the format (t:xx).

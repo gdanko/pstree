@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.23.0 -->
-<!-- CreationDate: Fri Jun 20 16:04:52 2025 -->
+<!-- CreationDate: Fri Jun 20 18:29:03 2025 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -94,7 +94,9 @@ after the process name.</p>
 <p style="margin-left:9%;"><b>&minus;c, &minus;-cpu</b></p>
 
 <p style="margin-left:18%;">Show the CPU utilization for
-each process in the list using the format (c:0.00%).</p>
+each process in the list using the format (c:0.00%). This
+option implies <b>--compact-not</b>, since some of the
+results may be buried in collapsed subtrees.</p>
 
 <p style="margin-left:9%;"><b>&minus;C,
 &minus;-colorize</b></p>
@@ -148,7 +150,7 @@ characters.</p>
 &minus;-uid-transitions</b></p>
 
 <p style="margin-left:18%;">Show processes where the user
-ID changes from the parent process, e.g., (uid&acirc;uid).
+ID changes from the parent process, e.g., (uid>uid).
 This makes it easy to identify privilege escalations or
 drops in the process tree. This option cannot be used with
 <b>--user-transitions</b>.</p>
@@ -158,11 +160,11 @@ drops in the process tree. This option cannot be used with
 
 <p style="margin-left:18%;">Color the process name by the
 given attribute. Valid options are: age, cpu, mem. This
-option is only visible in the help if your terminal supports
-color. This option is not available if your terminal
-doesn&rsquo;t support at least 8 color output. This option
-cannot be used with <b>--colorize</b> or
-<b>--rainbow</b>.</p>
+option is not available if your terminal doesn&rsquo;t
+support at least 8 color output. This option implies
+<b>--compact-not</b>, since some of the offenders may be
+buried in collapsed subtrees. This option cannot be used
+with <b>--colorize</b> or <b>--rainbow</b>.</p>
 
 <p style="margin-left:9%;"><b>&minus;l, &minus;-level</b>
 <i>level</i></p>
@@ -174,7 +176,9 @@ level deep.</p>
 &minus;-memory</b></p>
 
 <p style="margin-left:18%;">Show the memory usage for each
-process in the list using the format (m:0.00 MiB).</p>
+process in the list using the format (m:0.00 MiB). This
+option implies <b>--compact-not</b>, since some of the
+results may be buried in collapsed subtrees.</p>
 
 <p style="margin-left:9%;"><b>&minus;n,
 &minus;-compact-not</b></p>
@@ -225,7 +229,9 @@ support 256 color output. This option cannot be used with
 &minus;-contains</b> <i>pattern</i></p>
 
 <p style="margin-left:18%;">Show only branches containing
-processes with <i>pattern</i> in the command line.</p>
+processes with <i>pattern</i> in the command line. This
+option implies <b>--compact-not</b>, since some of the
+results may be buried in collapsed subtrees.</p>
 
 <p style="margin-left:9%;"><b>&minus;t,
 &minus;-threads</b></p>
@@ -244,7 +250,7 @@ drawing characters.</p>
 
 <p style="margin-left:18%;">Show processes where the
 username changes from the parent process, e.g.,
-(user&acirc;user). This makes it easy to identify privilege
+(user>user). This makes it easy to identify privilege
 escalations or drops in the process tree. This option cannot
 be used with <b>--uid-transitions</b> or <b>--all</b>.</p>
 
