@@ -17,6 +17,7 @@ type DisplayOptions struct {
 	ColorSupport        bool
 	CompactMode         bool
 	GraphicsMode        int
+	HidePGL             bool
 	HideThreads         bool
 	IBM850Graphics      bool
 	InstalledMemory     uint64
@@ -312,7 +313,11 @@ func PrintTree(logger *slog.Logger, processes []Process, me int, head string, sc
 
 	var part3 string
 	if processes[me].PID == processes[me].PGID {
-		part3 = C.PGL
+		if displayOptions.HidePGL {
+			part3 = C.NPGL
+		} else {
+			part3 = C.PGL
+		}
 	} else {
 		part3 = C.NPGL
 	}
