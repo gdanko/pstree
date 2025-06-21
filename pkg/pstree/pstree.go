@@ -285,7 +285,7 @@ func MarkUIDTransitions(logger *slog.Logger, processes *[]Process) {
 //
 // Returns:
 //   - A new Process struct populated with information from the input process
-func generateProcess(proc *process.Process) Process {
+func generateProcess(logger *slog.Logger, proc *process.Process) Process {
 	var (
 		args          []string
 		command       string
@@ -313,7 +313,7 @@ func generateProcess(proc *process.Process) Process {
 	defer cancel()
 
 	argsChannel := make(chan func(ctx context.Context, proc *process.Process) ([]string, error))
-	go ProcessArgs(argsChannel)
+	go ProcessArgs(argsChannel, logger)
 	argsOut, err := (<-argsChannel)(ctx, proc)
 	if err != nil {
 		args = []string{}
@@ -322,7 +322,7 @@ func generateProcess(proc *process.Process) Process {
 	}
 
 	commandNameChannel := make(chan func(ctx context.Context, proc *process.Process) (string, error))
-	go ProcessCommandName(commandNameChannel)
+	go ProcessCommandName(commandNameChannel, logger)
 	commandOut, err := (<-commandNameChannel)(ctx, proc)
 	if err != nil {
 		command = "?"
@@ -341,7 +341,7 @@ func generateProcess(proc *process.Process) Process {
 	// }
 
 	cpuPercentChannel := make(chan func(ctx context.Context, proc *process.Process) (float64, error))
-	go ProcessCpuPercent(cpuPercentChannel)
+	go ProcessCpuPercent(cpuPercentChannel, logger)
 	cpuPercentOut, err := (<-cpuPercentChannel)(ctx, proc)
 	if err != nil {
 		cpuPercent = -1
@@ -350,7 +350,7 @@ func generateProcess(proc *process.Process) Process {
 	}
 
 	cpuTimesChannel := make(chan func(ctx context.Context, proc *process.Process) (*cpu.TimesStat, error))
-	go ProcessCpuTimes(cpuTimesChannel)
+	go ProcessCpuTimes(cpuTimesChannel, logger)
 	cpuTimesOut, err := (<-cpuTimesChannel)(ctx, proc)
 	if err != nil {
 		cpuTimes = &cpu.TimesStat{}
@@ -359,7 +359,7 @@ func generateProcess(proc *process.Process) Process {
 	}
 
 	createTimeChannel := make(chan func(ctx context.Context, proc *process.Process) (int64, error))
-	go ProcessCreateTime(createTimeChannel)
+	go ProcessCreateTime(createTimeChannel, logger)
 	createTimeOut, err := (<-createTimeChannel)(ctx, proc)
 	if err != nil {
 		createTime = -1
@@ -368,7 +368,7 @@ func generateProcess(proc *process.Process) Process {
 	}
 
 	environmentChannel := make(chan func(ctx context.Context, proc *process.Process) ([]string, error))
-	go ProcessEnvironment(environmentChannel)
+	go ProcessEnvironment(environmentChannel, logger)
 	environmentOut, err := (<-environmentChannel)(ctx, proc)
 	if err != nil {
 		environment = []string{}
@@ -377,7 +377,7 @@ func generateProcess(proc *process.Process) Process {
 	}
 
 	gidsChannel := make(chan func(ctx context.Context, proc *process.Process) ([]uint32, error))
-	go ProcessGIDs(gidsChannel)
+	go ProcessGIDs(gidsChannel, logger)
 	gidsOut, err := (<-gidsChannel)(ctx, proc)
 	if err != nil {
 		gids = []uint32{}
@@ -386,7 +386,7 @@ func generateProcess(proc *process.Process) Process {
 	}
 
 	groupsChannel := make(chan func(ctx context.Context, proc *process.Process) ([]uint32, error))
-	go ProcessGroups(groupsChannel)
+	go ProcessGroups(groupsChannel, logger)
 	groupsOut, err := (<-groupsChannel)(ctx, proc)
 	if err != nil {
 		groups = []uint32{}
@@ -395,7 +395,7 @@ func generateProcess(proc *process.Process) Process {
 	}
 
 	memoryInfoChannel := make(chan func(ctx context.Context, proc *process.Process) (*process.MemoryInfoStat, error))
-	go ProcessMemoryInfo(memoryInfoChannel)
+	go ProcessMemoryInfo(memoryInfoChannel, logger)
 	memoryInfoOut, err := (<-memoryInfoChannel)(ctx, proc)
 	if err != nil {
 		memoryInfo = &process.MemoryInfoStat{}
@@ -404,7 +404,7 @@ func generateProcess(proc *process.Process) Process {
 	}
 
 	memoryPercentChannel := make(chan func(ctx context.Context, proc *process.Process) (float32, error))
-	go ProcessMemoryPercent(memoryPercentChannel)
+	go ProcessMemoryPercent(memoryPercentChannel, logger)
 	memoryPercentOut, err := (<-memoryPercentChannel)(ctx, proc)
 	if err != nil {
 		memoryPercent = -1.0
@@ -413,7 +413,7 @@ func generateProcess(proc *process.Process) Process {
 	}
 
 	numFDsChannel := make(chan func(ctx context.Context, proc *process.Process) (int32, error))
-	go ProcessNumFDs(numFDsChannel)
+	go ProcessNumFDs(numFDsChannel, logger)
 	numFDsOut, err := (<-numFDsChannel)(ctx, proc)
 	if err != nil {
 		numFDs = -1
@@ -422,7 +422,7 @@ func generateProcess(proc *process.Process) Process {
 	}
 
 	openFilesChannel := make(chan func(ctx context.Context, proc *process.Process) ([]process.OpenFilesStat, error))
-	go ProcessOpenFiles(openFilesChannel)
+	go ProcessOpenFiles(openFilesChannel, logger)
 	openFilesOut, err := (<-openFilesChannel)(ctx, proc)
 	if err != nil {
 		openFiles = []process.OpenFilesStat{}
@@ -431,7 +431,7 @@ func generateProcess(proc *process.Process) Process {
 	}
 
 	numThreadsChannel := make(chan func(ctx context.Context, proc *process.Process) (int32, error))
-	go ProcessNumThreads(numThreadsChannel)
+	go ProcessNumThreads(numThreadsChannel, logger)
 	numThreadsOut, err := (<-numThreadsChannel)(ctx, proc)
 	if err != nil {
 		numThreads = -1
@@ -439,8 +439,8 @@ func generateProcess(proc *process.Process) Process {
 		numThreads = numThreadsOut
 	}
 
-	pgidChannel := make(chan func(proc *process.Process) (int, error))
-	go ProcessPGID(pgidChannel)
+	pgidChannel := make(chan func(proc *process.Process) (pgid int, err error))
+	go ProcessPGID(pgidChannel, logger)
 	pgidOut, err := (<-pgidChannel)(proc)
 	if err != nil {
 		pgid = -1
@@ -459,7 +459,7 @@ func generateProcess(proc *process.Process) Process {
 	// }
 
 	ppidChannel := make(chan func(ctx context.Context, proc *process.Process) (int32, error))
-	go ProcessPPID(ppidChannel)
+	go ProcessPPID(ppidChannel, logger)
 	ppidOut, err := (<-ppidChannel)(ctx, proc)
 	if err != nil {
 		ppid = -1
@@ -478,7 +478,7 @@ func generateProcess(proc *process.Process) Process {
 	// }
 
 	usernameChannel := make(chan func(ctx context.Context, proc *process.Process) (string, error))
-	go ProcessUsername(usernameChannel)
+	go ProcessUsername(usernameChannel, logger)
 	usernameOut, err := (<-usernameChannel)(ctx, proc)
 	if err != nil {
 		username = "?"
@@ -487,7 +487,7 @@ func generateProcess(proc *process.Process) Process {
 	}
 
 	uidsChannel := make(chan func(ctx context.Context, proc *process.Process) ([]uint32, error))
-	go ProcessUIDs(uidsChannel)
+	go ProcessUIDs(uidsChannel, logger)
 	uidsOut, err := (<-uidsChannel)(ctx, proc)
 	if err != nil {
 		uids = []uint32{}
@@ -594,7 +594,7 @@ func GetProcesses(logger *slog.Logger, processes *[]Process) {
 	sorted = SortByPid(unsorted)
 
 	for _, p := range sorted {
-		*processes = append(*processes, generateProcess(p))
+		*processes = append(*processes, generateProcess(logger, p))
 	}
 }
 
