@@ -19,7 +19,7 @@ It uses [gopsutil](https://github.com/shirou/gopsutil) for gathering process inf
 ## Usage
 ```
 $ pstree --help
-pstree $Revision: 0.7.2 $ by Gary Danko (C) 2025
+pstree $Revision: 0.7.4 $ by Gary Danko (C) 2025
 
 Usage: pstree [OPTIONS]
 
@@ -38,7 +38,7 @@ Application Options:
   -d, --debug              show debugging data
   -X, --exclude-root       don't show branches containing only root processes; cannot be used with --user
   -h, --help               help for pstree
-      --hide-threads       hide threads, show only processes
+  -H, --hide-threads       hide threads, show only processes
   -i, --ibm-850            use IBM-850 line drawing characters
   -l, --level int          print tree to <level> level deep
   -m, --memory             show the memory usage with each process, e.g., (m:x.y MiB); implies --compact-not
