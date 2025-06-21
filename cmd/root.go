@@ -57,7 +57,7 @@ var (
 	username                string
 	validAttributes         []string = []string{"age", "cpu", "mem"}
 	validOrderBy            []string = []string{"age", "cpu", "mem", "pid", "threads", "user"}
-	version                 string   = "0.7.0"
+	version                 string   = "0.7.2"
 	versionString           string
 	rootCmd                 = &cobra.Command{
 		Use:    "pstree",
@@ -243,11 +243,16 @@ For more information about these matters, see the files named COPYING.`,
 
 	pstree.MakeTree(logger.Logger, &processes)
 	pstree.MarkProcs(logger.Logger, &processes, flagContains, flagUsername, flagExcludeRoot, flagPid)
-
 	pstree.DropProcs(logger.Logger, &processes)
 
 	if flagLevel == 0 {
 		flagLevel = 999
+	}
+
+	// If any of the following flags are set, then compact mode should be disabled
+	// This is because some of the results or offenders may be buried in collapsed subtrees
+	if flagColor != "" || flagCpu || flagMemory || flagContains != "" {
+		flagCompactNot = true
 	}
 
 	if flagShowAll {
