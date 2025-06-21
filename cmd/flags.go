@@ -66,7 +66,7 @@ func GetPersistentFlags(cmd *cobra.Command, colorSupport bool, colorCount int, u
 	cmd.PersistentFlags().BoolVarP(&flagShowUIDTransitions, "uid-transitions", "I", false, "show processes where the user ID changes from the parent process, e.g., (uid→uid); cannot be used with --user-transitions")
 	cmd.PersistentFlags().BoolVarP(&flagShowUserTransitions, "user-transitions", "U", false, "show processes where the user changes from the parent process, e.g., (user→user); cannot be used with --uid-transitions or --all")
 	cmd.PersistentFlags().BoolVarP(&flagThreads, "threads", "t", false, "show the number of threads with each process, e.g., (t:xx)")
-	cmd.PersistentFlags().BoolVarP(&flagHideThreads, "hide-threads", "", false, "hide threads, show only processes")
+	cmd.PersistentFlags().BoolVarP(&flagHideThreads, "hide-threads", "H", false, "hide threads, show only processes")
 
 	// Filtering and sorting
 	cmd.PersistentFlags().BoolVarP(&flagAge, "age", "G", false, "show the age of the process using the format (dd:hh:mm:ss)")
