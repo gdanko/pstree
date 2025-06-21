@@ -2,8 +2,8 @@ package pstree
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"log/slog"
 	"syscall"
 
 	"github.com/shirou/gopsutil/v4/cpu"
@@ -28,23 +28,32 @@ func ProcessArgs(c chan func(ctx context.Context, proc *process.Process) (args [
 //
 // Parameters:
 //   - c: Channel to send the function through
-func ProcessCommandName(c chan func(ctx context.Context, proc *process.Process) (string, error)) {
+//   - logger: Logger instance for debug information
+func ProcessCommandName(c chan func(ctx context.Context, proc *process.Process) (string, error), logger *slog.Logger) {
 	c <- (func(ctx context.Context, proc *process.Process) (command string, err error) {
+		// First check for exe, which should be the full path to the
 		exe, err := proc.ExeWithContext(ctx)
-		if err == nil {
+		if err == nil && exe != "" {
+			// Return the full path
 			return exe, nil
 		}
 
+		// Either there was en error or exe was empty so let's try to get the command slice
+		cmdLine, err := proc.CmdlineSliceWithContext(ctx)
+		if err == nil && len(cmdLine) > 0 {
+			// Return the first element of the command line slice, which is the executable
+			return cmdLine[0], nil
+		}
+
+		// Crud, we still don't have a command name so let's try to get the command basename
 		name, err := proc.NameWithContext(ctx)
-		if err == nil {
+		if err == nil && name != "" {
+			// Return name, which is the basename of the command
 			return name, nil
 		}
 
-		if proc.Pid >= 0 {
-			return fmt.Sprintf("[PID %d]", proc.Pid), nil
-		}
-
-		return "", errors.New("failed to retrieve command name")
+		// Well crap, I give up, let's return the PID
+		return fmt.Sprintf("[PID %d]", proc.Pid), nil
 	})
 }
 
