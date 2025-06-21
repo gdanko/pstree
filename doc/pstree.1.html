@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.23.0 -->
-<!-- CreationDate: Sat Jun 21 08:38:56 2025 -->
+<!-- CreationDate: Sat Jun 21 11:46:14 2025 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -24,6 +24,7 @@
 <a href="#SYNOPSIS">SYNOPSIS</a><br>
 <a href="#DESCRIPTION">DESCRIPTION</a><br>
 <a href="#OPTIONS">OPTIONS</a><br>
+<a href="#EXAMPLES">EXAMPLES</a><br>
 <a href="#AUTHOR">AUTHOR</a><br>
 <a href="#SEE ALSO">SEE ALSO</a><br>
 
@@ -57,11 +58,12 @@ display a tree of processes</p>
 <b>--show-owner</b>] [<b>-p</b> | <b>--show-pids</b>]
 [<b>-P</b> | <b>--pid</b> <i>PID</i>] [<b>-r</b> |
 <b>--rainbow</b>] [<b>-s</b> | <b>--contains</b>
-<i>pattern</i>] [<b>-t</b> | <b>--threads</b>] [<b>-u</b> |
-<b>--utf-8</b>] [<b>-U</b> | <b>--user-transitions</b>]
-[<b>--user</b> <i>username</i>] [<b>-v</b> |
-<b>--vt-100</b>] [<b>-V</b> | <b>--version</b>] [<b>-w</b> |
-<b>--wide</b>] [<b>-X</b> | <b>--exclude-root</b>]</p>
+<i>pattern</i>] [<b>-S</b> | <b>--show-pgls</b>] [<b>-t</b>
+| <b>--threads</b>] [<b>-u</b> | <b>--utf-8</b>] [<b>-U</b>
+| <b>--user-transitions</b>] [<b>-v</b> | <b>--vt-100</b>]
+[<b>-V</b> | <b>--version</b>] [<b>-w</b> | <b>--wide</b>]
+[<b>-X</b> | <b>--exclude-root</b>] [<b>--user</b>
+<i>username</i>]</p>
 
 <h2>DESCRIPTION
 <a name="DESCRIPTION"></a>
@@ -70,11 +72,11 @@ display a tree of processes</p>
 
 <p style="margin-left:9%; margin-top: 1em"><b>pstree</b>
 shows running processes as a tree. The tree is rooted at
-launchd. If --pid is specified, the tree will be rooted at
-the specified PID. If --user is specified, all process trees
-rooted at processes owned by that user are shown. By
-default, processes are grouped and collapsed by command name
-and arguments. This can be disabled with the
+launchd. If <b>--pid</b> is specified, the tree will be
+rooted at the specified PID. If <b>--user</b> is specified,
+all process trees rooted at processes owned by that user are
+shown. By default, processes are grouped and collapsed by
+command name and arguments. This can be disabled with the
 <b>--compact-not</b> option.</p>
 
 <h2>OPTIONS
@@ -237,6 +239,13 @@ processes with <i>pattern</i> in the command line. This
 option implies <b>--compact-not</b>, since some of the
 results may be buried in collapsed subtrees.</p>
 
+<p style="margin-left:9%;"><b>&minus;S,
+&minus;-show-pgls</b></p>
+
+<p style="margin-left:18%;">Show process group leader
+indicators. By default, process group leaders are not marked
+with special characters in the output.</p>
+
 <p style="margin-left:9%;"><b>&minus;t,
 &minus;-threads</b></p>
 
@@ -290,6 +299,49 @@ width of the screen.</p>
 <p style="margin-left:18%;">Don&rsquo;t show branches
 containing only root processes. This option cannot be used
 with <b>--user</b>.</p>
+
+<h2>EXAMPLES
+<a name="EXAMPLES"></a>
+</h2>
+
+
+<p style="margin-left:9%; margin-top: 1em">Display a basic
+process tree:</p>
+
+<p style="margin-left:9%; margin-top: 1em">pstree</p>
+
+<p style="margin-left:9%; margin-top: 1em">Show a process
+tree with PIDs, CPU usage, memory usage, and process
+owners:</p>
+
+<p style="margin-left:9%; margin-top: 1em">pstree -p -c -m
+-O</p>
+
+<p style="margin-left:9%; margin-top: 1em">Show a process
+tree for a specific user with process age and thread
+counts:</p>
+
+<p style="margin-left:9%; margin-top: 1em">pstree --user
+username -G -t</p>
+
+<p style="margin-left:9%; margin-top: 1em">Show a process
+tree rooted at a specific process with all details:</p>
+
+<p style="margin-left:9%; margin-top: 1em">pstree -P 1234
+-A</p>
+
+<p style="margin-left:9%; margin-top: 1em">Show a process
+tree with UTF-8 graphics and process group leader
+indicators:</p>
+
+<p style="margin-left:9%; margin-top: 1em">pstree -u -S</p>
+
+<p style="margin-left:9%; margin-top: 1em">Show only
+processes containing a specific pattern in the command
+line:</p>
+
+<p style="margin-left:9%; margin-top: 1em">pstree -s
+&quot;firefox&quot;</p>
 
 <h2>AUTHOR
 <a name="AUTHOR"></a>

@@ -1,6 +1,6 @@
 .\" -*- coding: utf-8 -*-
 .ad b
-.TH PSTREE 1 "June 21, 2025" "0.7.4" "User Commands"
+.TH PSTREE 1 "June 21, 2025" "0.7.6" "User Commands"
 .SH NAME
 pstree \- display a tree of processes
 .SH SYNOPSIS
@@ -26,17 +26,18 @@ pstree \- display a tree of processes
 [\fB-P\fR | \fB--pid\fR \fIPID\fR]
 [\fB-r\fR | \fB--rainbow\fR]
 [\fB-s\fR | \fB--contains\fR \fIpattern\fR]
+[\fB-S\fR | \fB--show-pgls\fR]
 [\fB-t\fR | \fB--threads\fR]
 [\fB-u\fR | \fB--utf-8\fR]
 [\fB-U\fR | \fB--user-transitions\fR]
-[\fB--user\fR \fIusername\fR]
 [\fB-v\fR | \fB--vt-100\fR]
 [\fB-V\fR | \fB--version\fR]
 [\fB-w\fR | \fB--wide\fR]
 [\fB-X\fR | \fB--exclude-root\fR]
+[\fB--user\fR \fIusername\fR]
 .SH DESCRIPTION
 .B pstree
-shows running processes as a tree. The tree is rooted at launchd. If --pid is specified, the tree will be rooted at the specified PID. If --user is specified, all process trees rooted at processes owned by that user are shown. By default, processes are grouped and collapsed by command name and arguments. This can be disabled with the \fB--compact-not\fR option. 
+shows running processes as a tree. The tree is rooted at launchd. If \fB--pid\fR is specified, the tree will be rooted at the specified PID. If \fB--user\fR is specified, all process trees rooted at processes owned by that user are shown. By default, processes are grouped and collapsed by command name and arguments. This can be disabled with the \fB--compact-not\fR option. 
 .SH OPTIONS
 .TP
 .B \-a, \--arguments
@@ -102,6 +103,9 @@ Display the output in a really annoying rainbow pattern. You've been warned. Thi
 .B \-s, \--contains \fIpattern\fR
 Show only branches containing processes with \fIpattern\fR in the command line. This option implies \fB--compact-not\fR, since some of the results may be buried in collapsed subtrees.
 .TP
+.B \-S, \--show-pgls
+Show process group leader indicators. By default, process group leaders are not marked with special characters in the output.
+.TP
 .B \-t, \--threads
 Show the number of threads for each process in the list using the format (t:xx).
 .TP
@@ -125,6 +129,43 @@ Do not truncate output to the width of the screen.
 .TP
 .B \-X, \--exclude-root
 Don't show branches containing only root processes. This option cannot be used with \fB--user\fR.
+.SH EXAMPLES
+.PP
+Display a basic process tree:
+.PP
+.nf
+    pstree
+.fi
+.PP
+Show a process tree with PIDs, CPU usage, memory usage, and process owners:
+.PP
+.nf
+    pstree -p -c -m -O
+.fi
+.PP
+Show a process tree for a specific user with process age and thread counts:
+.PP
+.nf
+    pstree --user username -G -t
+.fi
+.PP
+Show a process tree rooted at a specific process with all details:
+.PP
+.nf
+    pstree -P 1234 -A
+.fi
+.PP
+Show a process tree with UTF-8 graphics and process group leader indicators:
+.PP
+.nf
+    pstree -u -S
+.fi
+.PP
+Show only processes containing a specific pattern in the command line:
+.PP
+.nf
+    pstree -s "firefox"
+.fi
 .SH AUTHOR
 Gary Danko <gary.danko@example.com>
 .SH SEE ALSO
