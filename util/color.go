@@ -12,6 +12,32 @@ import (
 
 var ansiEscape = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
 
+// visibleWidth calculates the display width of a string containing ANSI escape sequences.
+// It ignores ANSI escape sequences and counts only the visible characters' width.
+// The function properly handles multi-byte Unicode characters and characters with
+// different display widths (like CJK characters that take up 2 columns).
+//
+// Parameters:
+//   - input: The string to calculate the width for, which may contain ANSI escape sequences
+//
+// Returns:
+//
+//	The display width of the string, excluding ANSI escape sequences
+func visibleWidth(input string) int {
+	width := 0
+	for len(input) > 0 {
+		if loc := ansiEscape.FindStringIndex(input); loc != nil && loc[0] == 0 {
+			// Skip ANSI
+			input = input[loc[1]:]
+			continue
+		}
+		r, size := utf8.DecodeRuneInString(input)
+		width += runewidth.RuneWidth(r)
+		input = input[size:]
+	}
+	return width
+}
+
 // TruncateANSI truncates a string containing ANSI escape sequences to fit within a specified screen width.
 // It preserves ANSI color and formatting codes while only counting visible characters toward the width limit.
 //
@@ -28,21 +54,25 @@ var ansiEscape = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
 //
 //	A string that fits within screenWidth, with ANSI sequences preserved.
 func TruncateANSI(logger *slog.Logger, input string, screenWidth int) string {
+	dots := "..."
+
 	if screenWidth <= 3 {
-		// Not enough room even for "..."
-		return "..."
+		return dots
 	}
 
-	dots := "..."
-	targetWidth := screenWidth - len(dots)
+	// First, check actual display width
+	if visibleWidth(input) <= screenWidth {
+		return input // No truncation needed
+	}
 
+	targetWidth := screenWidth - len(dots)
 	var output strings.Builder
 	width := 0
 
 	for len(input) > 0 {
 		if loc := ansiEscape.FindStringIndex(input); loc != nil && loc[0] == 0 {
-			// Copy ANSI escape sequence
-			output.WriteString(input[loc[0]:loc[1]])
+			esc := input[loc[0]:loc[1]]
+			output.WriteString(esc)
 			input = input[loc[1]:]
 			continue
 		}
