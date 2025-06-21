@@ -40,6 +40,7 @@ var (
 	flagShowAll             bool
 	flagShowOwner           bool
 	flagShowPgids           bool
+	flagShowPGL             bool
 	flagShowPids            bool
 	flagShowUIDTransitions  bool
 	flagShowUserTransitions bool
@@ -57,7 +58,7 @@ var (
 	username                string
 	validAttributes         []string = []string{"age", "cpu", "mem"}
 	validOrderBy            []string = []string{"age", "cpu", "mem", "pid", "threads", "user"}
-	version                 string   = "0.7.4"
+	version                 string   = "0.7.6"
 	versionString           string
 	rootCmd                 = &cobra.Command{
 		Use:    "pstree",
@@ -279,6 +280,7 @@ For more information about these matters, see the files named COPYING.`,
 		ColorSupport:        colorSupport,
 		CompactMode:         !flagCompactNot,
 		GraphicsMode:        flagGraphicsMode,
+		HidePGL:             !flagShowPGL,
 		HideThreads:         flagHideThreads,
 		IBM850Graphics:      flagIBM850,
 		InstalledMemory:     installedMemory.Total,
