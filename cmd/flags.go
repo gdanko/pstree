@@ -84,4 +84,5 @@ func GetPersistentFlags(cmd *cobra.Command, colorSupport bool, colorCount int, u
 
 	// Miscellaneous
 	cmd.PersistentFlags().BoolVarP(&flagVersion, "version", "V", false, "display version information")
+	cmd.PersistentFlags().BoolVarP(&flagShowPGL, "show-pgls", "S", false, "show process group leader indicators")
 }
