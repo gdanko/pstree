@@ -225,11 +225,14 @@ func PrintTree(logger *slog.Logger, processes []Process, me int, head string, sc
 	}
 
 	// Initialize compact mode if enabled and at the root level
-	if displayOptions.CompactMode && currentLevel == 0 {
+	if currentLevel == 0 {
+		// Always initialize compact mode to identify duplicates
+		// But we'll respect the CompactMode flag when displaying
 		InitCompactMode(processes)
 	}
 
 	// Skip this process if it's been marked as a duplicate in compact mode
+	// Only skip if compact mode is actually enabled
 	if displayOptions.CompactMode && ShouldSkipProcess(me) {
 		return
 	}
@@ -392,7 +395,7 @@ func PrintTree(logger *slog.Logger, processes []Process, me int, head string, sc
 		outputSlice = append(outputSlice, ownerTransition)
 	}
 
-	// Get the base command
+	// Get the command - use full path when compact mode is disabled
 	commandStr := processes[me].Command
 
 	// Determine if this is a thread
