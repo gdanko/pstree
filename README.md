@@ -58,3 +58,8 @@ Application Options:
   -w, --wide               wide output, not truncated to window width
 
 Process group leaders are marked with '=' for ASCII, '¤' for IBM-850, '◆' for VT-100, and '●' for UTF-8.
+```
+
+## Notes
+* To view the man page for accuracy, use the command `groff -man -Tascii ./share/man/man1/pstree.1` or `groff -man -Tutf8 ./share/man/man1/pstree.1` if you've enabled UTF-8
+* To generate the HTML man page, use the command `groff -Thtml -mandoc ./share/man/man1/pstree.1 > doc/pstree.1.html`
