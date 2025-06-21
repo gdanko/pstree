@@ -1,5 +1,5 @@
 .ad b
-.TH PSTREE 1 "June 20, 2025" "0.7.2" "User Commands"
+.TH PSTREE 1 "June 21, 2025" "0.7.4" "User Commands"
 .SH NAME
 pstree \- display a tree of processes
 .SH SYNOPSIS
@@ -12,7 +12,7 @@ pstree \- display a tree of processes
 [\fB-g\fR | \fB--pgid\fR]
 [\fB-G\fR | \fB--age\fR]
 [\fB-h\fR | \fB--help\fR]
-[\fB--hide-threads\fR]
+[\fB-H\fR | \fB--hide-threads\fR]
 [\fB-i\fR | \fB--ibm-850\fR]
 [\fB-I\fR | \fB--uid-transitions\fR]
 [\fB-k\fR | \fB--color\fR \fIattr\fR]
@@ -35,7 +35,7 @@ pstree \- display a tree of processes
 [\fB-X\fR | \fB--exclude-root\fR]
 .SH DESCRIPTION
 .B pstree
-shows running processes as a tree. The tree is rooted at launchd. If --pid is specified, the tree will be rooted at the specified PID. If --user is specified, all process trees rooted at processes owned by that user are shown.
+shows running processes as a tree. The tree is rooted at launchd. If --pid is specified, the tree will be rooted at the specified PID. If --user is specified, all process trees rooted at processes owned by that user are shown. By default, processes are grouped and collapsed by command name and arguments. This can be disabled with the \fB--compact-not\fR option. 
 .SH OPTIONS
 .TP
 .B \-a, \--arguments
@@ -62,7 +62,7 @@ Show the age of each process in the list using the format (dd:hh:mm:ss).
 .B \-h, \--help
 Display a help message and exit.
 .TP
-.B \--hide-threads
+.B \-H, \--hide-threads
 Hide threads, showing only processes. When this option is used, threads will not be displayed in the process tree and thread information will be omitted from compact mode output. Thread counts will still be shown if the -t option is used.
 .TP
 .B \-i, \--ibm-850
