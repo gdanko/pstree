@@ -2,48 +2,67 @@ package util
 
 import (
 	"fmt"
+	"log/slog"
 	"regexp"
 	"strings"
+	"unicode/utf8"
+
+	"github.com/mattn/go-runewidth"
 )
 
-var (
-	ansiEscape = regexp.MustCompile(`\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])`)
-)
+var ansiEscape = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
 
-func visibleLength(text string) int {
-	return len(ansiEscape.ReplaceAllString(text, ""))
-}
-
-// truncateANSI truncates an ANSI-colored string to fit within a max width.
-func TruncateANSI(text string, maxWidth int) string {
-	if visibleLength(text) <= maxWidth {
-		return text // No need to truncate
+// TruncateANSI truncates a string containing ANSI escape sequences to fit within a specified screen width.
+// It preserves ANSI color and formatting codes while only counting visible characters toward the width limit.
+//
+// Parameters:
+//   - logger: A structured logger for debug output
+//   - input: The string to truncate, which may contain ANSI escape sequences
+//   - screenWidth: The maximum width (in visible characters) the output string should occupy
+//
+// The function handles multi-byte Unicode characters correctly by using utf8.DecodeRuneInString
+// and accounts for characters with different display widths using the runewidth package.
+// If truncation occurs, "..." is appended to the result.
+//
+// Returns:
+//
+//	A string that fits within screenWidth, with ANSI sequences preserved.
+func TruncateANSI(logger *slog.Logger, input string, screenWidth int) string {
+	if screenWidth <= 3 {
+		// Not enough room even for "..."
+		return "..."
 	}
 
-	var result strings.Builder
-	visibleChars := 0
-	i := 0
+	dots := "..."
+	targetWidth := screenWidth - len(dots)
 
-	for i < len(text) {
-		if loc := ansiEscape.FindStringIndex(text[i:]); loc != nil && loc[0] == 0 {
-			// If an ANSI sequence is found at the current position, keep it.
-			result.WriteString(text[i : i+loc[1]])
-			i += loc[1]
-		} else {
-			// Otherwise, process visible characters
-			if visibleChars >= maxWidth-3 {
-				break
-			}
-			result.WriteByte(text[i])
-			visibleChars++
-			i++
+	var output strings.Builder
+	width := 0
+
+	for len(input) > 0 {
+		if loc := ansiEscape.FindStringIndex(input); loc != nil && loc[0] == 0 {
+			// Copy ANSI escape sequence
+			output.WriteString(input[loc[0]:loc[1]])
+			input = input[loc[1]:]
+			continue
 		}
-	}
-	result.WriteString("...")
 
-	// Append reset code to prevent ANSI bleed
-	return result.String() + "\x1b[0m"
+		r, size := utf8.DecodeRuneInString(input)
+		rw := runewidth.RuneWidth(r)
+
+		if width+rw > targetWidth {
+			break
+		}
+
+		output.WriteRune(r)
+		width += rw
+		input = input[size:]
+	}
+
+	output.WriteString(dots)
+	return output.String()
 }
+
 func colorMyText(red, green, blue int, text *string) {
 	coloredText := fmt.Sprintf("\033[38;2;%d;%d;%dm%s\033[0m", red, green, blue, *text)
 	*text = coloredText
