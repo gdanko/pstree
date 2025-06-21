@@ -474,10 +474,23 @@ func PrintTree(logger *slog.Logger, processes []Process, me int, head string, sc
 			if head == "" {
 				return ""
 			}
-			if processes[me].Sister != -1 {
-				return C.Bar
+			// In compact mode, we need to check if any visible siblings exist
+			if displayOptions.CompactMode {
+				sibling := processes[me].Sister
+				for sibling != -1 {
+					if !ShouldSkipProcess(sibling) {
+						return C.Bar // Only add vertical bar if there's a visible sibling
+					}
+					sibling = processes[sibling].Sister
+				}
+				return " " // No visible siblings
+			} else {
+				// In normal mode, just check if there's a sibling
+				if processes[me].Sister != -1 {
+					return C.Bar
+				}
+				return " "
 			}
-			return " "
 		}(),
 	)
 
