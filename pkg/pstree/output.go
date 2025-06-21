@@ -461,9 +461,9 @@ func PrintTree(logger *slog.Logger, processes []Process, me int, head string, sc
 	if !displayOptions.WideDisplay {
 		if len(line) > screenWidth {
 			if displayOptions.RainbowOutput {
-				line = util.TruncateANSI(gorainbow.Rainbow(line), screenWidth)
+				line = util.TruncateANSI(logger, gorainbow.Rainbow(line), screenWidth)
 			} else {
-				line = util.TruncateANSI(line, screenWidth)
+				line = util.TruncateANSI(logger, line, screenWidth)
 			}
 		} else {
 			if displayOptions.RainbowOutput {
