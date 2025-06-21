@@ -1,3 +1,4 @@
+.\" -*- coding: utf-8 -*-
 .ad b
 .TH PSTREE 1 "June 21, 2025" "0.7.4" "User Commands"
 .SH NAME
@@ -69,7 +70,7 @@ Hide threads, showing only processes. When this option is used, threads will not
 Use IBM-850 line drawing characters.
 .TP
 .B \-I, \--uid-transitions
-Show processes where the user ID changes from the parent process, e.g., (uid→uid). This makes it easy to identify privilege escalations or drops in the process tree. This option cannot be used with \fB--user-transitions\fR.
+Show processes where the user ID changes from the parent process, e.g., (uid\[u2192]uid). This makes it easy to identify privilege escalations or drops in the process tree. This option cannot be used with \fB--user-transitions\fR.
 .TP
 .B \-k, \--color \fIattr\fR
 Color the process name by the given attribute. Valid options are: age, cpu, mem. This option is not available if your terminal doesn't support at least 8 color output. This option implies \fB--compact-not\fR, since some of the offenders may be buried in collapsed subtrees. This option cannot be used with \fB--colorize\fR or \fB--rainbow\fR.
@@ -108,7 +109,7 @@ Show the number of threads for each process in the list using the format (t:xx).
 Use UTF-8 (Unicode) line drawing characters.
 .TP
 .B \-U, \--user-transitions
-Show processes where the username changes from the parent process, e.g., (user→user). This makes it easy to identify privilege escalations or drops in the process tree. This option cannot be used with \fB--uid-transitions\fR or \fB--all\fR.
+Show processes where the username changes from the parent process, e.g., (user\[u2192]user). This makes it easy to identify privilege escalations or drops in the process tree. This option cannot be used with \fB--uid-transitions\fR or \fB--all\fR.
 .TP
 .B \--user \fIuser\fR
 Show only branches containing processes of \fIuser\fR. This option can be used more than once. This option cannot be used with \fB--exclude-root\fR.
