@@ -12,9 +12,9 @@ func TestFlagToDisplayOptions(t *testing.T) {
 
 	// Test cases for individual flags
 	testCases := []struct {
-		name           string
-		setupFlags     func()
-		checkOptions   func(t *testing.T, opts pstree.DisplayOptions)
+		name         string
+		setupFlags   func()
+		checkOptions func(t *testing.T, opts pstree.DisplayOptions)
 	}{
 		{
 			name: "CPU flag (-c)",
@@ -50,16 +50,16 @@ func TestFlagToDisplayOptions(t *testing.T) {
 		{
 			name: "Show PIDs flag (-p)",
 			setupFlags: func() {
-				flagShowPids = true
+				flagShowPIDs = true
 			},
 			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
-				assert.True(t, opts.ShowPids, "ShowPids should be true when -p flag is set")
+				assert.True(t, opts.ShowPIDs, "ShowPids should be true when -p flag is set")
 			},
 		},
 		{
 			name: "Show PGIDs flag (-g)",
 			setupFlags: func() {
-				flagShowPgids = true
+				flagShowPGIDs = true
 			},
 			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
 				assert.True(t, opts.ShowPGIDs, "ShowPGIDs should be true when -g flag is set")
@@ -95,10 +95,10 @@ func TestFlagToDisplayOptions(t *testing.T) {
 		{
 			name: "Show PGLs flag (-S, --show-pgls)",
 			setupFlags: func() {
-				flagShowPGL = true
+				flagShowPGLs = true
 			},
 			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
-				assert.False(t, opts.HidePGL, "HidePGL should be false when -S flag is set")
+				assert.True(t, opts.ShowPGLs, "ShowPGLs should be true when -S flag is set")
 			},
 		},
 		{
@@ -167,7 +167,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 		{
 			name: "Color flag (-k)",
 			setupFlags: func() {
-				flagColor = "cpu"
+				flagColorAttr = "cpu"
 				flagCompactNot = false // Reset this as it gets modified
 			},
 			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
@@ -178,7 +178,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 		{
 			name: "Colorize flag (-C)",
 			setupFlags: func() {
-				flagColorize = true
+				flagColor = true
 				colorSupport = true
 			},
 			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
@@ -215,8 +215,8 @@ func TestFlagToDisplayOptions(t *testing.T) {
 				flagCpu = false
 				flagMemory = false
 				flagShowOwner = false
-				flagShowPgids = false
-				flagShowPids = false
+				flagShowPGIDs = false
+				flagShowPIDs = false
 				flagShowUIDTransitions = false
 				flagThreads = false
 			},
@@ -227,7 +227,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 				assert.True(t, opts.ShowMemoryUsage, "ShowMemoryUsage should be true when -A flag is set")
 				assert.True(t, opts.ShowOwner, "ShowOwner should be true when -A flag is set")
 				assert.True(t, opts.ShowPGIDs, "ShowPGIDs should be true when -A flag is set")
-				assert.True(t, opts.ShowPids, "ShowPids should be true when -A flag is set")
+				assert.True(t, opts.ShowPIDs, "ShowPids should be true when -A flag is set")
 				assert.True(t, opts.ShowUIDTransitions, "ShowUIDTransitions should be true when -A flag is set")
 				assert.True(t, opts.ShowNumThreads, "ShowNumThreads should be true when -A flag is set")
 			},
@@ -239,13 +239,13 @@ func TestFlagToDisplayOptions(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Reset all flags
 			resetFlags()
-			
+
 			// Setup flags for this test
 			tc.setupFlags()
-			
+
 			// Apply flags to DisplayOptions
 			applyFlagsToDisplayOptions()
-			
+
 			// Check that DisplayOptions are set correctly
 			tc.checkOptions(t, displayOptions)
 		})
@@ -256,15 +256,13 @@ func TestFlagToDisplayOptions(t *testing.T) {
 func resetFlags() {
 	flagAge = false
 	flagArguments = false
-	flagColor = ""
-	flagColorize = false
+	flagColor = false
+	flagColorAttr = ""
 	flagCompactNot = false
 	flagContains = ""
 	flagCpu = false
 	flagExcludeRoot = false
-	flagGraphicsMode = 0
 	flagHideThreads = false
-	flagShowPGL = false
 	flagIBM850 = false
 	flagLevel = 0
 	flagMemory = false
@@ -273,8 +271,9 @@ func resetFlags() {
 	flagRainbow = false
 	flagShowAll = false
 	flagShowOwner = false
-	flagShowPgids = false
-	flagShowPids = false
+	flagShowPGIDs = false
+	flagShowPGLs = false
+	flagShowPIDs = false
 	flagShowUIDTransitions = false
 	flagShowUserTransitions = false
 	flagThreads = false
@@ -282,7 +281,7 @@ func resetFlags() {
 	flagUTF8 = false
 	flagVT100 = false
 	flagWide = false
-	
+
 	colorSupport = false
 	colorCount = 0
 }
@@ -291,7 +290,7 @@ func resetFlags() {
 // This is a simplified version of what happens in pstreeRunCmd
 func applyFlagsToDisplayOptions() {
 	// If any of the following flags are set, then compact mode should be disabled
-	if flagColor != "" || flagCpu || flagMemory || flagContains != "" {
+	if flagColorAttr != "" || flagCpu || flagMemory || flagContains != "" {
 		flagCompactNot = true
 	}
 
@@ -301,20 +300,18 @@ func applyFlagsToDisplayOptions() {
 		flagCpu = true
 		flagMemory = true
 		flagShowOwner = true
-		flagShowPgids = true
-		flagShowPids = true
+		flagShowPGIDs = true
+		flagShowPIDs = true
 		flagShowUIDTransitions = true
 		flagThreads = true
 	}
 
 	displayOptions = pstree.DisplayOptions{
-		ColorAttr:           flagColor,
+		ColorAttr:           flagColorAttr,
 		ColorCount:          colorCount,
-		ColorizeOutput:      flagColorize,
+		ColorizeOutput:      flagColor,
 		ColorSupport:        colorSupport,
 		CompactMode:         !flagCompactNot,
-		GraphicsMode:        flagGraphicsMode,
-		HidePGL:             !flagShowPGL,
 		HideThreads:         flagHideThreads,
 		IBM850Graphics:      flagIBM850,
 		InstalledMemory:     1024 * 1024 * 1024 * 8, // 8GB for testing
@@ -325,8 +322,9 @@ func applyFlagsToDisplayOptions() {
 		ShowMemoryUsage:     flagMemory,
 		ShowNumThreads:      flagThreads,
 		ShowOwner:           flagShowOwner,
-		ShowPGIDs:           flagShowPgids,
-		ShowPids:            flagShowPids,
+		ShowPGIDs:           flagShowPGIDs,
+		ShowPGLs:            flagShowPGLs,
+		ShowPIDs:            flagShowPIDs,
 		ShowProcessAge:      flagAge,
 		ShowUIDTransitions:  flagShowUIDTransitions,
 		ShowUserTransitions: flagShowUserTransitions,
