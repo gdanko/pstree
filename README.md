@@ -64,9 +64,9 @@ It uses [gopsutil](https://github.com/shirou/gopsutil) for gathering process inf
 * Type `make build` and the binary will live under `bin` in the repository root
 * You will need to manually copy `share/man/man1/pstree.1` to your `$MANPATH`
 * If you're using macOS, you can also use homebrew
-    * `brew tap servicenow/gdanko ssh://git@gitlab.servicenow.net:29418/gary.danko/homebrew.git`
+    * `brew tap gdanko/homebrew`
     * `brew update`
-    * `brew install servicenow/gdanko/pstree`
+    * `brew install gdanko/homebrew/pstree`
 
 ## Usage
 ```
