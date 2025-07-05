@@ -1,7 +1,7 @@
 GOPATH := $(shell go env GOPATH)
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
-PSTREE_VERSION := 0.7.8
+PSTREE_VERSION := 0.8.0
 
 GOOS ?= $(shell uname | tr '[:upper:]' '[:lower:]')
 GOARCH ?=$(shell arch)
@@ -53,6 +53,70 @@ install:
 	@echo "=================================================\n"
 
 	go install -race
+
+#
+# Test targets
+#
+.PHONY: test test-all test-short test-race test-bench test-cover test-build test-clean
+
+test-build:
+	@echo "================================================="
+	@echo "Building test binary"
+	@echo "=================================================\n"
+	go build -o pstree.testbin .
+
+test-clean:
+	@echo "================================================="
+	@echo "Cleaning up test binary"
+	@echo "=================================================\n"
+	@rm -f pstree.testbin
+
+test: test-build
+	@echo "================================================="
+	@echo "Running standard tests"
+	@echo "=================================================\n"
+	go test -v ./...
+	@$(MAKE) test-clean
+
+test-all: test-build
+	@echo "================================================="
+	@echo "Running all tests"
+	@echo "=================================================\n"
+	go test -v ./...
+	go test -race ./...
+	go test -bench=. ./...
+	go test -coverprofile=coverage.out ./...
+	@echo "\nTo view coverage report in browser:\n  go tool cover -html=coverage.out"
+	@$(MAKE) test-clean
+
+test-short: test-build
+	@echo "================================================="
+	@echo "Running short tests (skipping integration tests)"
+	@echo "=================================================\n"
+	go test -short ./...
+	@$(MAKE) test-clean
+
+test-race: test-build
+	@echo "================================================="
+	@echo "Running tests with race detector"
+	@echo "=================================================\n"
+	go test -race ./...
+	@$(MAKE) test-clean
+
+test-bench: test-build
+	@echo "================================================="
+	@echo "Running benchmarks"
+	@echo "=================================================\n"
+	go test -bench=. ./...
+	@$(MAKE) test-clean
+
+test-cover: test-build
+	@echo "================================================="
+	@echo "Generating test coverage report"
+	@echo "=================================================\n"
+	go test -coverprofile=coverage.out ./...
+	@echo "\nTo view coverage report in browser:\n  go tool cover -html=coverage.out"
+	@$(MAKE) test-clean
 
 #
 # General targets
