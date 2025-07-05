@@ -6,170 +6,113 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// createMockProcessesForCompact creates a slice of mock Process structs for testing compact mode
-func createMockProcessesForCompact() []Process {
-	return []Process{
-		{
-			PID:      1,
-			PPID:     0,
-			Command:  "/sbin/init",
-			Args:     []string{},
-			Parent:   -1,
-			NumThreads: 1,
-		},
-		{
-			PID:      2,
-			PPID:     1,
-			Command:  "/usr/bin/bash",
-			Args:     []string{"-c", "sleep 100"},
-			Parent:   0,
-			NumThreads: 1,
-		},
-		{
-			PID:      3,
-			PPID:     1,
-			Command:  "/usr/bin/bash",
-			Args:     []string{"-c", "sleep 100"},
-			Parent:   0,
-			NumThreads: 1,
-		},
-		{
-			PID:      4,
-			PPID:     1,
-			Command:  "/usr/bin/bash",
-			Args:     []string{"-c", "echo hello"},
-			Parent:   0,
-			NumThreads: 1,
-		},
-		{
-			PID:      5,
-			PPID:     2,
-			Command:  "/bin/sleep",
-			Args:     []string{"100"},
-			Parent:   1,
-			NumThreads: 1,
-		},
-		{
-			PID:      6,
-			PPID:     2,
-			Command:  "/bin/sleep",
-			Args:     []string{"100"},
-			Parent:   1,
-			NumThreads: 1,
-		},
-		{
-			PID:      7,
-			PPID:     2,
-			Command:  "/bin/sleep",
-			Args:     []string{"200"},
-			Parent:   1,
-			NumThreads: 1,
-		},
-		{
-			PID:      8,
-			PPID:     4,
-			Command:  "/bin/echo",
-			Args:     []string{"hello"},
-			Parent:   3,
-			NumThreads: 3, // This is a thread
-		},
-	}
-}
-
 func TestInitCompactMode(t *testing.T) {
-	processes := createMockProcessesForCompact()
-	
+	// Create test processes with identical commands under the same parent
+	proc1 := Process{PID: 1, PPID: 0, Command: "init"}
+	proc2 := Process{PID: 100, PPID: 1, Command: "bash", Args: []string{"arg1"}}
+	proc3 := Process{PID: 200, PPID: 1, Command: "bash", Args: []string{"arg1"}}
+	proc4 := Process{PID: 300, PPID: 1, Command: "bash", Args: []string{"arg2"}}
+	proc5 := Process{PID: 400, PPID: 2, Command: "bash", Args: []string{"arg1"}}
+
+	processes := []Process{proc1, proc2, proc3, proc4, proc5}
+
 	// Initialize compact mode
 	InitCompactMode(processes)
-	
-	// Check that processGroups and skipProcesses are initialized
-	assert.NotNil(t, processGroups)
-	assert.NotNil(t, skipProcesses)
-	
-	// Check that processes with identical commands and args are grouped
-	// PIDs 2 and 3 have identical command and args
-	assert.True(t, skipProcesses[2], "Process with PID 3 should be marked to skip")
-	
-	// PIDs 5 and 6 have identical command and args
-	assert.True(t, skipProcesses[5], "Process with PID 6 should be marked to skip")
-	
-	// PID 7 has different args, so it shouldn't be skipped
-	assert.False(t, skipProcesses[6], "Process with PID 7 should not be marked to skip")
+
+	// Verify that identical processes are grouped correctly
+	// proc2 and proc3 should be grouped (same command, same args, same parent)
+	assert.False(t, ShouldSkipProcess(0)) // proc1 should not be skipped
+	assert.False(t, ShouldSkipProcess(1)) // proc2 should not be skipped (first in group)
+	assert.True(t, ShouldSkipProcess(2))  // proc3 should be skipped (duplicate of proc2)
+	assert.False(t, ShouldSkipProcess(3)) // proc4 should not be skipped (different args)
+	assert.False(t, ShouldSkipProcess(4)) // proc5 should not be skipped (different parent)
+
+	// Test GetProcessCount for the first process in a group
+	count, isThread := GetProcessCount(processes, 1)
+	assert.Equal(t, 2, count) // proc2 has one duplicate (proc3)
+	assert.False(t, isThread) // proc2 is not a thread
+
+	// Test GetProcessCount for a process that is not in a group
+	count, isThread = GetProcessCount(processes, 0)
+	assert.Equal(t, 1, count) // proc1 has no duplicates
+	assert.False(t, isThread) // proc1 is not a thread
 }
 
 func TestShouldSkipProcess(t *testing.T) {
-	processes := createMockProcessesForCompact()
+	// Create test processes
+	proc1 := Process{PID: 1, PPID: 0, Command: "init"}
+	proc2 := Process{PID: 100, PPID: 1, Command: "bash"}
+	proc3 := Process{PID: 200, PPID: 1, Command: "bash"}
+
+	processes := []Process{proc1, proc2, proc3}
+
+	// Initialize compact mode
 	InitCompactMode(processes)
-	
-	tests := []struct {
-		name        string
-		processIndex int
-		expected    bool
-	}{
-		{"Process 0 (PID 1) - unique", 0, false},
-		{"Process 1 (PID 2) - first of duplicate", 1, false},
-		{"Process 2 (PID 3) - duplicate", 2, true},
-		{"Process 3 (PID 4) - unique", 3, false},
-		{"Process 4 (PID 5) - first of duplicate", 4, false},
-		{"Process 5 (PID 6) - duplicate", 5, true},
-		{"Process 6 (PID 7) - unique args", 6, false},
-	}
-	
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := ShouldSkipProcess(tt.processIndex)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
+
+	// Verify that ShouldSkipProcess returns the correct values
+	assert.False(t, ShouldSkipProcess(0))
+	assert.False(t, ShouldSkipProcess(1))
+	assert.True(t, ShouldSkipProcess(2))
+
+	// Test with an index that doesn't exist in the skipProcesses map
+	assert.False(t, ShouldSkipProcess(999))
 }
 
 func TestGetProcessCount(t *testing.T) {
-	processes := createMockProcessesForCompact()
+	// Create test processes with identical commands
+	proc1 := Process{PID: 1, PPID: 0, Command: "init"}
+	proc2 := Process{PID: 100, PPID: 1, Command: "bash"}
+	proc3 := Process{PID: 200, PPID: 1, Command: "bash"}
+	proc4 := Process{PID: 300, PPID: 1, Command: "bash"}
+
+	processes := []Process{proc1, proc2, proc3, proc4}
+
+	// Initialize compact mode
 	InitCompactMode(processes)
-	
-	tests := []struct {
-		name        string
-		processIndex int
-		expectedCount int
-		expectedIsThread bool
-	}{
-		{"Process 0 (PID 1) - unique", 0, 1, false},
-		{"Process 1 (PID 2) - has duplicate", 1, 2, true},
-		{"Process 3 (PID 4) - unique", 3, 1, true},
-		{"Process 4 (PID 5) - has duplicate", 4, 2, true},
-		{"Process 6 (PID 7) - unique args", 6, 1, true},
-		{"Process 7 (PID 8) - thread", 7, 1, true},
-	}
-	
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			count, isThread := GetProcessCount(processes, tt.processIndex)
-			assert.Equal(t, tt.expectedCount, count)
-			assert.Equal(t, tt.expectedIsThread, isThread)
-		})
-	}
+
+	// Test GetProcessCount for the first process in a group
+	count, isThread := GetProcessCount(processes, 1)
+	assert.Equal(t, 3, count) // proc2 has two duplicates (proc3 and proc4)
+	assert.False(t, isThread) // proc2 is not a thread
+
+	// Test GetProcessCount for a process that should be skipped
+	count, isThread = GetProcessCount(processes, 2)
+	assert.Equal(t, 1, count) // Not the first in group, so count is 1
+	assert.False(t, isThread)
+
+	// Test with a process that has threads
+	proc5 := Process{PID: 500, PPID: 1, Command: "chrome", NumThreads: 5}
+	proc6 := Process{PID: 600, PPID: 1, Command: "chrome", NumThreads: 5}
+
+	processes2 := []Process{proc1, proc5, proc6}
+
+	// Initialize compact mode
+	InitCompactMode(processes2)
+
+	// Test GetProcessCount for a process with threads
+	count, isThread = GetProcessCount(processes2, 1)
+	assert.Equal(t, 2, count) // proc5 has one duplicate (proc6)
+	assert.True(t, isThread)  // proc5 is a thread
 }
 
 func TestFormatCompactOutput(t *testing.T) {
-	tests := []struct {
-		name        string
-		command     string
-		count       int
-		isThread    bool
-		hideThreads bool
-		expected    string
-	}{
-		{"Single process", "/usr/bin/bash", 1, false, false, "/usr/bin/bash"},
-		{"Multiple processes", "/usr/bin/bash", 3, false, false, "3*[bash]"},
-		{"Single thread", "/usr/bin/chrome", 1, true, false, "/usr/bin/chrome"},
-		{"Multiple threads", "/usr/bin/chrome", 5, true, false, "5*[{chrome}]"},
-		{"Multiple threads hidden", "/usr/bin/chrome", 5, true, true, ""},
-	}
-	
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := FormatCompactOutput(tt.command, tt.count, tt.isThread, tt.hideThreads)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
+	// Test formatting for regular processes
+	output := FormatCompactOutput("bash", 3, false, false)
+	assert.Equal(t, "3*[bash]", output)
+
+	// Test formatting for a single process (no compaction)
+	output = FormatCompactOutput("bash", 1, false, false)
+	assert.Equal(t, "bash", output)
+
+	// Test formatting for threads
+	output = FormatCompactOutput("chrome", 4, true, false)
+	assert.Equal(t, "4*[{chrome}]", output)
+
+	// Test formatting for threads when threads are hidden
+	output = FormatCompactOutput("chrome", 4, true, true)
+	assert.Equal(t, "", output)
+
+	// Test formatting for processes with full paths
+	output = FormatCompactOutput("/usr/bin/bash", 2, false, false)
+	assert.Equal(t, "2*[bash]", output)
 }
