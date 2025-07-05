@@ -3,9 +3,9 @@ package pstree
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"syscall"
 
+	"github.com/gdanko/pstree/pkg/globals"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/net"
 	"github.com/shirou/gopsutil/v4/process"
@@ -16,7 +16,7 @@ import (
 //
 // Parameters:
 //   - c: Channel to send the function through
-func ProcessArgs(c chan func(ctx context.Context, proc *process.Process) (args []string, err error), logger *slog.Logger) {
+func ProcessArgs(c chan func(ctx context.Context, proc *process.Process) (args []string, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (args []string, err error) {
 		args, err = proc.CmdlineSliceWithContext(ctx)
 		return args, err
@@ -28,13 +28,15 @@ func ProcessArgs(c chan func(ctx context.Context, proc *process.Process) (args [
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessCommandName(c chan func(ctx context.Context, proc *process.Process) (string, error), logger *slog.Logger) {
+func ProcessCommandName(c chan func(ctx context.Context, proc *process.Process) (string, error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (command string, err error) {
 		// First check for exe, which should be the full path to the
 		exe, err := proc.ExeWithContext(ctx)
 		if err == nil && exe != "" {
 			// Return the full path
+			if globals.GetDebugLevel() > 1 {
+				globals.GetLogger().Debug(fmt.Sprintf("ProcessCommandName, PID %d (ExeWithContext): %s", proc.Pid, exe))
+			}
 			return exe, nil
 		}
 
@@ -42,6 +44,9 @@ func ProcessCommandName(c chan func(ctx context.Context, proc *process.Process) 
 		cmdLine, err := proc.CmdlineSliceWithContext(ctx)
 		if err == nil && len(cmdLine) > 0 {
 			// Return the first element of the command line slice, which is the executable
+			if globals.GetDebugLevel() > 1 {
+				globals.GetLogger().Debug(fmt.Sprintf("ProcessCommandName, PID %d (CmdlineSliceWithContext): %s", proc.Pid, cmdLine[0]))
+			}
 			return cmdLine[0], nil
 		}
 
@@ -49,10 +54,16 @@ func ProcessCommandName(c chan func(ctx context.Context, proc *process.Process) 
 		name, err := proc.NameWithContext(ctx)
 		if err == nil && name != "" {
 			// Return name, which is the basename of the command
+			if globals.GetDebugLevel() > 1 {
+				globals.GetLogger().Debug(fmt.Sprintf("ProcessCommandName, PID %d (NameWithContext): %s", proc.Pid, name))
+			}
 			return name, nil
 		}
 
 		// Well crap, I give up, let's return the PID
+		if globals.GetDebugLevel() > 1 {
+			globals.GetLogger().Debug(fmt.Sprintf("ProcessCommandName, PID %d (PID): %d", proc.Pid, proc.Pid))
+		}
 		return fmt.Sprintf("[PID %d]", proc.Pid), nil
 	})
 }
@@ -62,8 +73,7 @@ func ProcessCommandName(c chan func(ctx context.Context, proc *process.Process) 
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessConnections(c chan func(ctx context.Context, proc *process.Process) (connections []net.ConnectionStat, err error), logger *slog.Logger) {
+func ProcessConnections(c chan func(ctx context.Context, proc *process.Process) (connections []net.ConnectionStat, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (connections []net.ConnectionStat, err error) {
 		connections, err = proc.ConnectionsWithContext(ctx)
 		return connections, err
@@ -75,8 +85,7 @@ func ProcessConnections(c chan func(ctx context.Context, proc *process.Process) 
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessCpuPercent(c chan func(ctx context.Context, proc *process.Process) (cpuPercent float64, err error), logger *slog.Logger) {
+func ProcessCpuPercent(c chan func(ctx context.Context, proc *process.Process) (cpuPercent float64, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (cpuPercent float64, err error) {
 		cpuPercent, err = proc.CPUPercentWithContext(ctx)
 		return cpuPercent, err
@@ -88,8 +97,7 @@ func ProcessCpuPercent(c chan func(ctx context.Context, proc *process.Process) (
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessCpuTimes(c chan func(ctx context.Context, proc *process.Process) (cpuTimes *cpu.TimesStat, err error), logger *slog.Logger) {
+func ProcessCpuTimes(c chan func(ctx context.Context, proc *process.Process) (cpuTimes *cpu.TimesStat, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (cpuTimes *cpu.TimesStat, err error) {
 		cpuTimes, err = proc.TimesWithContext(ctx)
 		return cpuTimes, err
@@ -102,8 +110,7 @@ func ProcessCpuTimes(c chan func(ctx context.Context, proc *process.Process) (cp
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessCreateTime(c chan func(ctx context.Context, proc *process.Process) (createTime int64, err error), logger *slog.Logger) {
+func ProcessCreateTime(c chan func(ctx context.Context, proc *process.Process) (createTime int64, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (createTime int64, err error) {
 		createTime, err = proc.CreateTimeWithContext(ctx)
 		return createTime / 1000, err
@@ -115,8 +122,7 @@ func ProcessCreateTime(c chan func(ctx context.Context, proc *process.Process) (
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessEnvironment(c chan func(ctx context.Context, proc *process.Process) (environment []string, err error), logger *slog.Logger) {
+func ProcessEnvironment(c chan func(ctx context.Context, proc *process.Process) (environment []string, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (environment []string, err error) {
 		environment, err = proc.EnvironWithContext(ctx)
 		return environment, err
@@ -128,8 +134,7 @@ func ProcessEnvironment(c chan func(ctx context.Context, proc *process.Process) 
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessGIDs(c chan func(ctx context.Context, proc *process.Process) (gids []uint32, err error), logger *slog.Logger) {
+func ProcessGIDs(c chan func(ctx context.Context, proc *process.Process) (gids []uint32, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (gids []uint32, err error) {
 		gids, err = proc.GidsWithContext(ctx)
 		return gids, err
@@ -141,8 +146,7 @@ func ProcessGIDs(c chan func(ctx context.Context, proc *process.Process) (gids [
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessGroups(c chan func(ctx context.Context, proc *process.Process) (groups []uint32, err error), logger *slog.Logger) {
+func ProcessGroups(c chan func(ctx context.Context, proc *process.Process) (groups []uint32, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (groups []uint32, err error) {
 		groups, err = proc.GroupsWithContext(ctx)
 		return groups, err
@@ -154,8 +158,7 @@ func ProcessGroups(c chan func(ctx context.Context, proc *process.Process) (grou
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessMemoryInfo(c chan func(ctx context.Context, proc *process.Process) (memoryInfo *process.MemoryInfoStat, err error), logger *slog.Logger) {
+func ProcessMemoryInfo(c chan func(ctx context.Context, proc *process.Process) (memoryInfo *process.MemoryInfoStat, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (memoryInfo *process.MemoryInfoStat, err error) {
 		memoryInfo, err = proc.MemoryInfoWithContext(ctx)
 		return memoryInfo, err
@@ -167,8 +170,7 @@ func ProcessMemoryInfo(c chan func(ctx context.Context, proc *process.Process) (
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessMemoryPercent(c chan func(ctx context.Context, proc *process.Process) (memoryPercent float32, err error), logger *slog.Logger) {
+func ProcessMemoryPercent(c chan func(ctx context.Context, proc *process.Process) (memoryPercent float32, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (memoryPercent float32, err error) {
 		memoryPercent, err = proc.MemoryPercentWithContext(ctx)
 		return memoryPercent, err
@@ -180,8 +182,7 @@ func ProcessMemoryPercent(c chan func(ctx context.Context, proc *process.Process
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessParent(c chan func(ctx context.Context, proc *process.Process) (parent *process.Process, err error), logger *slog.Logger) {
+func ProcessParent(c chan func(ctx context.Context, proc *process.Process) (parent *process.Process, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (parent *process.Process, err error) {
 		parent, err = proc.ParentWithContext(ctx)
 		return parent, err
@@ -194,8 +195,7 @@ func ProcessParent(c chan func(ctx context.Context, proc *process.Process) (pare
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessPGID(c chan func(proc *process.Process) (pgid int, err error), logger *slog.Logger) {
+func ProcessPGID(c chan func(proc *process.Process) (pgid int, err error)) {
 	c <- (func(proc *process.Process) (pgid int, err error) {
 		pgid, err = syscall.Getpgid(int(proc.Pid))
 		return pgid, err
@@ -207,8 +207,7 @@ func ProcessPGID(c chan func(proc *process.Process) (pgid int, err error), logge
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessPPID(c chan func(ctx context.Context, proc *process.Process) (ppid int32, err error), logger *slog.Logger) {
+func ProcessPPID(c chan func(ctx context.Context, proc *process.Process) (ppid int32, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (ppid int32, err error) {
 		ppid, err = proc.PpidWithContext(ctx)
 		return ppid, err
@@ -220,8 +219,7 @@ func ProcessPPID(c chan func(ctx context.Context, proc *process.Process) (ppid i
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessNumFDs(c chan func(ctx context.Context, proc *process.Process) (numFDs int32, err error), logger *slog.Logger) {
+func ProcessNumFDs(c chan func(ctx context.Context, proc *process.Process) (numFDs int32, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (numFDs int32, err error) {
 		numFDs, err = proc.NumFDsWithContext(ctx)
 		return numFDs, err
@@ -233,8 +231,7 @@ func ProcessNumFDs(c chan func(ctx context.Context, proc *process.Process) (numF
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessNumThreads(c chan func(ctx context.Context, proc *process.Process) (numThreads int32, err error), logger *slog.Logger) {
+func ProcessNumThreads(c chan func(ctx context.Context, proc *process.Process) (numThreads int32, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (numThreads int32, err error) {
 		numThreads, err = proc.NumThreadsWithContext(ctx)
 		return numThreads, err
@@ -246,8 +243,7 @@ func ProcessNumThreads(c chan func(ctx context.Context, proc *process.Process) (
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessOpenFiles(c chan func(ctx context.Context, proc *process.Process) (openFiles []process.OpenFilesStat, err error), logger *slog.Logger) {
+func ProcessOpenFiles(c chan func(ctx context.Context, proc *process.Process) (openFiles []process.OpenFilesStat, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (openFiles []process.OpenFilesStat, err error) {
 		openFiles, err = proc.OpenFilesWithContext(ctx)
 		return openFiles, err
@@ -259,8 +255,7 @@ func ProcessOpenFiles(c chan func(ctx context.Context, proc *process.Process) (o
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessStatus(c chan func(ctx context.Context, proc *process.Process) (status []string, err error), logger *slog.Logger) {
+func ProcessStatus(c chan func(ctx context.Context, proc *process.Process) (status []string, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (status []string, err error) {
 		status, err = proc.StatusWithContext(ctx)
 		return status, err
@@ -272,8 +267,7 @@ func ProcessStatus(c chan func(ctx context.Context, proc *process.Process) (stat
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessUsername(c chan func(ctx context.Context, proc *process.Process) (username string, err error), logger *slog.Logger) {
+func ProcessUsername(c chan func(ctx context.Context, proc *process.Process) (username string, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (username string, err error) {
 		username, err = proc.UsernameWithContext(ctx)
 		return username, err
@@ -285,8 +279,7 @@ func ProcessUsername(c chan func(ctx context.Context, proc *process.Process) (us
 //
 // Parameters:
 //   - c: Channel to send the function through
-//   - logger: Logger instance for debug information
-func ProcessUIDs(c chan func(ctx context.Context, proc *process.Process) (uids []uint32, err error), logger *slog.Logger) {
+func ProcessUIDs(c chan func(ctx context.Context, proc *process.Process) (uids []uint32, err error)) {
 	c <- (func(ctx context.Context, proc *process.Process) (uids []uint32, err error) {
 		uids, err = proc.UidsWithContext(ctx)
 		return uids, err
