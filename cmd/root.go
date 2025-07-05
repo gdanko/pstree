@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/gdanko/pstree/pkg/globals"
 	"github.com/gdanko/pstree/pkg/logger"
 	"github.com/gdanko/pstree/pkg/pstree"
 	"github.com/gdanko/pstree/util"
@@ -18,30 +19,32 @@ import (
 var (
 	colorCount              int
 	colorSupport            bool
+	debugLevel              int
 	displayOptions          pstree.DisplayOptions
 	errorMessage            string
 	flagAge                 bool
 	flagArguments           bool
-	flagColor               string
-	flagColorize            bool
+	flagColor               bool
+	flagColorAttr           string
+	flagColorScheme         string
 	flagCompactNot          bool
 	flagContains            string
 	flagCpu                 bool
-	flagDebug               bool
 	flagExcludeRoot         bool
-	flagGraphicsMode        int
 	flagHideThreads         bool
 	flagIBM850              bool
 	flagLevel               int
+	flagMapBasedTree        bool // New flag for using the map-based tree structure
 	flagMemory              bool
 	flagOrderBy             string
 	flagPid                 int32
 	flagRainbow             bool
 	flagShowAll             bool
 	flagShowOwner           bool
-	flagShowPgids           bool
-	flagShowPGL             bool
-	flagShowPids            bool
+	flagShowPGIDs           bool
+	flagShowPGLs            bool
+	flagShowPIDs            bool
+	flagShowPPIDs           bool
 	flagShowUIDTransitions  bool
 	flagShowUserTransitions bool
 	flagThreads             bool
@@ -52,20 +55,29 @@ var (
 	flagWide                bool
 	installedMemory         *mem.VirtualMemoryStat
 	processes               []pstree.Process
+	processTree             *pstree.ProcessTree
+	processMap              *pstree.ProcessMap // New variable for the map-based tree
 	screenWidth             int
 	sorted                  []pstree.Process
 	usageTemplate           string
 	username                string
 	validAttributes         []string = []string{"age", "cpu", "mem"}
+	validColorSchemes       []string = []string{"darwin", "linux", "powershell", "windows10", "xterm"}
 	validOrderBy            []string = []string{"age", "cpu", "mem", "pid", "threads", "user"}
-	version                 string   = "0.7.8"
+	version                 string   = "0.8.0"
 	versionString           string
 	rootCmd                 = &cobra.Command{
 		Use:    "pstree",
 		Short:  "",
 		Long:   fmt.Sprintf("pstree $Revision: %s $ by Gary Danko (C) 2025", version),
 		PreRun: pstreePreRunCmd,
-		RunE:   pstreeRunCmd,
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			globals.SetDebugLevel(debugLevel)
+			if debugLevel > 0 {
+				fmt.Printf("Debug level: %d\n", debugLevel)
+			}
+		},
+		RunE: pstreeRunCmd,
 	}
 )
 
@@ -99,10 +111,11 @@ Process group leaders are marked with '%s' for ASCII, '%s' for IBM-850, '%s' for
 
 // pstreePreRunCmd is executed before the main run command.
 // This function is a hook provided by cobra that runs before the main command execution.
-// It can be used for pre-execution setup tasks.
+// It can be used for pre-execution setup tasks such as initializing resources,
+// validating command-line arguments, or setting up the environment.
 //
 // Parameters:
-//   - cmd: The command being executed
+//   - cmd: The cobra.Command being executed
 //   - args: Command line arguments passed to the command
 func pstreePreRunCmd(cmd *cobra.Command, args []string) {
 }
@@ -118,31 +131,33 @@ func pstreePreRunCmd(cmd *cobra.Command, args []string) {
 // Returns:
 //   - error: Any error encountered during execution
 func pstreeRunCmd(cmd *cobra.Command, args []string) error {
-	if flagDebug {
+	if debugLevel > 0 {
 		logger.Init(slog.LevelDebug)
 	} else {
 		logger.Init(slog.LevelInfo)
 	}
+	globals.SetLogger(logger.Logger)
 	installedMemory, _ = util.GetTotalMemory()
 
 	// Flag conflict rules
+	// to show if a flag is set, use cmd.Flags().Changed("flag")
 	//
-	// 1. --user root cannot be used with --exclude-root
-	// 2. only one of --color, --rainbow, and --color-attr can be used
+	// 1. --user cannot be used with --exclude-root
+	// 2. only one of --color-attr, --colorize, and --rainbow can be used
 	// 3. only one of --ibm-850, --utf-8, and --vt-100 can be use
-	// 4. valid options for --color-attr are: cpu, mem
+	// 4. valid options for --color-attr are: age, cpu, mem
 	// 5. only one of --uid-transitions and --user-transitions can be used
-	// 6. --all and --user-transitions cannot be used together
-	// 7. --all and --uid-transitions cannot be used together
+	// 6. --level cannot be set to less than 1
+	// 7. valid options for --color-scheme are: darwin, linux, windows10, xterm
 
 	// Rule 1: --user root cannot be used with --exclude-root
-	if slices.Contains(flagUsername, "root") && flagExcludeRoot {
-		return errors.New("--user root and --exclude-root cannot be used together")
+	if cmd.Flags().Changed("user") && flagExcludeRoot {
+		return errors.New("--user and --exclude-root cannot be used together")
 	}
 
-	// Rule 2: only one of --color, --rainbow, and --color-attr can be used
-	if (util.BtoI(flagColorize) + util.BtoI(flagRainbow) + util.StoI(flagColor)) > 1 {
-		return errors.New("only one of --color, --colorize, and --rainbow can be used")
+	// Rule 2: only one of --color-attr, --color, and --rainbow can be used
+	if (util.BtoI(flagColor) + util.BtoI(flagRainbow) + util.StoI(flagColorAttr)) > 1 {
+		return errors.New("only one of --color-attr, --color, and --rainbow can be used")
 	}
 
 	// Rule 3: only one of --ibm-850, --utf-8, and --vt-100 can be used
@@ -151,8 +166,8 @@ func pstreeRunCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	// Rule 4: valid options for --color-attr are: age, cpu, mem
-	if flagColor != "" && !slices.Contains(validAttributes, flagColor) {
-		return fmt.Errorf("valid options for --color are: %s", strings.Join(validAttributes, ", "))
+	if flagColorAttr != "" && !slices.Contains(validAttributes, flagColorAttr) {
+		return fmt.Errorf("valid options for --color-attr are: %s", strings.Join(validAttributes, ", "))
 	}
 
 	// Rule 5: only one of --uid-transitions and --user-transitions can be used
@@ -160,14 +175,14 @@ func pstreeRunCmd(cmd *cobra.Command, args []string) error {
 		return errors.New("only one of --uid-transitions and --user-transitions can be used")
 	}
 
-	// Rule 6: --all and --user-transitions cannot be used together
-	if flagShowAll && flagShowUserTransitions {
-		return errors.New("--all and --user-transitions cannot be used together")
+	// Rule 6: --level cannot be set to less than 1
+	if cmd.Flags().Changed("level") && flagLevel < 1 {
+		return errors.New("--level cannot be set to less than 1")
 	}
 
-	// Rule 7: --all and --uid-transitions cannot be used together
-	if flagShowAll && flagShowUIDTransitions {
-		return errors.New("--all and --uid-transitions cannot be used together")
+	// Rule 7: valid options for --color-scheme are: darwin, linux, windows10, xterm
+	if flagColorScheme != "" && !slices.Contains(validColorSchemes, flagColorScheme) {
+		return fmt.Errorf("valid options for --color-scheme are: %s", strings.Join(validColorSchemes, ", "))
 	}
 
 	if flagVersion {
@@ -177,7 +192,7 @@ Copyright (C) 2025 Gary Danko
 pstree comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it under
 the terms of the GNU General Public License.
-For more information about these matters, see the files named COPYING.`,
+For more information about these matters, see the file named LICENSE.`,
 			version,
 		)
 		fmt.Fprintln(os.Stdout, versionString)
@@ -199,7 +214,7 @@ For more information about these matters, see the files named COPYING.`,
 	}
 
 	screenWidth = util.GetScreenWidth()
-	pstree.GetProcesses(logger.Logger, &processes)
+	pstree.GetProcesses(&processes)
 
 	if flagOrderBy != "" {
 		if !slices.Contains(validOrderBy, flagOrderBy) {
@@ -222,7 +237,7 @@ For more information about these matters, see the files named COPYING.`,
 			flagMemory = true
 			pstree.SortProcsByMemory(&processes)
 		case "pid":
-			flagShowPids = true
+			flagShowPIDs = true
 			pstree.SortProcsByPid(&processes)
 		case "threads":
 			flagThreads = true
@@ -242,17 +257,13 @@ For more information about these matters, see the files named COPYING.`,
 		processes = sorted
 	}
 
-	pstree.MakeTree(logger.Logger, &processes)
-	pstree.MarkProcs(logger.Logger, &processes, flagContains, flagUsername, flagExcludeRoot, flagPid)
-	pstree.DropProcs(logger.Logger, &processes)
-
 	if flagLevel == 0 {
 		flagLevel = 999
 	}
 
 	// If any of the following flags are set, then compact mode should be disabled
 	// This is because some of the results or offenders may be buried in collapsed subtrees
-	if flagColor != "" || flagCpu || flagMemory || flagContains != "" {
+	if flagColorAttr != "" || flagCpu || flagMemory || flagContains != "" {
 		flagCompactNot = true
 	}
 
@@ -262,45 +273,91 @@ For more information about these matters, see the files named COPYING.`,
 		flagCpu = true
 		flagMemory = true
 		flagShowOwner = true
-		flagShowPgids = true
-		flagShowPids = true
-		flagShowUIDTransitions = true
+		flagShowPGIDs = true
+		flagShowPIDs = true
 		flagThreads = true
 	}
 
-	// If show UID transitions or show User transitions is enabled, mark processes with different UIDs from their parent
-	if flagShowUIDTransitions || flagShowUserTransitions {
-		pstree.MarkUIDTransitions(logger.Logger, &processes)
-	}
-
 	displayOptions = pstree.DisplayOptions{
-		ColorAttr:           flagColor,
+		ColorAttr:           flagColorAttr,
 		ColorCount:          colorCount,
-		ColorizeOutput:      flagColorize,
+		ColorizeOutput:      flagColor,
+		ColorScheme:         flagColorScheme,
 		ColorSupport:        colorSupport,
 		CompactMode:         !flagCompactNot,
-		GraphicsMode:        flagGraphicsMode,
-		HidePGL:             !flagShowPGL,
+		Contains:            flagContains,
+		ExcludeRoot:         flagExcludeRoot,
 		HideThreads:         flagHideThreads,
 		IBM850Graphics:      flagIBM850,
 		InstalledMemory:     installedMemory.Total,
 		MaxDepth:            flagLevel,
+		OrderBy:             flagOrderBy,
 		RainbowOutput:       flagRainbow,
+		RootPID:             flagPid,
+		ScreenWidth:         screenWidth,
 		ShowArguments:       flagArguments,
 		ShowCpuPercent:      flagCpu,
 		ShowMemoryUsage:     flagMemory,
 		ShowNumThreads:      flagThreads,
 		ShowOwner:           flagShowOwner,
-		ShowPGIDs:           flagShowPgids,
-		ShowPids:            flagShowPids,
+		ShowPGIDs:           flagShowPGIDs,
+		ShowPGLs:            flagShowPGLs,
+		ShowPIDs:            flagShowPIDs,
+		ShowPPIDs:           flagShowPPIDs,
 		ShowProcessAge:      flagAge,
 		ShowUIDTransitions:  flagShowUIDTransitions,
 		ShowUserTransitions: flagShowUserTransitions,
+		Usernames:           flagUsername,
 		UTF8Graphics:        flagUTF8,
 		VT100Graphics:       flagVT100,
 		WideDisplay:         flagWide,
 	}
-	pstree.PrintTree(logger.Logger, processes, 0, "", screenWidth, 0, &displayOptions)
+
+	// Choose between traditional array-based tree or new map-based tree
+	// Filtering by PID, username, etc. is not currently working with the map-based implementation
+	if flagMapBasedTree {
+
+		// Use the new map-based tree structure
+		logger.Logger.Debug("Using map-based tree structure")
+
+		// Build the process map
+		processMap = pstree.NewProcessMap(logger.Logger, processes, displayOptions)
+
+		// Mark processes to be displayed
+		processMap.FindPrintable()
+		// pretty.Println(processMap.Nodes)
+
+		// Drop unmarked processes
+		// processMap.DropUnmarked()
+
+		// Show processes that will be displayed
+		processMap.ShowPrintable()
+
+		// Print the process tree with simple indentation based on depth
+		processMap.PrintTree()
+
+	} else {
+		// Use the traditional array-based tree structure
+		logger.Logger.Debug("Using traditional array-based tree structure")
+
+		// Generate the process tree
+		processTree = pstree.NewProcessTree(debugLevel, logger.Logger, processes, displayOptions)
+
+		// Mark processes to be displayed
+		processTree.MarkProcesses()
+
+		// Drop unmarked processes
+		processTree.DropUnmarked()
+
+		// Show processes that will be displayed
+		if processTree.DebugLevel > 2 {
+			processTree.ShowPrintable()
+			os.Exit(0)
+		}
+
+		// Print the tree
+		processTree.PrintTree(0, "")
+	}
 
 	return nil
 }
