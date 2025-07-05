@@ -35,3 +35,7 @@ bin
 
 # .bak files
 *.bak
+
+# Pesky .DS_Store
+.DS_Store
+
