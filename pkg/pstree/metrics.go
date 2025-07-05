@@ -3,7 +3,6 @@ package pstree
 import (
 	"context"
 	"fmt"
-	"syscall"
 
 	"github.com/gdanko/pstree/pkg/globals"
 	"github.com/shirou/gopsutil/v4/cpu"
@@ -195,11 +194,8 @@ func ProcessParent(c chan func(ctx context.Context, proc *process.Process) (pare
 //
 // Parameters:
 //   - c: Channel to send the function through
-func ProcessPGID(c chan func(proc *process.Process) (pgid int, err error)) {
-	c <- (func(proc *process.Process) (pgid int, err error) {
-		pgid, err = syscall.Getpgid(int(proc.Pid))
-		return pgid, err
-	})
+func ProcessPGID(c chan func(proc *process.Process) (int, error)) {
+	c <- getPGIDFunc()
 }
 
 // ProcessPPID sends a function to the provided channel that retrieves the parent process ID of a process.
