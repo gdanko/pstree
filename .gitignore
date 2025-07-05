@@ -39,3 +39,5 @@ bin
 # Pesky .DS_Store
 .DS_Store
 
+# Test binary
+pstree.testbin
