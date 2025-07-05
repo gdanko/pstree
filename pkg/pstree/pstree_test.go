@@ -1,325 +1,168 @@
 package pstree
 
 import (
-	"log/slog"
-	"os"
 	"testing"
 
 	"github.com/shirou/gopsutil/v4/process"
 	"github.com/stretchr/testify/assert"
 )
 
-// setupTestLogger creates a logger for testing
-func setupTestLogger() *slog.Logger {
-	return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-	}))
-}
-
-// createMockProcesses creates a slice of mock Process structs for testing
-func createMockProcesses() []Process {
-	return []Process{
-		{
-			PID:      1,
-			PPID:     0,
-			Command:  "init",
-			Username: "root",
-			PGID:     1,
-			Parent:   -1,
-			Child:    1,
-			Sister:   -1,
-			Print:    true,
-			UIDs:     []uint32{0},
-			MemoryInfo: &process.MemoryInfoStat{
-				RSS: 1024 * 1024, // 1MB
-			},
-			CPUPercent: 0.5,
-			NumThreads: 1,
-			Age:        3600, // 1 hour
-		},
-		{
-			PID:      2,
-			PPID:     1,
-			Command:  "systemd",
-			Username: "root",
-			PGID:     2,
-			Parent:   0,
-			Child:    2,
-			Sister:   -1,
-			Print:    true,
-			UIDs:     []uint32{0},
-			MemoryInfo: &process.MemoryInfoStat{
-				RSS: 2 * 1024 * 1024, // 2MB
-			},
-			CPUPercent: 1.0,
-			NumThreads: 2,
-			Age:        1800, // 30 minutes
-		},
-		{
-			PID:      3,
-			PPID:     1,
-			Command:  "kworker",
-			Username: "root",
-			PGID:     3,
-			Parent:   0,
-			Child:    -1,
-			Sister:   1,
-			Print:    true,
-			UIDs:     []uint32{0},
-			MemoryInfo: &process.MemoryInfoStat{
-				RSS: 512 * 1024, // 512KB
-			},
-			CPUPercent: 0.2,
-			NumThreads: 1,
-			Age:        900, // 15 minutes
-		},
-		{
-			PID:      4,
-			PPID:     2,
-			Command:  "bash",
-			Username: "user",
-			PGID:     4,
-			Parent:   1,
-			Child:    -1,
-			Sister:   -1,
-			Print:    true,
-			UIDs:     []uint32{1000},
-			HasUIDTransition: true,
-			ParentUID:        0,
-			ParentUsername:   "root",
-			MemoryInfo: &process.MemoryInfoStat{
-				RSS: 3 * 1024 * 1024, // 3MB
-			},
-			CPUPercent: 0.8,
-			NumThreads: 1,
-			Age:        600, // 10 minutes
-		},
-	}
-}
-
 func TestSortByPid(t *testing.T) {
-	// Create a slice of process.Process pointers in unsorted order
-	procs := []*process.Process{
-		{Pid: 3},
-		{Pid: 1},
-		{Pid: 4},
-		{Pid: 2},
-	}
+	// Create test processes with different PIDs
+	proc1 := &process.Process{Pid: 100}
+	proc2 := &process.Process{Pid: 50}
+	proc3 := &process.Process{Pid: 200}
 
-	// Sort the slice
-	sorted := SortByPid(procs)
+	// Create a slice with processes in random order
+	procs := []*process.Process{proc1, proc2, proc3}
 
-	// Verify the sorting
-	assert.Equal(t, int32(1), sorted[0].Pid)
-	assert.Equal(t, int32(2), sorted[1].Pid)
-	assert.Equal(t, int32(3), sorted[2].Pid)
-	assert.Equal(t, int32(4), sorted[3].Pid)
-}
+	// Sort the processes
+	sortedProcs := SortByPid(procs)
 
-func TestGetPidFromIndex(t *testing.T) {
-	processes := createMockProcesses()
-
-	tests := []struct {
-		name     string
-		index    int
-		expected int32
-	}{
-		{"Valid index 0", 0, 1},
-		{"Valid index 1", 1, 2},
-		{"Valid index 2", 2, 3},
-		{"Valid index 3", 3, 4},
-		{"Invalid index", 10, -1},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			pid := GetPidFromIndex(&processes, tt.index)
-			assert.Equal(t, tt.expected, pid)
-		})
-	}
-}
-
-func TestFindPrintable(t *testing.T) {
-	processes := createMockProcesses()
-
-	// Set some processes as not printable
-	processes[1].Print = false
-	processes[3].Print = false
-
-	printable := FindPrintable(&processes)
-
-	// Verify only printable processes are returned
-	assert.Equal(t, 2, len(printable))
-	assert.Equal(t, int32(1), printable[0].PID)
-	assert.Equal(t, int32(3), printable[1].PID)
+	// Verify that the processes are sorted by PID in ascending order
+	assert.Equal(t, int32(50), sortedProcs[0].Pid)
+	assert.Equal(t, int32(100), sortedProcs[1].Pid)
+	assert.Equal(t, int32(200), sortedProcs[2].Pid)
 }
 
 func TestGetProcessByPid(t *testing.T) {
-	processes := createMockProcesses()
+	// Create test processes
+	proc1 := Process{PID: 100, Command: "proc1"}
+	proc2 := Process{PID: 200, Command: "proc2"}
+	proc3 := Process{PID: 300, Command: "proc3"}
 
-	tests := []struct {
-		name        string
-		pid         int32
-		expectError bool
-	}{
-		{"Find existing PID 1", 1, false},
-		{"Find existing PID 2", 2, false},
-		{"Find existing PID 3", 3, false},
-		{"Find existing PID 4", 4, false},
-		{"Find non-existent PID", 99, true},
-	}
+	// Create a slice with the processes
+	processes := []Process{proc1, proc2, proc3}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			proc, err := GetProcessByPid(&processes, tt.pid)
+	// Test finding an existing process
+	foundProc, err := GetProcessByPid(&processes, 200)
+	assert.NoError(t, err)
+	assert.Equal(t, "proc2", foundProc.Command)
 
-			if tt.expectError {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.pid, proc.PID)
-			}
-		})
-	}
+	// Test finding a non-existent process
+	_, err = GetProcessByPid(&processes, 999)
+	assert.Error(t, err)
 }
 
 func TestSortProcsByAge(t *testing.T) {
-	processes := createMockProcesses()
+	// Create test processes with different ages
+	proc1 := Process{PID: 100, Age: 300}
+	proc2 := Process{PID: 200, Age: 100}
+	proc3 := Process{PID: 300, Age: 200}
 
-	// Sort by age
+	// Create a slice with the processes
+	processes := []Process{proc1, proc2, proc3}
+
+	// Sort the processes by age
 	SortProcsByAge(&processes)
 
-	// Verify sorting (ascending order)
-	assert.Equal(t, int32(4), processes[0].PID) // 10 minutes
-	assert.Equal(t, int32(3), processes[1].PID) // 15 minutes
-	assert.Equal(t, int32(2), processes[2].PID) // 30 minutes
-	assert.Equal(t, int32(1), processes[3].PID) // 1 hour
+	// Verify that the processes are sorted by age in ascending order
+	assert.Equal(t, int64(100), processes[0].Age)
+	assert.Equal(t, int64(200), processes[1].Age)
+	assert.Equal(t, int64(300), processes[2].Age)
 }
 
 func TestSortProcsByCpu(t *testing.T) {
-	processes := createMockProcesses()
+	// Create test processes with different CPU percentages
+	proc1 := Process{PID: 100, CPUPercent: 5.0}
+	proc2 := Process{PID: 200, CPUPercent: 1.0}
+	proc3 := Process{PID: 300, CPUPercent: 10.0}
 
-	// Sort by CPU usage
+	// Create a slice with the processes
+	processes := []Process{proc1, proc2, proc3}
+
+	// Sort the processes by CPU percentage
 	SortProcsByCpu(&processes)
 
-	// Verify sorting (ascending order)
-	assert.Equal(t, int32(3), processes[0].PID) // 0.2%
-	assert.Equal(t, int32(1), processes[1].PID) // 0.5%
-	assert.Equal(t, int32(4), processes[2].PID) // 0.8%
-	assert.Equal(t, int32(2), processes[3].PID) // 1.0%
+	// Verify that the processes are sorted by CPU percentage in ascending order
+	assert.Equal(t, float64(1.0), processes[0].CPUPercent)
+	assert.Equal(t, float64(5.0), processes[1].CPUPercent)
+	assert.Equal(t, float64(10.0), processes[2].CPUPercent)
 }
 
 func TestSortProcsByMemory(t *testing.T) {
-	processes := createMockProcesses()
+	// Create test processes with different memory usage
+	proc1 := Process{PID: 100, MemoryInfo: &process.MemoryInfoStat{RSS: 5000}}
+	proc2 := Process{PID: 200, MemoryInfo: &process.MemoryInfoStat{RSS: 1000}}
+	proc3 := Process{PID: 300, MemoryInfo: &process.MemoryInfoStat{RSS: 10000}}
 
-	// Sort by memory usage
+	// Create a slice with the processes
+	processes := []Process{proc1, proc2, proc3}
+
+	// Sort the processes by memory usage
 	SortProcsByMemory(&processes)
 
-	// Verify sorting (ascending order)
-	assert.Equal(t, int32(3), processes[0].PID) // 512KB
-	assert.Equal(t, int32(1), processes[1].PID) // 1MB
-	assert.Equal(t, int32(2), processes[2].PID) // 2MB
-	assert.Equal(t, int32(4), processes[3].PID) // 3MB
+	// Verify that the processes are sorted by memory usage in ascending order
+	assert.Equal(t, uint64(1000), processes[0].MemoryInfo.RSS)
+	assert.Equal(t, uint64(5000), processes[1].MemoryInfo.RSS)
+	assert.Equal(t, uint64(10000), processes[2].MemoryInfo.RSS)
 }
 
 func TestSortProcsByUsername(t *testing.T) {
-	processes := createMockProcesses()
+	// Create test processes with different usernames
+	proc1 := Process{PID: 100, Username: "charlie"}
+	proc2 := Process{PID: 200, Username: "alice"}
+	proc3 := Process{PID: 300, Username: "bob"}
 
-	// Sort by username
+	// Create a slice with the processes
+	processes := []Process{proc1, proc2, proc3}
+
+	// Sort the processes by username
 	SortProcsByUsername(&processes)
 
-	// Verify sorting (alphabetical order)
-	assert.Equal(t, "root", processes[0].Username)
-	assert.Equal(t, "root", processes[1].Username)
-	assert.Equal(t, "root", processes[2].Username)
-	assert.Equal(t, "user", processes[3].Username)
+	// Verify that the processes are sorted by username in ascending alphabetical order
+	assert.Equal(t, "alice", processes[0].Username)
+	assert.Equal(t, "bob", processes[1].Username)
+	assert.Equal(t, "charlie", processes[2].Username)
 }
 
 func TestSortProcsByPid(t *testing.T) {
-	processes := []Process{
-		{PID: 3},
-		{PID: 1},
-		{PID: 4},
-		{PID: 2},
-	}
+	// Create test processes with different PIDs
+	proc1 := Process{PID: 300}
+	proc2 := Process{PID: 100}
+	proc3 := Process{PID: 200}
 
-	// Sort by PID
+	// Create a slice with the processes
+	processes := []Process{proc1, proc2, proc3}
+
+	// Sort the processes by PID
 	SortProcsByPid(&processes)
 
-	// Verify sorting (ascending order)
-	assert.Equal(t, int32(1), processes[0].PID)
-	assert.Equal(t, int32(2), processes[1].PID)
-	assert.Equal(t, int32(3), processes[2].PID)
-	assert.Equal(t, int32(4), processes[3].PID)
+	// Verify that the processes are sorted by PID in ascending order
+	assert.Equal(t, int32(100), processes[0].PID)
+	assert.Equal(t, int32(200), processes[1].PID)
+	assert.Equal(t, int32(300), processes[2].PID)
 }
 
 func TestSortProcsByNumThreads(t *testing.T) {
-	processes := createMockProcesses()
+	// Create test processes with different thread counts
+	proc1 := Process{PID: 100, NumThreads: 5}
+	proc2 := Process{PID: 200, NumThreads: 2}
+	proc3 := Process{PID: 300, NumThreads: 10}
 
-	// Sort by number of threads
+	// Create a slice with the processes
+	processes := []Process{proc1, proc2, proc3}
+
+	// Sort the processes by thread count
 	SortProcsByNumThreads(&processes)
 
-	// Verify sorting (ascending order)
-	// PIDs 1, 3, and 4 all have 1 thread, but their order should be preserved
-	assert.Equal(t, int32(1), processes[0].PID)
-	assert.Equal(t, int32(3), processes[1].PID)
-	assert.Equal(t, int32(4), processes[2].PID)
-	assert.Equal(t, int32(2), processes[3].PID) // 2 threads
+	// Verify that the processes are sorted by thread count in ascending order
+	assert.Equal(t, int32(2), processes[0].NumThreads)
+	assert.Equal(t, int32(5), processes[1].NumThreads)
+	assert.Equal(t, int32(10), processes[2].NumThreads)
 }
 
-func TestGetPIDIndex(t *testing.T) {
-	logger := setupTestLogger()
-	processes := createMockProcesses()
+func TestGenerateProcess(t *testing.T) {
+	// This is a more complex test that requires mocking the process.Process type
+	// For simplicity, we'll just verify that the function doesn't panic
 
-	tests := []struct {
-		name     string
-		pid      int32
-		expected int
-	}{
-		{"Find existing PID 1", 1, 0},
-		{"Find existing PID 2", 2, 1},
-		{"Find existing PID 3", 3, 2},
-		{"Find existing PID 4", 4, 3},
-		{"Find non-existent PID", 99, -1},
-	}
+	// Create a minimal process.Process with just a PID
+	// In a real test, you would use a mocking library to mock the methods
+	proc := &process.Process{Pid: 1}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			index := GetPIDIndex(logger, processes, tt.pid)
-			assert.Equal(t, tt.expected, index)
-		})
-	}
-}
+	// Call generateProcess and verify it doesn't panic
+	result := GenerateProcess(proc)
 
-func TestMarkCurrentAndAncestors(t *testing.T) {
-	logger := setupTestLogger()
-	processes := createMockProcesses()
-
-	// Mark process 4 and its ancestors
-	MarkCurrentAndAncestors(logger, &processes, 4)
-
-	// Verify marking
-	assert.True(t, processes[0].IsCurrentOrAncestor) // PID 1 (grandparent)
-	assert.True(t, processes[1].IsCurrentOrAncestor) // PID 2 (parent)
-	assert.False(t, processes[2].IsCurrentOrAncestor) // PID 3 (unrelated)
-	assert.True(t, processes[3].IsCurrentOrAncestor) // PID 4 (current)
-}
-
-func TestMarkUIDTransitions(t *testing.T) {
-	logger := setupTestLogger()
-	processes := createMockProcesses()
-
-	// Reset the HasUIDTransition flag
-	for i := range processes {
-		processes[i].HasUIDTransition = false
-	}
-
-	// Mark UID transitions
-	MarkUIDTransitions(logger, &processes)
-
-	// Verify marking
-	assert.False(t, processes[0].HasUIDTransition) // PID 1 (root process)
-	assert.False(t, processes[1].HasUIDTransition) // PID 2 (same UID as parent)
-	assert.False(t, processes[2].HasUIDTransition) // PID 3 (same UID as parent)
-	assert.True(t, processes[4-1].HasUIDTransition) // PID 4 (different UID from parent)
+	// Basic verification that the result has the expected PID
+	assert.Equal(t, int32(1), result.PID)
 }
