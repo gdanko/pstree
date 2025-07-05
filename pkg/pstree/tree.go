@@ -1039,8 +1039,8 @@ func (processTree *ProcessTree) colorizeField(fieldName string, value *string, p
 				processTree.Colorizer.OwnerTransition(processTree.ColorScheme, value)
 			case "pidPgid":
 				processTree.Colorizer.PIDPGID(processTree.ColorScheme, value)
-			case "prefix":
-				processTree.Colorizer.Prefix(processTree.ColorScheme, value)
+			// case "prefix":
+			// 	processTree.Colorizer.Prefix(processTree.ColorScheme, value)
 			case "threads":
 				processTree.Colorizer.NumThreads(processTree.ColorScheme, value)
 			}
@@ -1102,8 +1102,8 @@ func (processTree *ProcessTree) colorizeField(fieldName string, value *string, p
 						processTree.Colorizer.MemoryHigh(processTree.ColorScheme, value)
 					}
 				}
-			} else {
-				processTree.Colorizer.Default(processTree.ColorScheme, value)
+				// } else {
+				// 	processTree.Colorizer.Default(processTree.ColorScheme, value)
 			}
 		}
 	}
