@@ -21,12 +21,15 @@ import (
 //   - colorSupport: Boolean indicating if the terminal supports color output
 //   - colorCount: Integer representing the number of colors supported by the terminal
 //   - username: String containing the current user's username for privilege-based flags
-func GetPersistentFlags(cmd *cobra.Command, colorSupport bool, colorCount int, username string) {
+func GetPersistentFlags(cmd *cobra.Command, colorSupport bool, colorCount int, unicodeSupport bool, username string) {
 	// Drawing characters
 	if runtime.GOOS == "windows" || (username == "gdanko" || username == "gary.danko") { // I put this here to show all output for the usage section of the README
 		cmd.PersistentFlags().BoolVarP(&flagIBM850, "ibm-850", "i", false, "use IBM-850 line drawing characters; only supported on DOS/Windows")
 	}
-	cmd.PersistentFlags().BoolVarP(&flagUTF8, "utf-8", "u", false, "use UTF-8 (Unicode) line drawing characters")
+
+	if unicodeSupport {
+		cmd.PersistentFlags().BoolVarP(&flagUTF8, "utf-8", "u", false, "use UTF-8 (Unicode) line drawing characters")
+	}
 	cmd.PersistentFlags().BoolVarP(&flagVT100, "vt-100", "v", false, "use VT-100 line drawing characters")
 
 	// Depth
