@@ -24,6 +24,7 @@ import (
 	"github.com/gdanko/pstree/util"
 	"github.com/giancarlosio/gorainbow"
 	"github.com/mattn/go-runewidth"
+	"golang.org/x/term"
 )
 
 var ansiEscape = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
@@ -854,21 +855,31 @@ func (processTree *ProcessTree) PrintTree(pidIndex int, head string) {
 
 	line = processTree.buildLineItem(head, pidIndex)
 
-	if !processTree.DisplayOptions.WideDisplay {
+	// If output is not a terminal, strip color
+	if !term.IsTerminal(int(os.Stdout.Fd())) {
+		line = processTree.stripANSI(line)
 		if len(line) > processTree.DisplayOptions.ScreenWidth {
-			if processTree.DisplayOptions.RainbowOutput {
-				line = processTree.truncateANSI(gorainbow.Rainbow(line))
+			if !processTree.DisplayOptions.WideDisplay {
+				line = processTree.truncatePlain(line)
+			}
+		}
+	} else {
+		if !processTree.DisplayOptions.WideDisplay {
+			if len(line) > processTree.DisplayOptions.ScreenWidth {
+				if processTree.DisplayOptions.RainbowOutput {
+					line = processTree.truncateANSI(gorainbow.Rainbow(line))
+				} else {
+					line = processTree.truncateANSI(line)
+				}
 			} else {
-				line = processTree.truncateANSI(line)
+				if processTree.DisplayOptions.RainbowOutput {
+					line = gorainbow.Rainbow(line)
+				}
 			}
 		} else {
 			if processTree.DisplayOptions.RainbowOutput {
 				line = gorainbow.Rainbow(line)
 			}
-		}
-	} else {
-		if processTree.DisplayOptions.RainbowOutput {
-			line = gorainbow.Rainbow(line)
 		}
 	}
 
@@ -1246,4 +1257,38 @@ func (processTree *ProcessTree) truncateANSI(input string) string {
 
 	output.WriteString(dots)
 	return output.String() + "\x1b[0m" // Prevent ANSI bleed
+}
+
+func (processTree *ProcessTree) stripANSI(input string) string {
+	var ansiRegex = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
+	return ansiRegex.ReplaceAllString(input, "")
+}
+
+func (processTree *ProcessTree) truncatePlain(input string) string {
+	dots := "..."
+
+	if processTree.DisplayOptions.ScreenWidth <= 3 {
+		return dots
+	}
+
+	// First, check actual display width
+	if runewidth.StringWidth(input) <= processTree.DisplayOptions.ScreenWidth {
+		return input // No truncation needed
+	}
+
+	targetWidth := processTree.DisplayOptions.ScreenWidth - len(dots)
+	var output strings.Builder
+	width := 0
+
+	for _, r := range input {
+		rw := runewidth.RuneWidth(r)
+		if width+rw > targetWidth {
+			break
+		}
+		output.WriteRune(r)
+		width += rw
+	}
+
+	output.WriteString(dots)
+	return output.String()
 }
