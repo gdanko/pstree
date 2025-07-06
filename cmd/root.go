@@ -59,6 +59,7 @@ var (
 	processMap              *pstree.ProcessMap // New variable for the map-based tree
 	screenWidth             int
 	sorted                  []pstree.Process
+	unicodeSupport          bool
 	usageTemplate           string
 	username                string
 	validAttributes         []string = []string{"age", "cpu", "mem"}
@@ -94,8 +95,9 @@ func Execute() error {
 func init() {
 	username = util.DetermineUsername()
 	colorSupport, colorCount = util.HasColorSupport()
+	unicodeSupport = util.HasUnicodeSupport()
 
-	GetPersistentFlags(rootCmd, colorSupport, colorCount, username)
+	GetPersistentFlags(rootCmd, colorSupport, colorCount, unicodeSupport, username)
 
 	usageTemplate = fmt.Sprintf(`Usage: pstree [OPTIONS]
 
