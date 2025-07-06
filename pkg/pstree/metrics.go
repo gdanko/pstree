@@ -191,6 +191,7 @@ func ProcessParent(c chan func(ctx context.Context, proc *process.Process) (pare
 // ProcessPGID sends a function to the provided channel that retrieves the process group ID of a process.
 // This function is designed to be used with goroutines to gather process information concurrently.
 // Unlike other functions, this one uses syscall.Getpgid directly instead of a context-aware method.
+// This functionality is not supported on Windows.
 //
 // Parameters:
 //   - c: Channel to send the function through
