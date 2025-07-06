@@ -15,6 +15,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/gdanko/pstree/pkg/color"
 	"github.com/gdanko/pstree/util"
 	"github.com/giancarlosio/gorainbow"
 	"github.com/mattn/go-runewidth"
@@ -33,8 +34,8 @@ type ProcessMap struct {
 	Logger         *slog.Logger
 	Nodes          map[int32]*ProcessNode
 	TreeChars      TreeChars
-	ColorScheme    ColorScheme
-	Colorizer      Colorizer
+	ColorScheme    color.ColorScheme
+	Colorizer      color.Colorizer
 }
 
 // NewProcessMap creates a new process tree map from a slice of processes.
@@ -70,30 +71,30 @@ func NewProcessMap(logger *slog.Logger, processes []Process, displayOptions Disp
 
 	// Initialize the color scheme
 	if processMap.DisplayOptions.ColorScheme != "" {
-		processMap.ColorScheme = ColorSchemes[processMap.DisplayOptions.ColorScheme]
+		processMap.ColorScheme = color.ColorSchemes[processMap.DisplayOptions.ColorScheme]
 	} else {
 		switch runtime.GOOS {
 		case "windows":
 			if os.Getenv("PSModulePath") != "" {
-				processMap.ColorScheme = ColorSchemes["powershell"]
+				processMap.ColorScheme = color.ColorSchemes["powershell"]
 			} else {
-				processMap.ColorScheme = ColorSchemes["windows10"]
+				processMap.ColorScheme = color.ColorSchemes["windows10"]
 			}
 		case "linux":
-			processMap.ColorScheme = ColorSchemes["linux"]
+			processMap.ColorScheme = color.ColorSchemes["linux"]
 		case "darwin":
-			processMap.ColorScheme = ColorSchemes["darwin"]
+			processMap.ColorScheme = color.ColorSchemes["darwin"]
 		default:
-			processMap.ColorScheme = ColorSchemes["xterm"]
+			processMap.ColorScheme = color.ColorSchemes["xterm"]
 		}
 	}
 
 	// Initialize colorizer
 	if processMap.DisplayOptions.ColorizeOutput || processMap.DisplayOptions.ColorAttr != "" {
 		if processMap.DisplayOptions.ColorCount >= 8 && processMap.DisplayOptions.ColorCount <= 16 {
-			processMap.Colorizer = Colorizers["8color"]
+			processMap.Colorizer = color.Colorizers["8color"]
 		} else if processMap.DisplayOptions.ColorCount >= 256 {
-			processMap.Colorizer = Colorizers["256color"]
+			processMap.Colorizer = color.Colorizers["256color"]
 		}
 	}
 

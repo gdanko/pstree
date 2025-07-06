@@ -105,7 +105,7 @@ func TestRealPstreeOutput(t *testing.T) {
 			args: []string{},
 			patterns: []string{
 				// The init process should be in the output
-				`init`,
+				`launchd`,
 			},
 		},
 		{

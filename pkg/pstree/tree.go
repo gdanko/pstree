@@ -20,9 +20,11 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/gdanko/pstree/pkg/color"
 	"github.com/gdanko/pstree/util"
 	"github.com/giancarlosio/gorainbow"
 	"github.com/mattn/go-runewidth"
+	"golang.org/x/term"
 )
 
 var ansiEscape = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
@@ -89,24 +91,24 @@ func NewProcessTree(debugLevel int, logger *slog.Logger, processes []Process, di
 	// Initialize the color scheme
 	// if 8 bit color (8-16) is detected, we will use the ansi8 color scheme
 	if processTree.DisplayOptions.ColorCount >= 8 && processTree.DisplayOptions.ColorCount <= 16 {
-		processTree.ColorScheme = ColorSchemes["ansi8"]
+		processTree.ColorScheme = color.ColorSchemes["ansi8"]
 	} else if processTree.DisplayOptions.ColorCount >= 256 {
 		if processTree.DisplayOptions.ColorScheme != "" {
-			processTree.ColorScheme = ColorSchemes[processTree.DisplayOptions.ColorScheme]
+			processTree.ColorScheme = color.ColorSchemes[processTree.DisplayOptions.ColorScheme]
 		} else {
 			switch runtime.GOOS {
 			case "windows":
 				if os.Getenv("PSModulePath") != "" {
-					processTree.ColorScheme = ColorSchemes["powershell"]
+					processTree.ColorScheme = color.ColorSchemes["powershell"]
 				} else {
-					processTree.ColorScheme = ColorSchemes["windows10"]
+					processTree.ColorScheme = color.ColorSchemes["windows10"]
 				}
 			case "linux":
-				processTree.ColorScheme = ColorSchemes["linux"]
+				processTree.ColorScheme = color.ColorSchemes["linux"]
 			case "darwin":
-				processTree.ColorScheme = ColorSchemes["darwin"]
+				processTree.ColorScheme = color.ColorSchemes["darwin"]
 			default:
-				processTree.ColorScheme = ColorSchemes["xterm"]
+				processTree.ColorScheme = color.ColorSchemes["xterm"]
 			}
 		}
 	}
@@ -114,9 +116,9 @@ func NewProcessTree(debugLevel int, logger *slog.Logger, processes []Process, di
 	// Initialize colorizer
 	if processTree.DisplayOptions.ColorizeOutput || processTree.DisplayOptions.ColorAttr != "" {
 		if processTree.DisplayOptions.ColorCount >= 8 && processTree.DisplayOptions.ColorCount <= 16 {
-			processTree.Colorizer = Colorizers["8color"]
+			processTree.Colorizer = color.Colorizers["8color"]
 		} else if processTree.DisplayOptions.ColorCount >= 256 {
-			processTree.Colorizer = Colorizers["256color"]
+			processTree.Colorizer = color.Colorizers["256color"]
 		}
 	}
 
@@ -853,21 +855,31 @@ func (processTree *ProcessTree) PrintTree(pidIndex int, head string) {
 
 	line = processTree.buildLineItem(head, pidIndex)
 
-	if !processTree.DisplayOptions.WideDisplay {
+	// If output is not a terminal, strip color
+	if !term.IsTerminal(int(os.Stdout.Fd())) {
+		line = processTree.stripANSI(line)
 		if len(line) > processTree.DisplayOptions.ScreenWidth {
-			if processTree.DisplayOptions.RainbowOutput {
-				line = processTree.truncateANSI(gorainbow.Rainbow(line))
+			if !processTree.DisplayOptions.WideDisplay {
+				line = processTree.truncatePlain(line)
+			}
+		}
+	} else {
+		if !processTree.DisplayOptions.WideDisplay {
+			if len(line) > processTree.DisplayOptions.ScreenWidth {
+				if processTree.DisplayOptions.RainbowOutput {
+					line = processTree.truncateANSI(gorainbow.Rainbow(line))
+				} else {
+					line = processTree.truncateANSI(line)
+				}
 			} else {
-				line = processTree.truncateANSI(line)
+				if processTree.DisplayOptions.RainbowOutput {
+					line = gorainbow.Rainbow(line)
+				}
 			}
 		} else {
 			if processTree.DisplayOptions.RainbowOutput {
 				line = gorainbow.Rainbow(line)
 			}
-		}
-	} else {
-		if processTree.DisplayOptions.RainbowOutput {
-			line = gorainbow.Rainbow(line)
 		}
 	}
 
@@ -1039,8 +1051,8 @@ func (processTree *ProcessTree) colorizeField(fieldName string, value *string, p
 				processTree.Colorizer.OwnerTransition(processTree.ColorScheme, value)
 			case "pidPgid":
 				processTree.Colorizer.PIDPGID(processTree.ColorScheme, value)
-			case "prefix":
-				processTree.Colorizer.Prefix(processTree.ColorScheme, value)
+			// case "prefix":
+			// 	processTree.Colorizer.Prefix(processTree.ColorScheme, value)
 			case "threads":
 				processTree.Colorizer.NumThreads(processTree.ColorScheme, value)
 			}
@@ -1102,8 +1114,8 @@ func (processTree *ProcessTree) colorizeField(fieldName string, value *string, p
 						processTree.Colorizer.MemoryHigh(processTree.ColorScheme, value)
 					}
 				}
-			} else {
-				processTree.Colorizer.Default(processTree.ColorScheme, value)
+				// } else {
+				// 	processTree.Colorizer.Default(processTree.ColorScheme, value)
 			}
 		}
 	}
@@ -1245,4 +1257,38 @@ func (processTree *ProcessTree) truncateANSI(input string) string {
 
 	output.WriteString(dots)
 	return output.String() + "\x1b[0m" // Prevent ANSI bleed
+}
+
+func (processTree *ProcessTree) stripANSI(input string) string {
+	var ansiRegex = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
+	return ansiRegex.ReplaceAllString(input, "")
+}
+
+func (processTree *ProcessTree) truncatePlain(input string) string {
+	dots := "..."
+
+	if processTree.DisplayOptions.ScreenWidth <= 3 {
+		return dots
+	}
+
+	// First, check actual display width
+	if runewidth.StringWidth(input) <= processTree.DisplayOptions.ScreenWidth {
+		return input // No truncation needed
+	}
+
+	targetWidth := processTree.DisplayOptions.ScreenWidth - len(dots)
+	var output strings.Builder
+	width := 0
+
+	for _, r := range input {
+		rw := runewidth.RuneWidth(r)
+		if width+rw > targetWidth {
+			break
+		}
+		output.WriteRune(r)
+		width += rw
+	}
+
+	output.WriteString(dots)
+	return output.String()
 }

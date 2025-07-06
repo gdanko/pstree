@@ -71,7 +71,7 @@ It uses [gopsutil](https://github.com/shirou/gopsutil) for gathering process inf
 ## Usage
 ```
 $ pstree --help
-pstree $Revision: 0.8.0 $ by Gary Danko (C) 2025
+pstree $Revision: 0.8.1 $ by Gary Danko (C) 2025
 
 Usage: pstree [OPTIONS]
 

@@ -59,12 +59,13 @@ var (
 	processMap              *pstree.ProcessMap // New variable for the map-based tree
 	screenWidth             int
 	sorted                  []pstree.Process
+	unicodeSupport          bool
 	usageTemplate           string
 	username                string
 	validAttributes         []string = []string{"age", "cpu", "mem"}
 	validColorSchemes       []string = []string{"darwin", "linux", "powershell", "windows10", "xterm"}
 	validOrderBy            []string = []string{"age", "cpu", "mem", "pid", "threads", "user"}
-	version                 string   = "0.8.0"
+	version                 string   = "0.8.1"
 	versionString           string
 	rootCmd                 = &cobra.Command{
 		Use:    "pstree",
@@ -94,8 +95,9 @@ func Execute() error {
 func init() {
 	username = util.DetermineUsername()
 	colorSupport, colorCount = util.HasColorSupport()
+	unicodeSupport = util.HasUnicodeSupport()
 
-	GetPersistentFlags(rootCmd, colorSupport, colorCount, username)
+	GetPersistentFlags(rootCmd, colorSupport, colorCount, unicodeSupport, username)
 
 	usageTemplate = fmt.Sprintf(`Usage: pstree [OPTIONS]
 
