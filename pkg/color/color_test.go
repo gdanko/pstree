@@ -1,4 +1,4 @@
-package pstree
+package color
 
 import (
 	"testing"

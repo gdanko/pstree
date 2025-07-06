@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/gdanko/pstree/pkg/pstree"
+	"github.com/gdanko/pstree/pkg/color"
 	"github.com/giancarlosio/gorainbow"
 	"github.com/spf13/cobra"
 )
@@ -41,7 +41,7 @@ func GetPersistentFlags(cmd *cobra.Command, colorSupport bool, colorCount int, u
 	// Color options
 	if colorSupport {
 		if colorCount >= 8 && colorCount < 256 {
-			cmd.PersistentFlags().BoolVarP(&flagColor, "color", "C", false, fmt.Sprintf("add some beautiful %s to the pstree output; cannot be used with --color-attr", pstree.Print8ColorRainbow("color")))
+			cmd.PersistentFlags().BoolVarP(&flagColor, "color", "C", false, fmt.Sprintf("add some beautiful %s to the pstree output; cannot be used with --color-attr", color.Print8ColorRainbow("color")))
 			cmd.PersistentFlags().StringVarP(&flagColorAttr, "color-attr", "k", "", fmt.Sprintf("color the process name by given attribute; implies --compact-not; valid options are: %s;\ncannot be used with --color", strings.Join(validAttributes, ", ")))
 		} else if colorCount >= 256 {
 			cmd.PersistentFlags().BoolVarP(&flagColor, "color", "C", false, gorainbow.Rainbow("add some beautiful color to the pstree output; cannot be used with --color-attr or --rainbow"))

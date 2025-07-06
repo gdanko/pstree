@@ -20,6 +20,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/gdanko/pstree/pkg/color"
 	"github.com/gdanko/pstree/util"
 	"github.com/giancarlosio/gorainbow"
 	"github.com/mattn/go-runewidth"
@@ -89,24 +90,24 @@ func NewProcessTree(debugLevel int, logger *slog.Logger, processes []Process, di
 	// Initialize the color scheme
 	// if 8 bit color (8-16) is detected, we will use the ansi8 color scheme
 	if processTree.DisplayOptions.ColorCount >= 8 && processTree.DisplayOptions.ColorCount <= 16 {
-		processTree.ColorScheme = ColorSchemes["ansi8"]
+		processTree.ColorScheme = color.ColorSchemes["ansi8"]
 	} else if processTree.DisplayOptions.ColorCount >= 256 {
 		if processTree.DisplayOptions.ColorScheme != "" {
-			processTree.ColorScheme = ColorSchemes[processTree.DisplayOptions.ColorScheme]
+			processTree.ColorScheme = color.ColorSchemes[processTree.DisplayOptions.ColorScheme]
 		} else {
 			switch runtime.GOOS {
 			case "windows":
 				if os.Getenv("PSModulePath") != "" {
-					processTree.ColorScheme = ColorSchemes["powershell"]
+					processTree.ColorScheme = color.ColorSchemes["powershell"]
 				} else {
-					processTree.ColorScheme = ColorSchemes["windows10"]
+					processTree.ColorScheme = color.ColorSchemes["windows10"]
 				}
 			case "linux":
-				processTree.ColorScheme = ColorSchemes["linux"]
+				processTree.ColorScheme = color.ColorSchemes["linux"]
 			case "darwin":
-				processTree.ColorScheme = ColorSchemes["darwin"]
+				processTree.ColorScheme = color.ColorSchemes["darwin"]
 			default:
-				processTree.ColorScheme = ColorSchemes["xterm"]
+				processTree.ColorScheme = color.ColorSchemes["xterm"]
 			}
 		}
 	}
@@ -114,9 +115,9 @@ func NewProcessTree(debugLevel int, logger *slog.Logger, processes []Process, di
 	// Initialize colorizer
 	if processTree.DisplayOptions.ColorizeOutput || processTree.DisplayOptions.ColorAttr != "" {
 		if processTree.DisplayOptions.ColorCount >= 8 && processTree.DisplayOptions.ColorCount <= 16 {
-			processTree.Colorizer = Colorizers["8color"]
+			processTree.Colorizer = color.Colorizers["8color"]
 		} else if processTree.DisplayOptions.ColorCount >= 256 {
-			processTree.Colorizer = Colorizers["256color"]
+			processTree.Colorizer = color.Colorizers["256color"]
 		}
 	}
 
