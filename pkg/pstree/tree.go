@@ -1416,17 +1416,17 @@ func (processTree *ProcessTree) printThreads(pidIndex int, head string) {
 		// Create thread line prefix with appropriate branch characters
 		if isLastThread && !hasChildProcess {
 			// Last thread with no child processes uses └──── style connector (L shape)
-			prefix = threadHead + processTree.TreeChars.BarL + processTree.TreeChars.EG + strings.Repeat(processTree.TreeChars.S2, 3) + processTree.TreeChars.NPGL
+			prefix = threadHead + processTree.TreeChars.BarL + processTree.TreeChars.EG + strings.Repeat(processTree.TreeChars.S2, 1) + processTree.TreeChars.NPGL
 		} else {
 			// Other threads or last thread with child processes use ├──── style connector (T shape)
-			prefix = threadHead + processTree.TreeChars.BarC + processTree.TreeChars.EG + strings.Repeat(processTree.TreeChars.S2, 3) + processTree.TreeChars.NPGL
+			prefix = threadHead + processTree.TreeChars.BarC + processTree.TreeChars.EG + strings.Repeat(processTree.TreeChars.S2, 1) + processTree.TreeChars.NPGL
 		}
 
 		// Format thread name with curly braces like {processname}
-		threadName := fmt.Sprintf("{%s}", filepath.Base(thread.Command))
+		threadName := fmt.Sprintf(" {%s}", filepath.Base(thread.Command))
 
 		// Format thread ID and PGID as (ThreadID, PGID)
-		threadInfo = fmt.Sprintf(" (%d,%d)", thread.TID, thread.PID)
+		threadInfo = fmt.Sprintf(" (%d,%d)", thread.TID, thread.PGID)
 
 		// Build the complete thread line
 		threadLine.WriteString(prefix)
