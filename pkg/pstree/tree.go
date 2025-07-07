@@ -1412,10 +1412,10 @@ func (processTree *ProcessTree) printThreads(pidIndex int, head string) {
 		if i == len(processTree.Nodes[pidIndex].Threads)-1 {
 			// Last thread uses └──── style connector
 			// prefix = threadHead + "└" + strings.Repeat("─", 6)
-			prefix = threadHead + processTree.TreeChars.BarL + processTree.TreeChars.EG + processTree.TreeChars.S2 + processTree.TreeChars.NPGL
+			prefix = threadHead + processTree.TreeChars.BarL + processTree.TreeChars.EG + strings.Repeat(processTree.TreeChars.S2, 3) + processTree.TreeChars.NPGL
 		} else {
 			// Other threads use ├──── style connector
-			prefix = threadHead + processTree.TreeChars.BarC + processTree.TreeChars.EG + processTree.TreeChars.S2 + processTree.TreeChars.NPGL
+			prefix = threadHead + processTree.TreeChars.BarC + processTree.TreeChars.EG + strings.Repeat(processTree.TreeChars.S2, 3) + processTree.TreeChars.NPGL
 		}
 
 		// Format thread name with curly braces like {processname}
