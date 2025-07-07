@@ -80,10 +80,29 @@ type Process struct {
 	Sister int
 	// Process status information
 	Status []string
+	// A map of threads for the process
+	Threads []Thread
+	// Thread ID (if this is a thread)
+	TID int32
 	// User IDs associated with this process
 	UIDs []uint32
 	// Username of the process owner
 	Username string
+}
+
+type Thread struct {
+	// Command line arguments
+	Args []string
+	// PID
+	PID int32
+	// Parent PID
+	PPID int32
+	// Thread ID
+	TID int32
+	// Command name (executable name)
+	Command string
+	// CPU Times
+	CPUTimes *cpu.TimesStat
 }
 
 //------------------------------------------------------------------------------
