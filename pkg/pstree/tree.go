@@ -779,7 +779,8 @@ func (processTree *ProcessTree) buildLineItem(head string, pidIndex int) string 
 //   - A string to be used as the head for child processes, including appropriate vertical bars
 //     or spaces based on whether the current process has visible siblings.
 func (processTree *ProcessTree) buildNewHead(head string, pidIndex int) string {
-	newHead := fmt.Sprintf("%s%s ", head,
+	newHead := fmt.Sprintf("%s%s ",
+		head,
 		func() string {
 			if head == "" {
 				return ""
@@ -909,6 +910,25 @@ func (processTree *ProcessTree) PrintTree(pidIndex int, head string) {
 
 	processTree.Logger.Debug(fmt.Sprintf("processTree.PrintTree(): printing line for node.PID=%d, head=\"%s\"", processTree.Nodes[pidIndex].PID, head))
 	fmt.Fprintln(os.Stdout, line)
+
+	// Begin experimental code for printing process tree with threads
+	// Print threads as children (after printing the process line)
+	threads := processTree.Nodes[pidIndex].Threads
+	var realThreads []Thread
+	for _, thread := range threads {
+		if thread.TID != processTree.Nodes[pidIndex].PID {
+			realThreads = append(realThreads, thread)
+		}
+	}
+	for i, thread := range realThreads {
+		branch := processTree.TreeChars.BarC
+		if i == len(realThreads)-1 {
+			branch = processTree.TreeChars.BarL
+		}
+		threadLine := fmt.Sprintf("%s%s{%s}(%d,%d)", newHead, branch, processTree.Nodes[pidIndex].Command, thread.TID, processTree.Nodes[pidIndex].PID)
+		fmt.Fprintln(os.Stdout, threadLine)
+	}
+	// End experimental code for printing process tree with threads
 
 	// Iterate over children and determine sibling status
 	childme := processTree.Nodes[pidIndex].Child
