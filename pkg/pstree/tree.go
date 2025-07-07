@@ -129,6 +129,9 @@ func NewProcessTree(debugLevel int, logger *slog.Logger, processes []Process, di
 	// Mark UID transitions
 	processTree.MarkUIDTransitions()
 
+	// Mark threads for display
+	processTree.MarkThreads()
+
 	return processTree
 }
 
@@ -269,8 +272,25 @@ func (processTree *ProcessTree) MarkProcesses() {
 	}
 }
 
+// MarkThreads marks threads that should be displayed based on filtering criteria.
+// It ensures that threads are properly associated with their parent processes and
+// marked for display when appropriate.
 func (processTree *ProcessTree) MarkThreads() {
-	// Do something here
+	processTree.Logger.Debug("Entering processTree.MarkThreads()")
+
+	// If threads are hidden, no need to mark them
+	if processTree.DisplayOptions.HideThreads {
+		return
+	}
+
+	// Iterate through all processes
+	for pidIndex := range processTree.Nodes {
+		// Only mark threads for processes that are marked for display
+		if processTree.Nodes[pidIndex].Print && len(processTree.Nodes[pidIndex].Threads) > 0 {
+			processTree.Logger.Debug(fmt.Sprintf("Marking %d threads for process %d",
+				len(processTree.Nodes[pidIndex].Threads), processTree.Nodes[pidIndex].PID))
+		}
+	}
 }
 
 // DropUnmarked removes processes that are not marked for display from the process tree.
@@ -512,7 +532,12 @@ func (processTree *ProcessTree) buildLinePrefix(head string, pidIndex int) strin
 		}
 	}
 
-	if processTree.Nodes[pidIndex].Child != -1 && processTree.AtDepth < processTree.DisplayOptions.MaxDepth {
+	// Check if this process has children or threads
+	hasChildren := processTree.Nodes[pidIndex].Child != -1 && processTree.AtDepth < processTree.DisplayOptions.MaxDepth
+	hasThreads := !processTree.DisplayOptions.HideThreads && len(processTree.Nodes[pidIndex].Threads) > 0
+
+	// Add branch character if the process has children or threads
+	if hasChildren || hasThreads {
 		builder.WriteString(processTree.TreeChars.P)
 	} else {
 		builder.WriteString(processTree.TreeChars.S2)
@@ -911,6 +936,11 @@ func (processTree *ProcessTree) PrintTree(pidIndex int, head string) {
 	processTree.Logger.Debug(fmt.Sprintf("processTree.PrintTree(): printing line for node.PID=%d, head=\"%s\"", processTree.Nodes[pidIndex].PID, head))
 	fmt.Fprintln(os.Stdout, line)
 
+	// Print threads for this process if any exist and threads are not hidden
+	if !processTree.DisplayOptions.HideThreads && len(processTree.Nodes[pidIndex].Threads) > 0 {
+		processTree.printThreads(pidIndex, newHead)
+	}
+
 	// Iterate over children and determine sibling status
 	childme := processTree.Nodes[pidIndex].Child
 	for childme != -1 {
@@ -1288,30 +1318,146 @@ func (processTree *ProcessTree) stripANSI(input string) string {
 }
 
 func (processTree *ProcessTree) truncatePlain(input string) string {
-	dots := "..."
+	var (
+		visibleWidth int
+	)
 
-	if processTree.DisplayOptions.ScreenWidth <= 3 {
-		return dots
+	visibleWidth = processTree.visibleWidth(input)
+
+	if visibleWidth <= processTree.DisplayOptions.ScreenWidth {
+		return input
 	}
 
-	// First, check actual display width
-	if runewidth.StringWidth(input) <= processTree.DisplayOptions.ScreenWidth {
-		return input // No truncation needed
-	}
+	// If the string is longer than the screen width, truncate it
+	var (
+		builder   strings.Builder
+		currWidth int
+		truncated bool
+		byteIndex int
+		charWidth int
+		r         rune
+		size      int
+	)
 
-	targetWidth := processTree.DisplayOptions.ScreenWidth - len(dots)
-	var output strings.Builder
-	width := 0
+	builder.Grow(processTree.DisplayOptions.ScreenWidth + 3) // +3 for "..."
 
-	for _, r := range input {
-		rw := runewidth.RuneWidth(r)
-		if width+rw > targetWidth {
+	for byteIndex = 0; byteIndex < len(input); {
+		r, size = utf8.DecodeRuneInString(input[byteIndex:])
+		charWidth = runewidth.RuneWidth(r)
+
+		if currWidth+charWidth > processTree.DisplayOptions.ScreenWidth-3 { // -3 for "..."
+			truncated = true
 			break
 		}
-		output.WriteRune(r)
-		width += rw
+
+		builder.WriteRune(r)
+		currWidth += charWidth
+		byteIndex += size
 	}
 
-	output.WriteString(dots)
-	return output.String()
+	if truncated {
+		builder.WriteString("...")
+	}
+
+	return builder.String()
+}
+
+// buildThreadHead constructs a head string specifically for thread display.
+// It ensures the correct spacing and vertical bars for thread hierarchy.
+//
+// Parameters:
+//   - head: The accumulated prefix string from parent levels
+//
+// Returns:
+//   - A string to be used as the head for thread display
+func (processTree *ProcessTree) buildThreadHead(head string) string {
+	// Remove the trailing space from the head if it exists
+	head = strings.TrimSuffix(head, " ")
+
+	// For thread display, we need to ensure the correct spacing
+	// The format should be "│ " (vertical bar followed by space)
+	if len(head) > 0 {
+		// Replace the last space with a vertical bar + space
+		return head + " "
+	}
+
+	return head
+}
+
+// printThreads displays the threads of a process in a tree-like structure.
+// It formats each thread with its thread ID and PGID, similar to how Linux pstree displays threads.
+//
+// Parameters:
+//   - pidIndex: Index of the parent process whose threads to display
+//   - head: The accumulated prefix string from parent levels
+func (processTree *ProcessTree) printThreads(pidIndex int, head string) {
+	if len(processTree.Nodes[pidIndex].Threads) == 0 {
+		return
+	}
+
+	processTree.Logger.Debug(fmt.Sprintf("Printing %d threads for process %d", len(processTree.Nodes[pidIndex].Threads), processTree.Nodes[pidIndex].PID))
+
+	// Get the thread head with proper spacing
+	threadHead := processTree.buildThreadHead(head)
+
+	for i, thread := range processTree.Nodes[pidIndex].Threads {
+		var (
+			line       string
+			threadLine strings.Builder
+			prefix     string
+			threadInfo string
+		)
+
+		// Create thread line prefix with appropriate branch characters
+		if i == len(processTree.Nodes[pidIndex].Threads)-1 {
+			// Last thread uses └──── style connector
+			// prefix = threadHead + "└" + strings.Repeat("─", 6)
+			prefix = threadHead + processTree.TreeChars.BarL + processTree.TreeChars.EG + processTree.TreeChars.S2 + processTree.TreeChars.NPGL
+		} else {
+			// Other threads use ├──── style connector
+			prefix = threadHead + processTree.TreeChars.BarC + processTree.TreeChars.EG + processTree.TreeChars.S2 + processTree.TreeChars.NPGL
+		}
+
+		// Format thread name with curly braces like {processname}
+		threadName := fmt.Sprintf("{%s}", filepath.Base(thread.Command))
+
+		// Format thread ID and PGID as (ThreadID, PGID)
+		threadInfo = fmt.Sprintf(" (%d,%d)", thread.TID, thread.PID)
+
+		// Build the complete thread line
+		threadLine.WriteString(prefix)
+		threadLine.WriteString(threadName)
+		threadLine.WriteString(threadInfo)
+
+		line = threadLine.String()
+
+		// Apply color if supported
+		if processTree.DisplayOptions.ColorSupport {
+			if processTree.DisplayOptions.ColorizeOutput {
+				processTree.colorizeField("prefix", &prefix, pidIndex)
+				processTree.colorizeField("command", &threadName, pidIndex)
+				processTree.colorizeField("pidPgid", &threadInfo, pidIndex)
+				line = prefix + threadName + threadInfo
+			}
+		}
+
+		// Handle terminal width and coloring
+		if !term.IsTerminal(int(os.Stdout.Fd())) {
+			line = processTree.stripANSI(line)
+			if len(line) > processTree.DisplayOptions.ScreenWidth && !processTree.DisplayOptions.WideDisplay {
+				line = processTree.truncatePlain(line)
+			}
+		} else if !processTree.DisplayOptions.WideDisplay && len(line) > processTree.DisplayOptions.ScreenWidth {
+			if processTree.DisplayOptions.RainbowOutput {
+				line = processTree.truncateANSI(gorainbow.Rainbow(line))
+			} else {
+				line = processTree.truncateANSI(line)
+			}
+		} else if processTree.DisplayOptions.RainbowOutput {
+			line = gorainbow.Rainbow(line)
+		}
+
+		// Print the thread line
+		fmt.Fprintln(os.Stdout, line)
+	}
 }
