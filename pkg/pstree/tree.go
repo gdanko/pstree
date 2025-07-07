@@ -742,8 +742,11 @@ func (processTree *ProcessTree) buildLineItem(head string, pidIndex int) string 
 			} else if processTree.Nodes[pidIndex].Args[0] == filepath.Base(processTree.Nodes[pidIndex].Command) {
 				// psutil.Process sometimes calls the argument filepath.Base(command),
 				// e.g., Command is /usr/bin/cat and Args[0] is cat
+
 				if len(processTree.Nodes[pidIndex].Args) == 1 {
+					// If this is the only arg, Args is an empty slice
 					processTree.Nodes[pidIndex].Args = []string{}
+					// If there is more than one arg, remove it from the slice
 				} else if len(processTree.Nodes[pidIndex].Args) > 1 {
 					processTree.Nodes[pidIndex].Args = processTree.Nodes[pidIndex].Args[1:]
 				}
