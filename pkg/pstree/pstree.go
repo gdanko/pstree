@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"path/filepath"
 	"sort"
 	"time"
 
@@ -156,6 +157,7 @@ func GenerateProcess(proc *process.Process) Process {
 		numFDs        int32
 		numThreads    int32
 		openFiles     []process.OpenFilesStat
+		threads       map[int32]*cpu.TimesStat
 		uids          []uint32
 		username      string
 	)
@@ -299,6 +301,15 @@ func GenerateProcess(proc *process.Process) Process {
 		ppid = ppidOut
 	}
 
+	threadsChannel := make(chan func(ctx context.Context, proc *process.Process) (threads map[int32]*cpu.TimesStat, err error))
+	go metrics.ProcessThreads(threadsChannel)
+	threadsOut, err := (<-threadsChannel)(ctx, proc)
+	if err != nil {
+		threads = map[int32]*cpu.TimesStat{}
+	} else {
+		threads = threadsOut
+	}
+
 	usernameChannel := make(chan func(ctx context.Context, proc *process.Process) (username string, err error))
 	go metrics.ProcessUsername(usernameChannel)
 	usernameOut, err := (<-usernameChannel)(ctx, proc)
@@ -327,6 +338,20 @@ func GenerateProcess(proc *process.Process) Process {
 		}
 	}
 
+	processThreads := []Thread{}
+	for threadID, thread := range threads {
+		if threadID != pid {
+			processThreads = append(processThreads, Thread{
+				Args:     args,
+				Command:  filepath.Base(command),
+				CPUTimes: thread,
+				PID:      pid,
+				PPID:     ppid,
+				TID:      threadID,
+			})
+		}
+	}
+
 	return Process{
 		Age:           util.GetUnixTimestamp() - createTime,
 		Args:          args,
@@ -350,8 +375,15 @@ func GenerateProcess(proc *process.Process) Process {
 		PID:           pid,
 		PPID:          ppid,
 		Sister:        -1,
+		Threads:       processThreads,
 		UIDs:          uids,
 		Username:      username,
+	}
+}
+
+func GenerateThread(proc *process.Process, thread Thread) Process {
+	return Process{
+		TID: thread.TID,
 	}
 }
 
