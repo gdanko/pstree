@@ -394,15 +394,6 @@ func GenerateThread(proc *process.Process, thread Thread) Process {
 // generateProcess function.
 //
 // Parameters:
-//   - logger: A structured logger for recording information during process collection
-//   - processes: A pointer to a slice that will be populated with Process structs
-//
-// This function uses the gopsutil library to get a list of all processes running on the system,
-// sorts them by PID, and then generates detailed Process structs for each one using the
-// generateProcess function.
-//
-// Parameters:
-//   - logger: A structured logger for recording information during process collection
 //   - processes: A pointer to a slice that will be populated with Process structs
 func GetProcesses(processes *[]Process) {
 	var (
@@ -417,7 +408,25 @@ func GetProcesses(processes *[]Process) {
 
 	sorted = SortByPid(unsorted)
 
+	// stuff to simulate threads
+	// rand.Seed(time.Now().UnixNano())
+
 	for _, p := range sorted {
-		*processes = append(*processes, GenerateProcess(p))
+		newProcess := GenerateProcess(p)
+		// randomThreadCount := rand.Intn(10) + 1
+		// randomThreadID := rand.Intn(1000000)
+
+		// for i := 0; i < randomThreadCount; i++ {
+		// 	newThread := Thread{
+		// 		Args:    newProcess.Args,
+		// 		Command: newProcess.Command,
+		// 		PID:     int32(newProcess.PID),
+		// 		PPID:    int32(newProcess.PPID),
+		// 		TID:     int32(randomThreadID),
+		// 	}
+		// 	newProcess.Threads = append(newProcess.Threads, newThread)
+		// }
+
+		*processes = append(*processes, newProcess)
 	}
 }
