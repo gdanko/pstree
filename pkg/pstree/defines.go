@@ -93,6 +93,8 @@ type Process struct {
 type Thread struct {
 	// Command line arguments
 	Args []string
+	// Process group ID
+        PGID int32
 	// PID
 	PID int32
 	// Parent PID
