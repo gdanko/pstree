@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
@@ -266,6 +267,10 @@ func (processTree *ProcessTree) MarkProcesses() {
 			}
 		}
 	}
+}
+
+func (processTree *ProcessTree) MarkThreads() {
+	// Do something here
 }
 
 // DropUnmarked removes processes that are not marked for display from the process tree.
@@ -729,11 +734,25 @@ func (processTree *ProcessTree) buildLineItem(head string, pidIndex int) string 
 
 	if processTree.DisplayOptions.ShowArguments {
 		if len(processTree.Nodes[pidIndex].Args) > 0 {
-			args = strings.Join(processTree.Nodes[pidIndex].Args, " ")
-			processTree.colorizeField("args", &args, pidIndex)
-			builder.WriteString(args)
-			builder.WriteString(" ")
+			// psutil.Process sometimes prepends the first argument with the name of the binary,
+			// e.g., /opt/brave.com/brave/brave /opt/brave.com/brave/brave --arg1 --arg2
+			// we want to strip the binary name out
+			if strings.HasPrefix(processTree.Nodes[pidIndex].Args[0], processTree.Nodes[pidIndex].Command) {
+				processTree.Nodes[pidIndex].Args[0] = processTree.Nodes[pidIndex].Args[0][len(processTree.Nodes[pidIndex].Command)+1:]
+			} else if processTree.Nodes[pidIndex].Args[0] == filepath.Base(processTree.Nodes[pidIndex].Command) {
+				// psutil.Process sometimes calls the argument filepath.Base(command),
+				// e.g., Command is /usr/bin/cat and Args[0] is cat
+				if len(processTree.Nodes[pidIndex].Args) == 1 {
+					processTree.Nodes[pidIndex].Args = []string{}
+				} else if len(processTree.Nodes[pidIndex].Args) > 1 {
+					processTree.Nodes[pidIndex].Args = processTree.Nodes[pidIndex].Args[1:]
+				}
+			}
 		}
+		args = strings.Join(processTree.Nodes[pidIndex].Args, " ")
+		processTree.colorizeField("args", &args, pidIndex)
+		builder.WriteString(args)
+		builder.WriteString(" ")
 	}
 
 	return builder.String()
