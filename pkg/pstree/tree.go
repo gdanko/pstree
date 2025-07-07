@@ -1408,13 +1408,17 @@ func (processTree *ProcessTree) printThreads(pidIndex int, head string) {
 			threadInfo string
 		)
 
+		// Always use T-connector (├) for threads except for the last thread when there are no child processes
+		// This ensures that when a thread is followed by a process, the thread uses the correct connector
+		isLastThread := i == len(processTree.Nodes[pidIndex].Threads)-1
+		hasChildProcess := processTree.Nodes[pidIndex].Child != -1
+
 		// Create thread line prefix with appropriate branch characters
-		if i == len(processTree.Nodes[pidIndex].Threads)-1 {
-			// Last thread uses └──── style connector
-			// prefix = threadHead + "└" + strings.Repeat("─", 6)
+		if isLastThread && !hasChildProcess {
+			// Last thread with no child processes uses └──── style connector (L shape)
 			prefix = threadHead + processTree.TreeChars.BarL + processTree.TreeChars.EG + strings.Repeat(processTree.TreeChars.S2, 3) + processTree.TreeChars.NPGL
 		} else {
-			// Other threads use ├──── style connector
+			// Other threads or last thread with child processes use ├──── style connector (T shape)
 			prefix = threadHead + processTree.TreeChars.BarC + processTree.TreeChars.EG + strings.Repeat(processTree.TreeChars.S2, 3) + processTree.TreeChars.NPGL
 		}
 
