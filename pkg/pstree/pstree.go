@@ -345,6 +345,7 @@ func GenerateProcess(proc *process.Process) Process {
 				Args:     args,
 				Command:  filepath.Base(command),
 				CPUTimes: thread,
+				PGID:     int32(pgid),
 				PID:      pid,
 				PPID:     ppid,
 				TID:      threadID,
@@ -381,12 +382,6 @@ func GenerateProcess(proc *process.Process) Process {
 	}
 }
 
-func GenerateThread(proc *process.Process, thread Thread) Process {
-	return Process{
-		TID: thread.TID,
-	}
-}
-
 // GetProcesses retrieves all system processes and populates the provided processes slice.
 //
 // This function uses the gopsutil library to get a list of all processes running on the system,
@@ -413,20 +408,6 @@ func GetProcesses(processes *[]Process) {
 
 	for _, p := range sorted {
 		newProcess := GenerateProcess(p)
-		// randomThreadCount := rand.Intn(10) + 1
-		// randomThreadID := rand.Intn(1000000)
-
-		// for i := 0; i < randomThreadCount; i++ {
-		// 	newThread := Thread{
-		// 		Args:    newProcess.Args,
-		// 		Command: newProcess.Command,
-		// 		PID:     int32(newProcess.PID),
-		// 		PPID:    int32(newProcess.PPID),
-		// 		TID:     int32(randomThreadID),
-		// 	}
-		// 	newProcess.Threads = append(newProcess.Threads, newThread)
-		// }
-
 		*processes = append(*processes, newProcess)
 	}
 }
