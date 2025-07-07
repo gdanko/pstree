@@ -259,6 +259,18 @@ func ProcessStatus(c chan func(ctx context.Context, proc *process.Process) (stat
 	})
 }
 
+// ProcessThreads sends a function to the provided channel that retrieves the threads of a process.
+// This function is designed to be used with goroutines to gather process information concurrently.
+//
+// Parameters:
+//   - c: Channel to send the function through
+func ProcessThreads(c chan func(ctx context.Context, proc *process.Process) (status map[int32]*cpu.TimesStat, err error)) {
+	c <- (func(ctx context.Context, proc *process.Process) (status map[int32]*cpu.TimesStat, err error) {
+		status, err = proc.ThreadsWithContext(ctx)
+		return status, err
+	})
+}
+
 // ProcessUsername sends a function to the provided channel that retrieves the username of the process owner.
 // This function is designed to be used with goroutines to gather process information concurrently.
 //
