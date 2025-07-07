@@ -911,25 +911,6 @@ func (processTree *ProcessTree) PrintTree(pidIndex int, head string) {
 	processTree.Logger.Debug(fmt.Sprintf("processTree.PrintTree(): printing line for node.PID=%d, head=\"%s\"", processTree.Nodes[pidIndex].PID, head))
 	fmt.Fprintln(os.Stdout, line)
 
-	// Begin experimental code for printing process tree with threads
-	// Print threads as children (after printing the process line)
-	threads := processTree.Nodes[pidIndex].Threads
-	var realThreads []Thread
-	for _, thread := range threads {
-		if thread.TID != processTree.Nodes[pidIndex].PID {
-			realThreads = append(realThreads, thread)
-		}
-	}
-	for i, thread := range realThreads {
-		branch := processTree.TreeChars.BarC + processTree.TreeChars.S2
-		if i == len(realThreads)-1 {
-			branch = processTree.TreeChars.BarL + processTree.TreeChars.S2
-		}
-		threadLine := fmt.Sprintf("%s%s {%s}(%d,%d)", newHead, branch, filepath.Base(processTree.Nodes[pidIndex].Command), thread.TID, processTree.Nodes[pidIndex].PID)
-		fmt.Fprintln(os.Stdout, threadLine)
-	}
-	// End experimental code for printing process tree with threads
-
 	// Iterate over children and determine sibling status
 	childme := processTree.Nodes[pidIndex].Child
 	for childme != -1 {
