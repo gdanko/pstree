@@ -921,11 +921,11 @@ func (processTree *ProcessTree) PrintTree(pidIndex int, head string) {
 		}
 	}
 	for i, thread := range realThreads {
-		branch := processTree.TreeChars.BarC
+		branch := processTree.TreeChars.BarC + processTree.TreeChars.S2
 		if i == len(realThreads)-1 {
-			branch = processTree.TreeChars.BarL
+			branch = processTree.TreeChars.BarL + processTree.TreeChars.S2
 		}
-		threadLine := fmt.Sprintf("%s%s{%s}(%d,%d)", newHead, branch, processTree.Nodes[pidIndex].Command, thread.TID, processTree.Nodes[pidIndex].PID)
+		threadLine := fmt.Sprintf("%s%s {%s}(%d,%d)", newHead, branch, processTree.Nodes[pidIndex].Command, thread.TID, processTree.Nodes[pidIndex].PID)
 		fmt.Fprintln(os.Stdout, threadLine)
 	}
 	// End experimental code for printing process tree with threads
