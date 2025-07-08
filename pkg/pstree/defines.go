@@ -7,6 +7,7 @@ package pstree
 
 import (
 	"log/slog"
+	"regexp"
 
 	"github.com/gdanko/pstree/pkg/color"
 	"github.com/shirou/gopsutil/v4/cpu"
@@ -94,7 +95,7 @@ type Thread struct {
 	// Command line arguments
 	Args []string
 	// Process group ID
-        PGID int32
+	PGID int32
 	// PID
 	PID int32
 	// Parent PID
@@ -210,6 +211,10 @@ type ProcessTree struct {
 	Colorizer color.Colorizer
 	// Color scheme for applying colors to text
 	ColorScheme color.ColorScheme
+	// Process groups for compact mode
+	ProcessGroups map[int32]map[string]map[string]ProcessGroup
+	// Map to track processes that should be skipped during printing
+	SkipProcesses map[int]bool
 }
 
 //------------------------------------------------------------------------------
@@ -294,4 +299,15 @@ var TreeStyles = map[string]TreeChars{
 		S2:   "\342\224\200\342\224\200", // ss
 		SG:   "",                         // sg
 	},
+}
+
+var AnsiEscape = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
+
+// ProcessGroup represents a group of identical processes
+type ProcessGroup struct {
+	Count      int    // Number of identical processes
+	FirstIndex int    // Index of the first process in the group
+	FullPath   string // Full path of the command
+	Indices    []int  // Indices of all processes in the group
+	Owner      string // Owner of the process group
 }
