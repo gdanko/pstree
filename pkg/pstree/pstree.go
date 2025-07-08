@@ -75,6 +75,16 @@ func SortProcsByAge(processes *[]tree.Process) {
 	})
 }
 
+// SortProcsByCmd sorts the processes slice by command name in ascending order.
+//
+// Parameters:
+//   - processes: Pointer to a slice of Process structs to be sorted
+func SortProcsByCmd(processes *[]tree.Process) {
+	sort.Slice(*processes, func(i, j int) bool {
+		return (*processes)[i].Command < (*processes)[j].Command
+	})
+}
+
 // SortProcsByCpu sorts the processes slice by CPU usage percentage in ascending order.
 //
 // Parameters:
@@ -149,7 +159,8 @@ func GenerateProcess(proc *process.Process) tree.Process {
 		environment   []string
 		err           error
 		gids          []uint32
-		groups        []uint32
+		groupName     string = "unknown"
+		groupsMap     map[uint32]string
 		pgid          int
 		pid           int32
 		ppid          int32
@@ -221,23 +232,23 @@ func GenerateProcess(proc *process.Process) tree.Process {
 		environment = environmentOut
 	}
 
-	gidsChannel := make(chan func(ctx context.Context, proc *process.Process) (gids []uint32, err error))
+	gidsChannel := make(chan func(ctx context.Context, proc *process.Process) (gids []uint32, groups map[uint32]string, err error))
 	go metrics.ProcessGIDs(gidsChannel)
-	gidsOut, err := (<-gidsChannel)(ctx, proc)
+	gidsOut, groupsMap, err := (<-gidsChannel)(ctx, proc)
 	if err != nil {
 		gids = []uint32{}
 	} else {
 		gids = gidsOut
 	}
 
-	groupsChannel := make(chan func(ctx context.Context, proc *process.Process) (groups []uint32, err error))
-	go metrics.ProcessGroups(groupsChannel)
-	groupsOut, err := (<-groupsChannel)(ctx, proc)
-	if err != nil {
-		groups = []uint32{}
-	} else {
-		groups = groupsOut
-	}
+	// groupsChannel := make(chan func(ctx context.Context, proc *process.Process) (groups []uint32, err error))
+	// go metrics.ProcessGroups(groupsChannel)
+	// groupsOut, err := (<-groupsChannel)(ctx, proc)
+	// if err != nil {
+	// 	groups = []uint32{}
+	// } else {
+	// 	groups = groupsOut
+	// }
 
 	memoryInfoChannel := make(chan func(ctx context.Context, proc *process.Process) (memoryInfo *process.MemoryInfoStat, err error))
 	go metrics.ProcessMemoryInfo(memoryInfoChannel)
@@ -354,6 +365,15 @@ func GenerateProcess(proc *process.Process) tree.Process {
 		}
 	}
 
+	// Try to determine the group name from the groups map if available
+	// and if the first UID is present in the map. This is to ensure
+	// we have a valid group name for the process.
+	if len(gids) > 0 {
+		for _, groupName = range groupsMap {
+			break
+		}
+	}
+
 	return tree.Process{
 		Age:           util.GetUnixTimestamp() - createTime,
 		Args:          args,
@@ -366,7 +386,8 @@ func GenerateProcess(proc *process.Process) tree.Process {
 		CreateTime:    createTime,
 		Environment:   environment,
 		GIDs:          gids,
-		Groups:        groups,
+		Group:         groupName,
+		Groups:        groupsMap,
 		MemoryInfo:    memoryInfo,
 		MemoryPercent: memoryPercent,
 		NumFDs:        numFDs,
