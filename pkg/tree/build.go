@@ -137,16 +137,6 @@ func NewProcessTree(debugLevel int, logger *slog.Logger, processes []Process, di
 //
 // The method handles cases where a parent process might not exist in the tree (e.g., if the
 // parent was not included in the original process list or if it's the process itself).
-// BuildTree constructs the hierarchical relationships between processes in the tree.
-//
-// This method establishes the parent-child relationships between processes by connecting
-// each process to its parent based on the PPID (Parent Process ID). It creates a tree structure
-// where each node can have one parent and multiple children, with siblings linked in a list.
-// The resulting tree structure enables efficient traversal for operations like marking,
-// filtering, and visualization.
-//
-// The method handles cases where a parent process might not exist in the tree (e.g., if the
-// parent was not included in the original process list or if it's the process itself).
 //
 // Refactoring opportunity: This function could be broken down into smaller functions:
 // - initializeNodes: Initialize all nodes with default values
