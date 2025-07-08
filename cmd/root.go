@@ -41,6 +41,7 @@ var (
 	flagPid                 int32
 	flagRainbow             bool
 	flagShowAll             bool
+	flagShowGroup           bool
 	flagShowOwner           bool
 	flagShowPGIDs           bool
 	flagShowPGLs            bool
@@ -65,7 +66,7 @@ var (
 	username                string
 	validAttributes         []string = []string{"age", "cpu", "mem"}
 	validColorSchemes       []string = []string{"darwin", "linux", "powershell", "windows10", "xterm"}
-	validOrderBy            []string = []string{"age", "cpu", "mem", "pid", "threads", "user"}
+	validOrderBy            []string = []string{"age", "cmd", "cpu", "mem", "pid", "threads", "user"}
 	version                 string   = "0.8.1"
 	versionString           string
 	rootCmd                 = &cobra.Command{
@@ -233,6 +234,8 @@ For more information about these matters, see the file named LICENSE.`,
 		case "age":
 			flagAge = true
 			pstree.SortProcsByAge(&processes)
+		case "cmd":
+			pstree.SortProcsByCmd(&processes)
 		case "cpu":
 			flagCpu = true
 			pstree.SortProcsByCpu(&processes)
@@ -275,6 +278,7 @@ For more information about these matters, see the file named LICENSE.`,
 		flagArguments = true
 		flagCpu = true
 		flagMemory = true
+		flagShowGroup = true
 		flagShowOwner = true
 		flagShowPGIDs = true
 		flagShowPIDs = true
@@ -300,6 +304,7 @@ For more information about these matters, see the file named LICENSE.`,
 		ScreenWidth:         screenWidth,
 		ShowArguments:       flagArguments,
 		ShowCpuPercent:      flagCpu,
+		ShowGroup:           flagShowGroup,
 		ShowMemoryUsage:     flagMemory,
 		ShowNumThreads:      flagThreads,
 		ShowOwner:           flagShowOwner,
