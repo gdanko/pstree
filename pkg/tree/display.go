@@ -244,22 +244,25 @@ func (processTree *ProcessTree) buildLinePrefix(head string, pidIndex int) strin
 func (processTree *ProcessTree) buildLineItem(head string, pidIndex int) string {
 	processTree.Logger.Debug(fmt.Sprintf("processTree.buildLineItem(head=\"%s\", pidIndex=%d, atDepth=%d)", head, pidIndex, processTree.AtDepth))
 	var (
-		ageString       string
-		args            string
-		commandStr      string
-		compactStr      string
-		connector       string
-		cpuPercent      string
-		linePrefix      string
-		memoryUsage     string
-		owner           string
-		ownerTransition string
-		pgidString      string
-		pidPgidSlice    []string
-		pidPgidString   string
-		pidString       string
-		ppidString      string
-		threads         string
+		ageString        string
+		args             string
+		commandStr       string
+		compactStr       string
+		connector        string
+		cpuPercent       string
+		group            string
+		linePrefix       string
+		memoryUsage      string
+		owner            string
+		ownerGroupSlice  []string
+		ownerGroupString string
+		ownerTransition  string
+		pgidString       string
+		pidPgidSlice     []string
+		pidPgidString    string
+		pidString        string
+		ppidString       string
+		threads          string
 	)
 
 	// Create a strings.Builder with an estimated capacity
@@ -277,26 +280,57 @@ func (processTree *ProcessTree) buildLineItem(head string, pidIndex int) string 
 	builder.WriteString(linePrefix)
 	builder.WriteString(" ")
 
+	// if processTree.DisplayOptions.ShowOwner {
+	// 	owner = processTree.Nodes[pidIndex].Username
+	// 	processTree.colorizeField("owner", &owner, pidIndex)
+	// 	builder.WriteString(owner)
+	// 	builder.WriteString(" ")
+	// }
+
+	// Show owner/group information if enabled
+	ownerGroupSlice = []string{} // Reset for each process
 	if processTree.DisplayOptions.ShowOwner {
 		owner = processTree.Nodes[pidIndex].Username
-		processTree.colorizeField("owner", &owner, pidIndex)
-		builder.WriteString(owner)
+		if owner != "" {
+			ownerGroupSlice = append(ownerGroupSlice, owner)
+		}
+	}
+
+	if processTree.DisplayOptions.ShowGroup {
+		group = processTree.Nodes[pidIndex].Group
+		if group != "" {
+			ownerGroupSlice = append(ownerGroupSlice, group)
+		}
+	}
+
+	if len(ownerGroupSlice) > 0 {
+		ownerGroupString = fmt.Sprintf("(%s)", strings.Join(ownerGroupSlice, ","))
+		processTree.colorizeField("owner", &ownerGroupString, pidIndex)
+		builder.WriteString(ownerGroupString)
 		builder.WriteString(" ")
 	}
 
+	// Show ppid, pid, pgid information if enabled
+	pidPgidSlice = []string{} // Reset for each process
 	if processTree.DisplayOptions.ShowPPIDs {
-		ppidString = util.Int32toStr(processTree.Nodes[pidIndex].PPID)
-		pidPgidSlice = append(pidPgidSlice, ppidString)
+		if processTree.Nodes[pidIndex].PPID >= 0 {
+			ppidString = util.Int32toStr(processTree.Nodes[pidIndex].PPID)
+			pidPgidSlice = append(pidPgidSlice, ppidString)
+		}
 	}
 
 	if processTree.DisplayOptions.ShowPIDs {
-		pidString = util.Int32toStr(processTree.Nodes[pidIndex].PID)
-		pidPgidSlice = append(pidPgidSlice, pidString)
+		if processTree.Nodes[pidIndex].PID >= 0 {
+			pidString = util.Int32toStr(processTree.Nodes[pidIndex].PID)
+			pidPgidSlice = append(pidPgidSlice, pidString)
+		}
 	}
 
 	if processTree.DisplayOptions.ShowPGIDs {
-		pgidString = util.Int32toStr(processTree.Nodes[pidIndex].PGID)
-		pidPgidSlice = append(pidPgidSlice, pgidString)
+		if processTree.Nodes[pidIndex].PGID >= 0 {
+			pgidString = util.Int32toStr(processTree.Nodes[pidIndex].PGID)
+			pidPgidSlice = append(pidPgidSlice, pgidString)
+		}
 	}
 
 	if len(pidPgidSlice) > 0 {
@@ -306,6 +340,7 @@ func (processTree *ProcessTree) buildLineItem(head string, pidIndex int) string 
 		builder.WriteString(" ")
 	}
 
+	// Show process age if enabled
 	if processTree.DisplayOptions.ShowProcessAge {
 		duration := util.FindDuration(processTree.Nodes[pidIndex].Age)
 		ageSlice := []string{}
