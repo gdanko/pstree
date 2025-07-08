@@ -3,6 +3,8 @@ package metrics
 import (
 	"context"
 	"fmt"
+	"os/user"
+	"strconv"
 
 	"github.com/gdanko/pstree/pkg/globals"
 	"github.com/shirou/gopsutil/v4/cpu"
@@ -133,10 +135,20 @@ func ProcessEnvironment(c chan func(ctx context.Context, proc *process.Process) 
 //
 // Parameters:
 //   - c: Channel to send the function through
-func ProcessGIDs(c chan func(ctx context.Context, proc *process.Process) (gids []uint32, err error)) {
-	c <- (func(ctx context.Context, proc *process.Process) (gids []uint32, err error) {
+func ProcessGIDs(c chan func(ctx context.Context, proc *process.Process) (gids []uint32, groupsMap map[uint32]string, err error)) {
+	c <- (func(ctx context.Context, proc *process.Process) (gids []uint32, groupsMap map[uint32]string, err error) {
 		gids, err = proc.GidsWithContext(ctx)
-		return gids, err
+		if err != nil {
+			return []uint32{}, make(map[uint32]string), err
+		}
+		groupsMap = make(map[uint32]string, len(gids))
+		for _, gid := range gids {
+			groupName, err := user.LookupGroupId(strconv.FormatUint(uint64(gid), 10))
+			if err == nil {
+				groupsMap[gid] = groupName.Name
+			}
+		}
+		return gids, groupsMap, nil
 	})
 }
 
