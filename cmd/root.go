@@ -318,7 +318,6 @@ For more information about these matters, see the file named LICENSE.`,
 	// Choose between traditional array-based tree or new map-based tree
 	// Filtering by PID, username, etc. is not currently working with the map-based implementation
 	if flagMapBasedTree {
-
 		// Use the new map-based tree structure
 		logger.Logger.Debug("Using map-based tree structure")
 
