@@ -4,7 +4,7 @@
 // hierarchical structure, which is more intuitive and easier to maintain than the array-based
 // approach. It's designed to work alongside the existing implementation while providing
 // a path for gradual refactoring.
-package pstree
+package tree
 
 import (
 	"fmt"

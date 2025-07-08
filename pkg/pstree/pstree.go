@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/gdanko/pstree/pkg/metrics"
+	"github.com/gdanko/pstree/pkg/tree"
 	"github.com/gdanko/pstree/util"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/net"
@@ -54,21 +55,21 @@ func SortByPid(procs []*process.Process) []*process.Process {
 // Returns:
 //   - The Process struct for the specified PID
 //   - An error if the process with the given PID was not found
-func GetProcessByPid(processes *[]Process, pid int32) (proc Process, err error) {
+func GetProcessByPid(processes *[]tree.Process, pid int32) (proc tree.Process, err error) {
 	for i := range *processes {
 		if (*processes)[i].PID == pid {
 			return (*processes)[i], nil
 		}
 	}
 	errorMessage := fmt.Sprintf("the process with the PID %d was not found", pid)
-	return Process{}, errors.New(errorMessage)
+	return tree.Process{}, errors.New(errorMessage)
 }
 
 // SortProcsByAge sorts the processes slice by process age in ascending order.
 //
 // Parameters:
 //   - processes: Pointer to a slice of Process structs to be sorted
-func SortProcsByAge(processes *[]Process) {
+func SortProcsByAge(processes *[]tree.Process) {
 	sort.Slice(*processes, func(i, j int) bool {
 		return (*processes)[i].Age < (*processes)[j].Age
 	})
@@ -78,7 +79,7 @@ func SortProcsByAge(processes *[]Process) {
 //
 // Parameters:
 //   - processes: Pointer to a slice of Process structs to be sorted
-func SortProcsByCpu(processes *[]Process) {
+func SortProcsByCpu(processes *[]tree.Process) {
 	sort.Slice(*processes, func(i, j int) bool {
 		return (*processes)[i].CPUPercent < (*processes)[j].CPUPercent
 	})
@@ -88,7 +89,7 @@ func SortProcsByCpu(processes *[]Process) {
 //
 // Parameters:
 //   - processes: Pointer to a slice of Process structs to be sorted
-func SortProcsByMemory(processes *[]Process) {
+func SortProcsByMemory(processes *[]tree.Process) {
 	sort.Slice(*processes, func(i, j int) bool {
 		return float64((*processes)[i].MemoryInfo.RSS) < float64((*processes)[j].MemoryInfo.RSS)
 	})
@@ -98,7 +99,7 @@ func SortProcsByMemory(processes *[]Process) {
 //
 // Parameters:
 //   - processes: Pointer to a slice of Process structs to be sorted
-func SortProcsByUsername(processes *[]Process) {
+func SortProcsByUsername(processes *[]tree.Process) {
 	sort.Slice(*processes, func(i, j int) bool {
 		return (*processes)[i].Username < (*processes)[j].Username
 	})
@@ -108,7 +109,7 @@ func SortProcsByUsername(processes *[]Process) {
 //
 // Parameters:
 //   - processes: Pointer to a slice of Process structs to be sorted
-func SortProcsByPid(processes *[]Process) {
+func SortProcsByPid(processes *[]tree.Process) {
 	sort.Slice(*processes, func(i, j int) bool {
 		return (*processes)[i].PID < (*processes)[j].PID
 	})
@@ -118,7 +119,7 @@ func SortProcsByPid(processes *[]Process) {
 //
 // Parameters:
 //   - processes: Pointer to a slice of Process structs to be sorted
-func SortProcsByNumThreads(processes *[]Process) {
+func SortProcsByNumThreads(processes *[]tree.Process) {
 	sort.Slice(*processes, func(i, j int) bool {
 		return (*processes)[i].NumThreads < (*processes)[j].NumThreads
 	})
@@ -138,7 +139,7 @@ func SortProcsByNumThreads(processes *[]Process) {
 //
 // Returns:
 //   - A new Process struct populated with information from the input process
-func GenerateProcess(proc *process.Process) Process {
+func GenerateProcess(proc *process.Process) tree.Process {
 	var (
 		args          []string
 		command       string
@@ -338,10 +339,10 @@ func GenerateProcess(proc *process.Process) Process {
 		}
 	}
 
-	processThreads := []Thread{}
+	processThreads := []tree.Thread{}
 	for threadID, thread := range threads {
 		if threadID != pid {
-			processThreads = append(processThreads, Thread{
+			processThreads = append(processThreads, tree.Thread{
 				Args:     args,
 				Command:  filepath.Base(command),
 				CPUTimes: thread,
@@ -353,11 +354,11 @@ func GenerateProcess(proc *process.Process) Process {
 		}
 	}
 
-	return Process{
+	return tree.Process{
 		Age:           util.GetUnixTimestamp() - createTime,
 		Args:          args,
 		Child:         -1,
-		Children:      &[]Process{},
+		Children:      &[]tree.Process{},
 		Command:       command,
 		Connections:   []net.ConnectionStat{},
 		CPUPercent:    util.RoundFloat(cpuPercent, 2),
@@ -390,7 +391,7 @@ func GenerateProcess(proc *process.Process) Process {
 //
 // Parameters:
 //   - processes: A pointer to a slice that will be populated with Process structs
-func GetProcesses(processes *[]Process) {
+func GetProcesses(processes *[]tree.Process) {
 	var (
 		err      error
 		sorted   []*process.Process

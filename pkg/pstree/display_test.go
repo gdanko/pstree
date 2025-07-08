@@ -2,14 +2,15 @@ package pstree
 
 import (
 	"testing"
-	
+
+	"github.com/gdanko/pstree/pkg/tree"
 	"github.com/stretchr/testify/assert"
 )
 
 // TestDisplayOptions tests the DisplayOptions struct and its fields
 func TestDisplayOptions(t *testing.T) {
 	// Create a DisplayOptions struct with various settings
-	options := DisplayOptions{
+	options := tree.DisplayOptions{
 		ShowPIDs:           true,
 		ShowPPIDs:          true,
 		ShowOwner:          true,
@@ -17,7 +18,7 @@ func TestDisplayOptions(t *testing.T) {
 		ShowUIDTransitions: true,
 		MaxDepth:           3,
 	}
-	
+
 	// Verify that the fields are set correctly
 	assert.True(t, options.ShowPIDs)
 	assert.True(t, options.ShowPPIDs)

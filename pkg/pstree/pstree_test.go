@@ -3,6 +3,7 @@ package pstree
 import (
 	"testing"
 
+	"github.com/gdanko/pstree/pkg/tree"
 	"github.com/shirou/gopsutil/v4/process"
 	"github.com/stretchr/testify/assert"
 )
@@ -27,12 +28,12 @@ func TestSortByPid(t *testing.T) {
 
 func TestGetProcessByPid(t *testing.T) {
 	// Create test processes
-	proc1 := Process{PID: 100, Command: "proc1"}
-	proc2 := Process{PID: 200, Command: "proc2"}
-	proc3 := Process{PID: 300, Command: "proc3"}
+	proc1 := tree.Process{PID: 100, Command: "proc1"}
+	proc2 := tree.Process{PID: 200, Command: "proc2"}
+	proc3 := tree.Process{PID: 300, Command: "proc3"}
 
 	// Create a slice with the processes
-	processes := []Process{proc1, proc2, proc3}
+	processes := []tree.Process{proc1, proc2, proc3}
 
 	// Test finding an existing process
 	foundProc, err := GetProcessByPid(&processes, 200)
@@ -46,12 +47,12 @@ func TestGetProcessByPid(t *testing.T) {
 
 func TestSortProcsByAge(t *testing.T) {
 	// Create test processes with different ages
-	proc1 := Process{PID: 100, Age: 300}
-	proc2 := Process{PID: 200, Age: 100}
-	proc3 := Process{PID: 300, Age: 200}
+	proc1 := tree.Process{PID: 100, Age: 300}
+	proc2 := tree.Process{PID: 200, Age: 100}
+	proc3 := tree.Process{PID: 300, Age: 200}
 
 	// Create a slice with the processes
-	processes := []Process{proc1, proc2, proc3}
+	processes := []tree.Process{proc1, proc2, proc3}
 
 	// Sort the processes by age
 	SortProcsByAge(&processes)
@@ -64,12 +65,12 @@ func TestSortProcsByAge(t *testing.T) {
 
 func TestSortProcsByCpu(t *testing.T) {
 	// Create test processes with different CPU percentages
-	proc1 := Process{PID: 100, CPUPercent: 5.0}
-	proc2 := Process{PID: 200, CPUPercent: 1.0}
-	proc3 := Process{PID: 300, CPUPercent: 10.0}
+	proc1 := tree.Process{PID: 100, CPUPercent: 5.0}
+	proc2 := tree.Process{PID: 200, CPUPercent: 1.0}
+	proc3 := tree.Process{PID: 300, CPUPercent: 10.0}
 
 	// Create a slice with the processes
-	processes := []Process{proc1, proc2, proc3}
+	processes := []tree.Process{proc1, proc2, proc3}
 
 	// Sort the processes by CPU percentage
 	SortProcsByCpu(&processes)
@@ -82,12 +83,12 @@ func TestSortProcsByCpu(t *testing.T) {
 
 func TestSortProcsByMemory(t *testing.T) {
 	// Create test processes with different memory usage
-	proc1 := Process{PID: 100, MemoryInfo: &process.MemoryInfoStat{RSS: 5000}}
-	proc2 := Process{PID: 200, MemoryInfo: &process.MemoryInfoStat{RSS: 1000}}
-	proc3 := Process{PID: 300, MemoryInfo: &process.MemoryInfoStat{RSS: 10000}}
+	proc1 := tree.Process{PID: 100, MemoryInfo: &process.MemoryInfoStat{RSS: 5000}}
+	proc2 := tree.Process{PID: 200, MemoryInfo: &process.MemoryInfoStat{RSS: 1000}}
+	proc3 := tree.Process{PID: 300, MemoryInfo: &process.MemoryInfoStat{RSS: 10000}}
 
 	// Create a slice with the processes
-	processes := []Process{proc1, proc2, proc3}
+	processes := []tree.Process{proc1, proc2, proc3}
 
 	// Sort the processes by memory usage
 	SortProcsByMemory(&processes)
@@ -100,12 +101,12 @@ func TestSortProcsByMemory(t *testing.T) {
 
 func TestSortProcsByUsername(t *testing.T) {
 	// Create test processes with different usernames
-	proc1 := Process{PID: 100, Username: "charlie"}
-	proc2 := Process{PID: 200, Username: "alice"}
-	proc3 := Process{PID: 300, Username: "bob"}
+	proc1 := tree.Process{PID: 100, Username: "charlie"}
+	proc2 := tree.Process{PID: 200, Username: "alice"}
+	proc3 := tree.Process{PID: 300, Username: "bob"}
 
 	// Create a slice with the processes
-	processes := []Process{proc1, proc2, proc3}
+	processes := []tree.Process{proc1, proc2, proc3}
 
 	// Sort the processes by username
 	SortProcsByUsername(&processes)
@@ -118,12 +119,12 @@ func TestSortProcsByUsername(t *testing.T) {
 
 func TestSortProcsByPid(t *testing.T) {
 	// Create test processes with different PIDs
-	proc1 := Process{PID: 300}
-	proc2 := Process{PID: 100}
-	proc3 := Process{PID: 200}
+	proc1 := tree.Process{PID: 300}
+	proc2 := tree.Process{PID: 100}
+	proc3 := tree.Process{PID: 200}
 
 	// Create a slice with the processes
-	processes := []Process{proc1, proc2, proc3}
+	processes := []tree.Process{proc1, proc2, proc3}
 
 	// Sort the processes by PID
 	SortProcsByPid(&processes)
@@ -136,12 +137,12 @@ func TestSortProcsByPid(t *testing.T) {
 
 func TestSortProcsByNumThreads(t *testing.T) {
 	// Create test processes with different thread counts
-	proc1 := Process{PID: 100, NumThreads: 5}
-	proc2 := Process{PID: 200, NumThreads: 2}
-	proc3 := Process{PID: 300, NumThreads: 10}
+	proc1 := tree.Process{PID: 100, NumThreads: 5}
+	proc2 := tree.Process{PID: 200, NumThreads: 2}
+	proc3 := tree.Process{PID: 300, NumThreads: 10}
 
 	// Create a slice with the processes
-	processes := []Process{proc1, proc2, proc3}
+	processes := []tree.Process{proc1, proc2, proc3}
 
 	// Sort the processes by thread count
 	SortProcsByNumThreads(&processes)

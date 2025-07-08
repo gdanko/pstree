@@ -1,4 +1,4 @@
-package pstree
+package tree
 
 import (
 	"regexp"

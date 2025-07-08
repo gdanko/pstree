@@ -9,7 +9,7 @@
 // NOTE: This file has been identified as being too large and complex.
 // Functions like BuildTree, MarkProcesses, and PrintTree could benefit from
 // being broken down into smaller, more focused functions.
-package pstree
+package tree
 
 import (
 	"fmt"

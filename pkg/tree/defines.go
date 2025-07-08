@@ -3,7 +3,7 @@
 // This file contains the core data structures and type definitions used throughout the package.
 // It defines the Process, DisplayOptions, ProcessTree, and TreeChars types that form the foundation
 // of the process tree visualization system.
-package pstree
+package tree
 
 import (
 	"log/slog"

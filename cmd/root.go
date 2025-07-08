@@ -11,6 +11,7 @@ import (
 	"github.com/gdanko/pstree/pkg/globals"
 	"github.com/gdanko/pstree/pkg/logger"
 	"github.com/gdanko/pstree/pkg/pstree"
+	"github.com/gdanko/pstree/pkg/tree"
 	"github.com/gdanko/pstree/util"
 	"github.com/shirou/gopsutil/v4/mem"
 	"github.com/spf13/cobra"
@@ -20,7 +21,7 @@ var (
 	colorCount              int
 	colorSupport            bool
 	debugLevel              int
-	displayOptions          pstree.DisplayOptions
+	displayOptions          tree.DisplayOptions
 	errorMessage            string
 	flagAge                 bool
 	flagArguments           bool
@@ -54,11 +55,11 @@ var (
 	flagVT100               bool
 	flagWide                bool
 	installedMemory         *mem.VirtualMemoryStat
-	processes               []pstree.Process
-	processTree             *pstree.ProcessTree
-	processMap              *pstree.ProcessMap // New variable for the map-based tree
+	processes               []tree.Process
+	processTree             *tree.ProcessTree
+	processMap              *tree.ProcessMap // New variable for the map-based tree
 	screenWidth             int
-	sorted                  []pstree.Process
+	sorted                  []tree.Process
 	unicodeSupport          bool
 	usageTemplate           string
 	username                string
@@ -106,7 +107,7 @@ Display a tree of processes.
 Application Options:
 {{.Flags.FlagUsages}}
 Process group leaders are marked with '%s' for ASCII, '%s' for IBM-850, '%s' for VT-100, and '%s' for UTF-8.
-`, pstree.TreeStyles["ascii"].PGL, pstree.TreeStyles["pc850"].PGL, pstree.TreeStyles["vt100"].PGL, pstree.TreeStyles["utf8"].PGL)
+`, tree.TreeStyles["ascii"].PGL, tree.TreeStyles["pc850"].PGL, tree.TreeStyles["vt100"].PGL, tree.TreeStyles["utf8"].PGL)
 
 	rootCmd.SetUsageTemplate(usageTemplate)
 }
@@ -227,7 +228,7 @@ For more information about these matters, see the file named LICENSE.`,
 		if err != nil {
 			panic(err)
 		}
-		sorted = []pstree.Process{proc}
+		sorted = []tree.Process{proc}
 		switch flagOrderBy {
 		case "age":
 			flagAge = true
@@ -280,7 +281,7 @@ For more information about these matters, see the file named LICENSE.`,
 		flagThreads = true
 	}
 
-	displayOptions = pstree.DisplayOptions{
+	displayOptions = tree.DisplayOptions{
 		ColorAttr:           flagColorAttr,
 		ColorCount:          colorCount,
 		ColorizeOutput:      flagColor,
@@ -322,7 +323,7 @@ For more information about these matters, see the file named LICENSE.`,
 		logger.Logger.Debug("Using map-based tree structure")
 
 		// Build the process map
-		processMap = pstree.NewProcessMap(logger.Logger, processes, displayOptions)
+		processMap = tree.NewProcessMap(logger.Logger, processes, displayOptions)
 
 		// Mark processes to be displayed
 		processMap.FindPrintable()
@@ -342,7 +343,7 @@ For more information about these matters, see the file named LICENSE.`,
 		logger.Logger.Debug("Using traditional array-based tree structure")
 
 		// Generate the process tree
-		processTree = pstree.NewProcessTree(debugLevel, logger.Logger, processes, displayOptions)
+		processTree = tree.NewProcessTree(debugLevel, logger.Logger, processes, displayOptions)
 
 		// Mark processes to be displayed
 		processTree.MarkProcesses()

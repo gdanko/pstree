@@ -1,4 +1,4 @@
-package pstree
+package tree
 
 // OptimizedBuildTree is an optimized version of BuildTree that uses the PidToIndexMap
 // to avoid linear searches through the process list.
@@ -15,18 +15,18 @@ func (processTree *ProcessTree) OptimizedBuildTree() {
 	// Build the tree using the PidToIndexMap for O(1) lookups
 	for pidIndex := range processTree.Nodes {
 		ppid := processTree.Nodes[pidIndex].PPID
-		
+
 		// Look up parent index directly from the map
 		ppidIndex, exists := processTree.PidToIndexMap[ppid]
-		
+
 		// Skip if parent doesn't exist or is the process itself
 		if !exists || ppidIndex == pidIndex {
 			continue
 		}
-		
+
 		// Set parent relationship
 		processTree.Nodes[pidIndex].Parent = ppidIndex
-		
+
 		// Add as child
 		if processTree.Nodes[ppidIndex].Child == -1 {
 			// First child

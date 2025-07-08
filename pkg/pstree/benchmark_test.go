@@ -3,6 +3,8 @@ package pstree
 import (
 	"log/slog"
 	"testing"
+
+	"github.com/gdanko/pstree/pkg/tree"
 )
 
 // BenchmarkBuildTree benchmarks the BuildTree function with different numbers of processes
@@ -34,12 +36,12 @@ func BenchmarkBuildTree(b *testing.B) {
 			// Run the benchmark
 			for i := 0; i < b.N; i++ {
 				// Create a process tree
-				processTree := &ProcessTree{
+				processTree := &tree.ProcessTree{
 					Logger:         logger,
 					Nodes:          processes,
 					PidToIndexMap:  make(map[int32]int),
 					IndexToPidMap:  make(map[int]int32),
-					DisplayOptions: DisplayOptions{},
+					DisplayOptions: tree.DisplayOptions{},
 				}
 
 				// Initialize PID to index mapping
@@ -56,11 +58,11 @@ func BenchmarkBuildTree(b *testing.B) {
 }
 
 // generateTestProcesses creates a slice of test processes with a realistic hierarchy
-func generateTestProcesses(numProcs, maxDepth, branching int) []Process {
-	processes := make([]Process, 0, numProcs)
+func generateTestProcesses(numProcs, maxDepth, branching int) []tree.Process {
+	processes := make([]tree.Process, 0, numProcs)
 
 	// Always start with init process (PID 1)
-	processes = append(processes, Process{
+	processes = append(processes, tree.Process{
 		PID:     1,
 		PPID:    0,
 		Command: "init",
@@ -85,7 +87,7 @@ func generateTestProcesses(numProcs, maxDepth, branching int) []Process {
 				break
 			}
 
-			processes = append(processes, Process{
+			processes = append(processes, tree.Process{
 				PID:     pid,
 				PPID:    parentPID,
 				Command: "proc" + string(rune('A'+i%26)),
