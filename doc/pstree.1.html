@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.23.0 -->
-<!-- CreationDate: Sat Jul  5 11:33:43 2025 -->
+<!-- CreationDate: Tue Jul  8 16:02:14 2025 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -55,10 +55,11 @@ display a tree of processes</p>
 <i>attr</i>] [<b>-l</b> | <b>--level</b> <i>level</i>]
 [<b>-m</b> | <b>--memory</b>] [<b>-n</b> |
 <b>--compact-not</b>] [<b>-o</b> | <b>--order-by</b>
-<i>field</i>] [<b>-O</b> | <b>--show-owner</b>] [<b>-p</b> |
-<b>--show-pids</b>] [<b>-P</b> | <b>--pid</b> <i>PID</i>]
-[<b>-q</b> | <b>--color-scheme</b> <i>scheme</i>] [<b>-r</b>
-| <b>--rainbow</b>] [<b>-s</b> | <b>--contains</b>
+<i>field</i>] [<b>--show-group</b>] [<b>-O</b> |
+<b>--show-owner</b>] [<b>-p</b> | <b>--show-pids</b>]
+[<b>-P</b> | <b>--pid</b> <i>PID</i>] [<b>-q</b> |
+<b>--color-scheme</b> <i>scheme</i>] [<b>-r</b> |
+<b>--rainbow</b>] [<b>-s</b> | <b>--contains</b>
 <i>pattern</i>] [<b>-S</b> | <b>--show-pgls</b>]
 [<b>--show-ppids</b>] [<b>-t</b> | <b>--threads</b>]
 [<b>-u</b> | <b>--utf-8</b>] [<b>-U</b> |
@@ -94,7 +95,8 @@ the list using the format (dd:hh:mm:ss).</p>
 
 <p style="margin-left:9%;"><b>&minus;A, &minus;-all</b></p>
 
-<p style="margin-left:18%;">Equivalent to -acgGmOptU.</p>
+<p style="margin-left:18%;">Equivalent to -a -c -g -G -m -O
+-p -t --show-group.</p>
 
 <p style="margin-left:9%;"><b>&minus;a,
 &minus;-arguments</b></p>
@@ -224,7 +226,9 @@ exit.</p>
 processes. When this option is used, threads will not be
 displayed in the process tree and thread information will be
 omitted from compact mode output. Thread counts will still
-be shown if the -t option is used.</p>
+be shown if the -t option is used. This option is only
+supported on Linux OSes. This is because Darwin OS does not
+expose thread IDs.</p>
 
 <p style="margin-left:9%;"><b>&minus;i,
 &minus;-ibm-850</b></p>
@@ -249,9 +253,9 @@ results may be buried in collapsed subtrees.</p>
 <p style="margin-left:9%;"><b>&minus;o,
 &minus;-order-by</b> <i>field</i></p>
 
-<p style="margin-left:18%;">Sort processes by a given
-field. Available options are: age, cpu, mem, pid, threads,
-user.</p>
+<p style="margin-left:18%;">Sort processes in ascending
+order by a given field. Available options are: age, cmd,
+cpu, mem, pid, threads, user.</p>
 
 <p style="margin-left:9%;"><b>&minus;P, &minus;-pid</b>
 <i>PID</i></p>
@@ -294,6 +298,11 @@ name.</p>
 <p style="margin-left:18%;">Show parent process IDs. Parent
 Process IDs are shown as decimal numbers in parentheses
 after each process name.</p>
+
+<p style="margin-left:9%;"><b>&minus;-show-group</b></p>
+
+<p style="margin-left:18%;">Show the group of the
+process.</p>
 
 <p style="margin-left:9%;"><b>&minus;O,
 &minus;-show-owner</b></p>

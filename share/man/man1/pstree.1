@@ -1,6 +1,6 @@
 .\" -*- coding: utf-8 -*-
 .ad b
-.TH PSTREE 1 "July 05, 2025" "0.8.1" "User Commands"
+.TH PSTREE 1 "July 08, 2025" "0.8.1" "User Commands"
 .SH NAME
 pstree \- display a tree of processes
 .SH SYNOPSIS
@@ -21,6 +21,7 @@ pstree \- display a tree of processes
 [\fB-m\fR | \fB--memory\fR]
 [\fB-n\fR | \fB--compact-not\fR]
 [\fB-o\fR | \fB--order-by\fR \fIfield\fR]
+[\fB--show-group\fR]
 [\fB-O\fR | \fB--show-owner\fR]
 [\fB-p\fR | \fB--show-pids\fR]
 [\fB-P\fR | \fB--pid\fR \fIPID\fR]
@@ -46,7 +47,7 @@ shows running processes as a tree. The tree is rooted at launchd. If \fB--pid\fR
 Show the age of each process in the list using the format (dd:hh:mm:ss).
 .TP
 .B \-A, \--all
-Equivalent to -acgGmOptU.
+Equivalent to -a -c -g -G -m -O -p -t --show-group.
 .TP
 .B \-a, \--arguments
 Show command line arguments after the process name.
@@ -90,7 +91,7 @@ Don't show branches containing only root processes. This option cannot be used w
 Display a help message and exit.
 .TP
 .B \-H, \--hide-threads
-Hide threads, showing only processes. When this option is used, threads will not be displayed in the process tree and thread information will be omitted from compact mode output. Thread counts will still be shown if the -t option is used.
+Hide threads, showing only processes. When this option is used, threads will not be displayed in the process tree and thread information will be omitted from compact mode output. Thread counts will still be shown if the -t option is used. This option is only supported on Linux OSes. This is because Darwin OS does not expose thread IDs.
 .TP
 .B \-i, \--ibm-850
 Use IBM-850 line drawing characters; only supported on DOS/Windows.
@@ -102,7 +103,7 @@ Print tree to \fIlevel\fR level deep.
 Show the memory usage for each process in the list using the format (m:0.00 MiB). This option implies \fB--compact-not\fR, since some of the results may be buried in collapsed subtrees.
 .TP
 .B \-o, \--order-by \fIfield\fR
-Sort processes by a given field. Available options are: age, cpu, mem, pid, threads, user.
+Sort processes in ascending order by a given field. Available options are: age, cmd, cpu, mem, pid, threads, user.
 .TP
 .B \-P, \--pid \fIPID\fR
 Show only branches containing process \fIPID\fR.
@@ -121,6 +122,9 @@ Show PIDs. Process IDs are shown as decimal numbers in parentheses after each pr
 .TP
 .B \--show-ppids
 Show parent process IDs. Parent Process IDs are shown as decimal numbers in parentheses after each process name.
+.TP
+.B \--show-group
+Show the group of the process.
 .TP
 .B \-O, \--show-owner
 Show the owner of the process.
