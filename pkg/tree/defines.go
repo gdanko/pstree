@@ -45,8 +45,10 @@ type Process struct {
 	Environment []string
 	// Group IDs associated with this process
 	GIDs []uint32
-	// Groups associated with this process
-	Groups []uint32
+	// The group name associated with the process
+	Group string
+	// A map of group ID < group name
+	Groups map[uint32]string
 	// Indicates if this process has a different UID from its parent
 	HasUIDTransition bool
 	// Indicates if this process is the current process or an ancestor
@@ -151,6 +153,8 @@ type DisplayOptions struct {
 	ShowArguments bool
 	// Whether to show CPU usage percentage
 	ShowCpuPercent bool
+	// Whether to show the process group
+	ShowGroup bool
 	// Whether to show memory usage
 	ShowMemoryUsage bool
 	// Whether to show thread count
