@@ -198,7 +198,11 @@ func (processTree *ProcessTree) FormatCompactOutput(command string, count int, g
 	if count <= 1 {
 		return command
 	}
-	return fmt.Sprintf("%d*[%s] {%s}", count, filepath.Base(command), strings.Join(processTree.PIDsToString(groupPIDs), ", "))
+	if processTree.DisplayOptions.ShowPIDs {
+		return fmt.Sprintf("%d*[%s] (%s)", count, filepath.Base(command), strings.Join(processTree.PIDsToString(groupPIDs), ","))
+	} else {
+		return fmt.Sprintf("%d*[%s]", count, filepath.Base(command))
+	}
 }
 
 func (processTree *ProcessTree) PIDsToString(pids []int32) []string {
