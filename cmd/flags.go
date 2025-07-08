@@ -52,11 +52,12 @@ func GetPersistentFlags(cmd *cobra.Command, colorSupport bool, colorCount int, u
 	}
 
 	// Optional information
-	cmd.PersistentFlags().BoolVarP(&flagShowAll, "all", "A", false, "equivalent to -acgGmOpt")
+	cmd.PersistentFlags().BoolVarP(&flagShowAll, "all", "A", false, "equivalent to -a -c -g -G -m -O -p -t --show-group")
 	cmd.PersistentFlags().BoolVarP(&flagCompactNot, "compact-not", "n", false, "do not compact identical subtrees in output")
 	cmd.PersistentFlags().BoolVarP(&flagCpu, "cpu", "c", false, "show CPU utilization percentage with each process, e.g., (c:0.00%); implies --compact-not")
 	cmd.PersistentFlags().BoolVarP(&flagMemory, "memory", "m", false, "show the memory usage with each process, e.g., (m:x.y MiB); implies --compact-not")
 	cmd.PersistentFlags().BoolVarP(&flagShowOwner, "show-owner", "O", false, "show the owner of the process")
+	cmd.PersistentFlags().BoolVarP(&flagShowGroup, "show-group", "", false, "show the group of the process")
 	cmd.PersistentFlags().BoolVarP(&flagShowPGIDs, "show-pgids", "g", false, "show process group IDs")
 	cmd.PersistentFlags().BoolVarP(&flagShowPIDs, "show-pids", "p", false, "show process IDs")
 	cmd.PersistentFlags().BoolVarP(&flagShowPPIDs, "show-ppids", "", false, "show parent process IDs")
