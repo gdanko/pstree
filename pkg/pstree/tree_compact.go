@@ -1,8 +1,3 @@
-// Package pstree provides functionality for building and displaying process trees.
-//
-// This file contains the implementation of compact mode, which groups identical processes
-// in the tree display. It helps reduce visual clutter by showing a count indicator for
-// multiple identical processes instead of displaying each one individually.
 package pstree
 
 import (
@@ -12,72 +7,46 @@ import (
 )
 
 //------------------------------------------------------------------------------
-// DATA STRUCTURES
-//------------------------------------------------------------------------------
-
-// ProcessGroup represents a group of identical processes
-type ProcessGroup struct {
-	FirstIndex int    // Index of the first process in the group
-	Count      int    // Number of identical processes
-	Indices    []int  // Indices of all processes in the group
-	IsThread   bool   // Whether this is a thread group
-	FullPath   string // Full path of the command
-}
-
-//------------------------------------------------------------------------------
-// GLOBAL STATE
-//------------------------------------------------------------------------------
-
-// processGroups stores information about groups of identical processes
-// Key is the parent PID, value is a map of command -> ProcessGroup
-var processGroups map[int32]map[string]ProcessGroup
-
-// skipProcesses tracks which processes should be skipped during printing
-var skipProcesses map[int]bool
-
-//------------------------------------------------------------------------------
 // INITIALIZATION
 //------------------------------------------------------------------------------
 
 // InitCompactMode initializes the compact mode by identifying identical processes.
 //
 // This function analyzes the provided processes slice and groups processes that have
-// identical commands and arguments under the same parent. It populates the processGroups
-// map with information about these groups and marks processes that should be skipped
-// during printing (all except the first process in each group).
+// identical commands and arguments under the same parent. It populates the
+// processTree.ProcessGroups map with information about these groups and marks
+// processes that should be skipped during printing (all except the first process
+// in each group).
 //
 // This function should be called before printing the tree when compact mode is enabled.
-//
-// Parameters:
-//   - processes: Slice of Process structs to analyze for grouping
-func InitCompactMode(processes []Process) {
+func (processTree *ProcessTree) InitCompactMode() {
 	var (
-		args      []string
-		cmd       string
-		exists    bool
-		group     ProcessGroup
-		isThread  bool
-		parentPID int32
+		args         []string
+		cmd          string
+		exists       bool
+		group        ProcessGroup
+		parentPID    int32
+		pidIndex     int
+		processOwner string
 	)
 
-	// Initialize the maps
-	processGroups = make(map[int32]map[string]ProcessGroup)
-	skipProcesses = make(map[int]bool)
-
 	// Group processes with identical commands under the same parent
-	for i := range processes {
+	for pidIndex = range processTree.Nodes {
 		// Skip processes that are already part of a group
-		if skipProcesses[i] {
+		if processTree.SkipProcesses[pidIndex] {
 			continue
 		}
 
 		// Get parent PID
-		parentPID = processes[i].PPID
+		parentPID = processTree.Nodes[pidIndex].PPID
+
+		// Get the owner of the process
+		processOwner = processTree.Nodes[pidIndex].Username
 
 		// Get the command and arguments to create a composite key
 		// This ensures processes are only grouped if both command AND arguments match exactly
-		cmd = processes[i].Command
-		args = processes[i].Args
+		cmd = processTree.Nodes[pidIndex].Command
+		args = processTree.Nodes[pidIndex].Args
 
 		// Create a composite key with both command and arguments
 		compositeKey := cmd
@@ -85,38 +54,52 @@ func InitCompactMode(processes []Process) {
 			compositeKey = fmt.Sprintf("%s %s", cmd, strings.Join(args, " "))
 		}
 
-		// Determine if this is a thread
-		isThread = processes[i].NumThreads > 0 && parentPID > 0
-
 		// Initialize map for this parent if needed
-		if _, exists := processGroups[parentPID]; !exists {
-			processGroups[parentPID] = make(map[string]ProcessGroup)
+		if _, exists := processTree.ProcessGroups[parentPID]; !exists {
+			// ProcessGroups map[int32]map[string]map[string]ProcessGroup
+			processTree.ProcessGroups[parentPID] = make(map[string]map[string]ProcessGroup)
+		}
+
+		if _, exists = processTree.ProcessGroups[parentPID][compositeKey]; !exists {
+			processTree.ProcessGroups[parentPID][compositeKey] = make(map[string]ProcessGroup)
 		}
 
 		// Use the composite key (command + args) for grouping
-		// This ensures that processes are only grouped if both command AND arguments match exactly
-		group, exists = processGroups[parentPID][compositeKey]
+		// This ensures that processes are only grouped if both command AND arguments AND owner match exactly
+		group, exists = processTree.ProcessGroups[parentPID][compositeKey][processOwner]
 		if !exists {
 			// Create a new group
 			group = ProcessGroup{
-				FirstIndex: i,
 				Count:      1,
-				Indices:    []int{i},
-				IsThread:   isThread,
+				FirstIndex: pidIndex,
 				FullPath:   cmd,
+				Indices:    []int{pidIndex},
+				Owner:      processTree.Nodes[pidIndex].Username,
 			}
 		} else {
 			// Add to existing group
 			group.Count++
-			group.Indices = append(group.Indices, i)
+			group.Indices = append(group.Indices, pidIndex)
 
 			// Mark this process to be skipped during printing
-			skipProcesses[i] = true
+			processTree.SkipProcesses[pidIndex] = true
 		}
 
 		// Update the group in the map
-		processGroups[parentPID][compositeKey] = group
+		processTree.ProcessGroups[parentPID][compositeKey][processOwner] = group
 	}
+	// Find the first example of groups of two identical processes
+	// and print them for debugging purposes
+	// for _, v := range processTree.ProcessGroups {
+	// 	for _, v := range v {
+	// 		if len(v.Indices) > 1 {
+	// 			pretty.Println(v.Indices)
+	// 			for pidIndex := range v.Indices {
+	// 				pretty.Println(processTree.Nodes[v.Indices[pidIndex]])
+	// 			}
+	// 		}
+	// 	}
+	// }
 }
 
 //------------------------------------------------------------------------------
@@ -130,12 +113,12 @@ func InitCompactMode(processes []Process) {
 // be skipped during the initialization phase.
 //
 // Parameters:
-//   - processIndex: Index of the process to check
+//   - pidIndex: Index of the process to check
 //
 // Returns:
 //   - true if the process should be skipped, false otherwise
-func ShouldSkipProcess(processIndex int) bool {
-	return skipProcesses[processIndex]
+func (processTree *ProcessTree) ShouldSkipProcess(pidIndex int) bool {
+	return processTree.SkipProcesses[pidIndex]
 }
 
 //------------------------------------------------------------------------------
@@ -155,18 +138,21 @@ func ShouldSkipProcess(processIndex int) bool {
 // Returns:
 //   - count: Number of identical processes in the group
 //   - isThread: Whether the process group represents threads
-func GetProcessCount(processes []Process, processIndex int) (int, bool) {
+func (processTree *ProcessTree) GetProcessCount(pidIndex int) (int, []int32) {
 	var (
 		args         []string
 		cmd          string
-		parentPID    int32
 		compositeKey string
+		groupPIDs    []int32
+		parentPID    int32
+		processOwner string
 	)
 
 	// Get parent PID and command
-	args = processes[processIndex].Args
-	cmd = processes[processIndex].Command
-	parentPID = processes[processIndex].PPID
+	args = processTree.Nodes[pidIndex].Args
+	cmd = processTree.Nodes[pidIndex].Command
+	parentPID = processTree.Nodes[pidIndex].PPID
+	processOwner = processTree.Nodes[pidIndex].Username
 
 	// Create the same composite key used in InitCompactMode
 	compositeKey = cmd
@@ -175,15 +161,19 @@ func GetProcessCount(processes []Process, processIndex int) (int, bool) {
 	}
 
 	// Check if we have a group for this process
-	if groups, exists := processGroups[parentPID]; exists {
+	if groups, exists := processTree.ProcessGroups[parentPID]; exists {
 		// Look up by composite key (command + args)
-		if group, exists := groups[compositeKey]; exists && group.FirstIndex == processIndex {
-			return group.Count, group.IsThread
+		if group, exists := groups[compositeKey][processOwner]; exists && group.FirstIndex == pidIndex {
+			// Find PIDs for each member of the group
+			for i := range group.Indices {
+				groupPIDs = append(groupPIDs, processTree.Nodes[group.Indices[i]].PID)
+			}
+			return group.Count, groupPIDs
 		}
 	}
 
 	// No group or not the first process in the group
-	return 1, false
+	return 1, []int32{}
 }
 
 //------------------------------------------------------------------------------
@@ -204,20 +194,17 @@ func GetProcessCount(processes []Process, processIndex int) (int, bool) {
 //
 // Returns:
 //   - Formatted string for display, or empty string if threads should be hidden
-func FormatCompactOutput(command string, count int, isThread bool, hideThreads bool) string {
+func (processTree *ProcessTree) FormatCompactOutput(command string, count int, groupPIDs []int32) string {
 	if count <= 1 {
 		return command
 	}
+	return fmt.Sprintf("%d*[%s] {%s}", count, filepath.Base(command), strings.Join(processTree.PIDsToString(groupPIDs), ", "))
+}
 
-	if isThread {
-		// Format for threads: N*[{command}]
-		if hideThreads {
-			return ""
-		} else {
-			return fmt.Sprintf("%d*[{%s}]", count, filepath.Base(command))
-		}
-	} else {
-		// Format for processes: N*[command]
-		return fmt.Sprintf("%d*[%s]", count, filepath.Base(command))
+func (processTree *ProcessTree) PIDsToString(pids []int32) []string {
+	pidStrings := make([]string, len(pids))
+	for i, pid := range pids {
+		pidStrings[i] = fmt.Sprintf("%d", pid)
 	}
+	return pidStrings
 }
