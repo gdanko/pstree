@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"time"
 
@@ -412,7 +413,7 @@ func GenerateProcess(proc *process.Process) tree.Process {
 //
 // Parameters:
 //   - processes: A pointer to a slice that will be populated with Process structs
-func GetProcesses(processes *[]tree.Process) {
+func GetProcesses(processes *[]tree.Process, generateThreads bool) {
 	var (
 		err      error
 		sorted   []*process.Process
@@ -425,11 +426,27 @@ func GetProcesses(processes *[]tree.Process) {
 
 	sorted = SortByPid(unsorted)
 
-	// stuff to simulate threads
-	// rand.Seed(time.Now().UnixNano())
-
 	for _, p := range sorted {
 		newProcess := GenerateProcess(p)
+
+		// Only if OS is Darwin and --generate-threads is enabled
+		// This is for testing purposes to simulate thread data on Darwin
+		// because Darwin does not provide thread IDs and therefore cannot
+		// return a list of threads for a process.
+		if generateThreads && runtime.GOOS == "darwin" {
+			if newProcess.NumThreads > 0 {
+				for i := 1; i <= int(newProcess.NumThreads); i++ {
+					newProcess.Threads = append(newProcess.Threads, tree.Thread{
+						TID:     int32(i + 100), // Example thread IDs for illustration
+						PPID:    newProcess.PPID,
+						PID:     newProcess.PID,
+						PGID:    newProcess.PGID,
+						Command: newProcess.Command,
+						Args:    newProcess.Args,
+					})
+				}
+			}
+		}
 		*processes = append(*processes, newProcess)
 	}
 }
