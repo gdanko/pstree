@@ -280,13 +280,6 @@ func (processTree *ProcessTree) buildLineItem(head string, pidIndex int) string 
 	builder.WriteString(linePrefix)
 	builder.WriteString(" ")
 
-	// if processTree.DisplayOptions.ShowOwner {
-	// 	owner = processTree.Nodes[pidIndex].Username
-	// 	processTree.colorizeField("owner", &owner, pidIndex)
-	// 	builder.WriteString(owner)
-	// 	builder.WriteString(" ")
-	// }
-
 	// Show owner/group information if enabled
 	ownerGroupSlice = []string{} // Reset for each process
 	if processTree.DisplayOptions.ShowOwner {
@@ -521,17 +514,29 @@ func (processTree *ProcessTree) PrintThreads(pidIndex int, head string) {
 		return
 	}
 
+	var threadHead string
+
 	processTree.Logger.Debug(fmt.Sprintf("Printing %d threads for process %d", len(processTree.Nodes[pidIndex].Threads), processTree.Nodes[pidIndex].PID))
 
 	// Get the thread head with proper spacing
-	threadHead := processTree.buildThreadHead(head)
+	if processTree.Nodes[pidIndex].PID == 1 {
+		// Special case for PID 1 (init/systemd)
+		threadHead = " "
+	} else {
+		threadHead = processTree.buildThreadHead(head)
+	}
+
+	processTree.Logger.Debug(fmt.Sprintf("Thread head for PID %d: \"%s\"", processTree.Nodes[pidIndex].PID, threadHead))
 
 	for i, thread := range processTree.Nodes[pidIndex].Threads {
 		var (
-			line       string
-			threadLine strings.Builder
-			prefix     string
-			threadInfo string
+			line          string
+			pgidString    string
+			prefix        string
+			threadLine    strings.Builder
+			tidPgidSlice  = []string{}
+			tidPgidString string
+			tidString     string
 		)
 
 		// Always use T-connector (├) for threads except for the last thread when there are no child processes
@@ -548,28 +553,40 @@ func (processTree *ProcessTree) PrintThreads(pidIndex int, head string) {
 			prefix = threadHead + processTree.TreeChars.BarC + processTree.TreeChars.EG + strings.Repeat(processTree.TreeChars.S2, 1) + processTree.TreeChars.NPGL
 		}
 
-		// Format thread name with curly braces like {processname}
-		threadName := fmt.Sprintf(" {%s}", filepath.Base(thread.Command))
-
-		// Format thread ID and PGID as (ThreadID, PGID)
-		threadInfo = fmt.Sprintf(" (%d,%d)", thread.TID, thread.PGID)
-
-		// Build the complete thread line
+		// Add the prefix to the thread line
 		threadLine.WriteString(prefix)
+		threadLine.WriteString(" ")
+
+		// Format thread name with curly braces like {processname}
+		threadName := fmt.Sprintf("{%s}", filepath.Base(thread.Command))
+		processTree.colorizeField("command", &threadName, pidIndex)
 		threadLine.WriteString(threadName)
-		threadLine.WriteString(threadInfo)
+		threadLine.WriteString(" ")
 
-		line = threadLine.String()
-
-		// Apply color if supported
-		if processTree.DisplayOptions.ColorSupport {
-			if processTree.DisplayOptions.ColorizeOutput {
-				processTree.colorizeField("prefix", &prefix, pidIndex)
-				processTree.colorizeField("command", &threadName, pidIndex)
-				processTree.colorizeField("pidPgid", &threadInfo, pidIndex)
-				line = prefix + threadName + threadInfo
+		// Format TID, PGID for threads
+		tidPgidSlice = []string{} // Reset for each thread
+		if processTree.DisplayOptions.ShowPIDs {
+			if thread.TID >= 0 {
+				tidString = util.Int32toStr(thread.TID)
+				tidPgidSlice = append(tidPgidSlice, tidString)
 			}
 		}
+
+		if processTree.DisplayOptions.ShowPGIDs {
+			if thread.PGID >= 0 {
+				pgidString = util.Int32toStr(thread.PGID)
+				tidPgidSlice = append(tidPgidSlice, pgidString)
+			}
+		}
+
+		if len(tidPgidSlice) > 0 {
+			tidPgidString = fmt.Sprintf("(%s)", strings.Join(tidPgidSlice, ","))
+			processTree.colorizeField("pidPgid", &tidPgidString, pidIndex)
+			threadLine.WriteString(tidPgidString)
+			threadLine.WriteString(" ")
+		}
+
+		line = threadLine.String()
 
 		// Handle terminal width and coloring
 		if !term.IsTerminal(int(os.Stdout.Fd())) {
