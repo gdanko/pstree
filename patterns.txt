@@ -64,3 +64,27 @@ pstree -c -p
 │                              ├─{charon}(1932)
 │                              └─{charon}(1933)
 
+
+### From ChatGPT
+Without -c (default — compacted):
+bash───myworker───2*[child]
+
+## With -c (no compaction — all instances shown):
+bash───myworker───child
+               └──child
+
+## Both would still show threads like:
+myworker───3*[{myworker}]
+
+##  Example (Compacted Output — Default pstree)
+# Assume a process myapp has:
+* 2 threads
+* 2 identical child processes named worker
+myapp───2*[worker]
+      └─2*[{myapp}]
+
+## Example (Uncompacted Output — pstree -c)
+* Same process structure, but with -c:
+myapp───worker
+      ├─worker
+      └─2*[{myapp}]
