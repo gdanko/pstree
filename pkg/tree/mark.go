@@ -75,6 +75,8 @@ func (processTree *ProcessTree) MarkProcesses() {
 // MarkThreads marks threads that should be displayed based on filtering criteria.
 // It ensures that threads are properly associated with their parent processes and
 // marked for display when appropriate.
+
+// I don't do shit. Remove me.
 func (processTree *ProcessTree) MarkThreads() {
 	processTree.Logger.Debug("Entering processTree.MarkThreads()")
 
