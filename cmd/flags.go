@@ -86,5 +86,8 @@ func GetPersistentFlags(cmd *cobra.Command, colorSupport bool, colorCount int, u
 	if username == "gdanko" || username == "gary.danko" {
 		cmd.PersistentFlags().BoolVar(&flagMapBasedTree, "map-tree", false, "use the map-based tree structure (experimental)")
 		cmd.PersistentFlags().CountVarP(&debugLevel, "debug", "d", "Increase debugging level (-d, -dd, -ddd)")
+		if runtime.GOOS == "darwin" {
+			cmd.PersistentFlags().BoolVarP(&flagGenerateThreads, "generate-threads", "x", false, "generate threads for testing purposes (Darwin-only)")
+		}
 	}
 }
