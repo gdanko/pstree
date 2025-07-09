@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.23.0 -->
-<!-- CreationDate: Tue Jul  8 16:02:14 2025 -->
+<!-- CreationDate: Tue Jul  8 18:38:59 2025 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -49,7 +49,7 @@ display a tree of processes</p>
 [<b>-c</b> | <b>--cpu</b>] [<b>-C</b> | <b>--color</b>]
 [<b>-d</b> | <b>--debug</b>] [<b>-g</b> |
 <b>--show-pgids</b>] [<b>-G</b> | <b>--age</b>] [<b>-h</b> |
-<b>--help</b>] [<b>-H</b> | <b>--hide-threads</b>]
+<b>--help</b>] [<b>-T</b> | <b>--hide-threads</b>]
 [<b>-i</b> | <b>--ibm-850</b>] [<b>-I</b> |
 <b>--uid-transitions</b>] [<b>-k</b> | <b>--color-attr</b>
 <i>attr</i>] [<b>-l</b> | <b>--level</b> <i>level</i>]
@@ -219,7 +219,7 @@ with <b>--user</b>.</p>
 <p style="margin-left:18%;">Display a help message and
 exit.</p>
 
-<p style="margin-left:9%;"><b>&minus;H,
+<p style="margin-left:9%;"><b>&minus;T,
 &minus;-hide-threads</b></p>
 
 <p style="margin-left:18%;">Hide threads, showing only
@@ -291,7 +291,9 @@ with special characters in the output.</p>
 
 <p style="margin-left:18%;">Show PIDs. Process IDs are
 shown as decimal numbers in parentheses after each process
-name.</p>
+name. If the display of threads is enabled (Linux-only),
+this option will display the thread ID as a decimal number
+in parentheses after each thread name.</p>
 
 <p style="margin-left:9%;"><b>&minus;-show-ppids</b></p>
 

@@ -13,7 +13,7 @@ pstree \- display a tree of processes
 [\fB-g\fR | \fB--show-pgids\fR]
 [\fB-G\fR | \fB--age\fR]
 [\fB-h\fR | \fB--help\fR]
-[\fB-H\fR | \fB--hide-threads\fR]
+[\fB-T\fR | \fB--hide-threads\fR]
 [\fB-i\fR | \fB--ibm-850\fR]
 [\fB-I\fR | \fB--uid-transitions\fR]
 [\fB-k\fR | \fB--color-attr\fR \fIattr\fR]
@@ -90,7 +90,7 @@ Don't show branches containing only root processes. This option cannot be used w
 .B \-h, \--help
 Display a help message and exit.
 .TP
-.B \-H, \--hide-threads
+.B \-T, \--hide-threads
 Hide threads, showing only processes. When this option is used, threads will not be displayed in the process tree and thread information will be omitted from compact mode output. Thread counts will still be shown if the -t option is used. This option is only supported on Linux OSes. This is because Darwin OS does not expose thread IDs.
 .TP
 .B \-i, \--ibm-850
@@ -118,7 +118,7 @@ Show PGIDs. Process Group IDs are shown as decimal numbers in parentheses after 
 Show process group leader indicators. By default, process group leaders are not marked with special characters in the output.
 .TP
 .B \-p, \--show-pids
-Show PIDs. Process IDs are shown as decimal numbers in parentheses after each process name.
+Show PIDs. Process IDs are shown as decimal numbers in parentheses after each process name. If the display of threads is enabled (Linux-only), this option will display the thread ID as a decimal number in parentheses after each thread name.
 .TP
 .B \--show-ppids
 Show parent process IDs. Parent Process IDs are shown as decimal numbers in parentheses after each process name.
