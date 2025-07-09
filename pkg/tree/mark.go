@@ -72,29 +72,6 @@ func (processTree *ProcessTree) MarkProcesses() {
 	}
 }
 
-// MarkThreads marks threads that should be displayed based on filtering criteria.
-// It ensures that threads are properly associated with their parent processes and
-// marked for display when appropriate.
-
-// I don't do shit. Remove me.
-func (processTree *ProcessTree) MarkThreads() {
-	processTree.Logger.Debug("Entering processTree.MarkThreads()")
-
-	// If threads are hidden, no need to mark them
-	if processTree.DisplayOptions.HideThreads {
-		return
-	}
-
-	// Iterate through all processes
-	for pidIndex := range processTree.Nodes {
-		// Only mark threads for processes that are marked for display
-		if processTree.Nodes[pidIndex].Print && len(processTree.Nodes[pidIndex].Threads) > 0 {
-			processTree.Logger.Debug(fmt.Sprintf("Marking %d threads for process %d",
-				len(processTree.Nodes[pidIndex].Threads), processTree.Nodes[pidIndex].PID))
-		}
-	}
-}
-
 // DropUnmarked removes processes that are not marked for display from the process tree.
 // It modifies the process tree structure to maintain proper parent-child relationships
 // while excluding processes that should not be displayed.
