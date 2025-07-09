@@ -2,6 +2,13 @@ package tree
 
 // OptimizedBuildTree is an optimized version of BuildTree that uses the PidToIndexMap
 // to avoid linear searches through the process list.
+//
+// This function initializes all nodes with default values (-1) for Child, Parent, and Sister fields,
+// then builds the tree structure using O(1) lookups via PidToIndexMap. It establishes parent-child
+// relationships between processes and maintains sibling relationships for processes with the same parent.
+//
+// The optimization comes from using direct index lookups instead of iterating through the process list
+// to find parent processes, significantly improving performance for large process trees.
 func (processTree *ProcessTree) OptimizedBuildTree() {
 	processTree.Logger.Debug("Entering processTree.OptimizedBuildTree()")
 
@@ -43,7 +50,11 @@ func (processTree *ProcessTree) OptimizedBuildTree() {
 	}
 }
 
-// ReplaceWithOptimizedBuildTree replaces the original BuildTree method with the optimized version
+// ReplaceWithOptimizedBuildTree is a placeholder function that could be used to
+// monkey patch the original BuildTree with the optimized version if needed.
+//
+// This function is currently not implemented and serves as a marker for potential
+// future implementation of runtime method replacement.
 func ReplaceWithOptimizedBuildTree() {
 	// This is a placeholder function that could be used to monkey patch
 	// the original BuildTree with the optimized version if needed
