@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.23.0 -->
-<!-- CreationDate: Tue Jul  8 18:38:59 2025 -->
+<!-- CreationDate: Tue Jul  8 18:53:31 2025 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -46,14 +46,13 @@ display a tree of processes</p>
 
 <p style="margin-left:9%; margin-top: 1em"><b>pstree</b>
 [<b>-A</b> | <b>--all</b>] [<b>-a</b> | <b>--arguments</b>]
-[<b>-c</b> | <b>--cpu</b>] [<b>-C</b> | <b>--color</b>]
-[<b>-d</b> | <b>--debug</b>] [<b>-g</b> |
-<b>--show-pgids</b>] [<b>-G</b> | <b>--age</b>] [<b>-h</b> |
-<b>--help</b>] [<b>-T</b> | <b>--hide-threads</b>]
-[<b>-i</b> | <b>--ibm-850</b>] [<b>-I</b> |
-<b>--uid-transitions</b>] [<b>-k</b> | <b>--color-attr</b>
-<i>attr</i>] [<b>-l</b> | <b>--level</b> <i>level</i>]
-[<b>-m</b> | <b>--memory</b>] [<b>-n</b> |
+[<b>-C</b> | <b>--cpu</b>] [<b>--color</b>] [<b>-d</b> |
+<b>--debug</b>] [<b>-g</b> | <b>--show-pgids</b>] [<b>-G</b>
+| <b>--age</b>] [<b>-h</b> | <b>--help</b>] [<b>-T</b> |
+<b>--hide-threads</b>] [<b>-i</b> | <b>--ibm-850</b>]
+[<b>-I</b> | <b>--uid-transitions</b>] [<b>-k</b> |
+<b>--color-attr</b> <i>attr</i>] [<b>-l</b> | <b>--level</b>
+<i>level</i>] [<b>-m</b> | <b>--memory</b>] [<b>-c</b> |
 <b>--compact-not</b>] [<b>-o</b> | <b>--order-by</b>
 <i>field</i>] [<b>--show-group</b>] [<b>-O</b> |
 <b>--show-owner</b>] [<b>-p</b> | <b>--show-pids</b>]
@@ -95,8 +94,9 @@ the list using the format (dd:hh:mm:ss).</p>
 
 <p style="margin-left:9%;"><b>&minus;A, &minus;-all</b></p>
 
-<p style="margin-left:18%;">Equivalent to -a -c -g -G -m -O
--p -t --show-group.</p>
+<p style="margin-left:18%;">Equivalent to <b>--show-owner
+--show-group --show-pids --show-pgids --age --cpu --memory
+--threads --arguments</b>.</p>
 
 <p style="margin-left:9%;"><b>&minus;a,
 &minus;-arguments</b></p>
@@ -104,8 +104,7 @@ the list using the format (dd:hh:mm:ss).</p>
 <p style="margin-left:18%;">Show command line arguments
 after the process name.</p>
 
-<p style="margin-left:9%;"><b>&minus;C,
-&minus;-color</b></p>
+<p style="margin-left:9%;"><b>&minus;-color</b></p>
 
 <p style="margin-left:18%;">Colorize the pstree output.
 This option is only visible in the help if your terminal
@@ -174,7 +173,7 @@ system memory: green (&lt;10%), yellow (10-20%), red
 scheme. Valid options are: darwin, linux, powershell,
 windows10, xterm.</p>
 
-<p style="margin-left:9%;"><b>&minus;n,
+<p style="margin-left:9%;"><b>&minus;c,
 &minus;-compact-not</b></p>
 
 <p style="margin-left:18%;">Do not compact identical
@@ -192,7 +191,7 @@ processes with <i>pattern</i> in the command line. This
 option implies <b>--compact-not</b>, since some of the
 results may be buried in collapsed subtrees.</p>
 
-<p style="margin-left:9%;"><b>&minus;c, &minus;-cpu</b></p>
+<p style="margin-left:9%;"><b>&minus;C, &minus;-cpu</b></p>
 
 <p style="margin-left:18%;">Show the CPU utilization for
 each process in the list using the format (c:0.00%). This

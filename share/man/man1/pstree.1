@@ -7,8 +7,8 @@ pstree \- display a tree of processes
 .B pstree
 [\fB-A\fR | \fB--all\fR]
 [\fB-a\fR | \fB--arguments\fR]
-[\fB-c\fR | \fB--cpu\fR]
-[\fB-C\fR | \fB--color\fR]
+[\fB-C\fR | \fB--cpu\fR]
+[\fB--color\fR]
 [\fB-d\fR | \fB--debug\fR]
 [\fB-g\fR | \fB--show-pgids\fR]
 [\fB-G\fR | \fB--age\fR]
@@ -19,7 +19,7 @@ pstree \- display a tree of processes
 [\fB-k\fR | \fB--color-attr\fR \fIattr\fR]
 [\fB-l\fR | \fB--level\fR \fIlevel\fR]
 [\fB-m\fR | \fB--memory\fR]
-[\fB-n\fR | \fB--compact-not\fR]
+[\fB-c\fR | \fB--compact-not\fR]
 [\fB-o\fR | \fB--order-by\fR \fIfield\fR]
 [\fB--show-group\fR]
 [\fB-O\fR | \fB--show-owner\fR]
@@ -47,12 +47,12 @@ shows running processes as a tree. The tree is rooted at launchd. If \fB--pid\fR
 Show the age of each process in the list using the format (dd:hh:mm:ss).
 .TP
 .B \-A, \--all
-Equivalent to -a -c -g -G -m -O -p -t --show-group.
+Equivalent to \fB--show-owner\fR \fB--show-group\fR \fB--show-pids\fR \fB--show-pgids\fR \fB--age\fR \fB--cpu\fR \fB--memory\fR \fB--threads\fR \fB--arguments\fR.
 .TP
 .B \-a, \--arguments
 Show command line arguments after the process name.
 .TP
-.B \-C, \--color
+.B \--color
 Colorize the pstree output. This option is only visible in the help if your terminal supports color. This option is not available if your terminal doesn't support at least 8 color output. This option cannot be used with \fB--color-attr\fR or \fB--rainbow\fR.
 .TP
 .B \-k, \--color-attr \fIattr\fR
@@ -72,13 +72,13 @@ Colors processes by memory usage as percentage of total system memory: green (<1
 .B \-q, \--color-scheme \fIscheme\fR
 Override the default color scheme. Valid options are: darwin, linux, powershell, windows10, xterm.
 .TP
-.B \-n, \--compact-not
+.B \-c, \--compact-not
 Do not compact identical subtrees in output. By default, identical process subtrees are shown only once with a count indicating how many instances exist (e.g., "process---N*[process]"). This option disables compaction, showing each process individually.
 .TP
 .B \-s, \--contains \fIpattern\fR
 Show only branches containing processes with \fIpattern\fR in the command line. This option implies \fB--compact-not\fR, since some of the results may be buried in collapsed subtrees.
 .TP
-.B \-c, \--cpu
+.B \-C, \--cpu
 Show the CPU utilization for each process in the list using the format (c:0.00%). This option implies \fB--compact-not\fR, since some of the results may be buried in collapsed subtrees.
 .TP
 .B \-d, \--debug

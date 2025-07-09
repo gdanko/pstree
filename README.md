@@ -19,7 +19,7 @@ It uses [gopsutil](https://github.com/shirou/gopsutil) for gathering process inf
 - Show CPU utilization percentage (`--cpu`)
 - Show memory usage in MiB (`--memory`)
 - Show thread count for each process (`--threads`)
-- Hide threads in compact mode, showing only processes (`--hide-threads`)
+- Hide threads, showing only processes on Linux systems (`--hide-threads`)
 
 ### Filtering and Selection
 - Filter by process ID (`--pid`)
@@ -56,7 +56,7 @@ It uses [gopsutil](https://github.com/shirou/gopsutil) for gathering process inf
 
 ### Output Control
 - Non-compact mode to show all processes individually (`--compact-not`)
-- Sort processes by various attributes (`--order-by`): age, cpu, mem, pid, threads, user
+- Sort processes by various attributes (`--order-by`): age, cmd, cpu, mem, pid, threads, user
 - All-inclusive mode to enable multiple options at once (`--all`)
 
 ## Compiling
@@ -80,7 +80,7 @@ Display a tree of processes.
 
 Application Options:
   -G, --age                   show the age of the process using the format (dd:hh:mm:ss)
-  -A, --all                   equivalent to -a -c -g -G -m -O -p -t --show-group
+  -A, --all                   equivalent to --show-owner --show-group --show-pids --show-pgids --age --cpu --memory --threads --arguments
   -a, --arguments             show command line arguments
   -C, --color                 add some beautiful color to the pstree output; cannot be used with --color-attr or --rainbow
   -k, --color-attr string     color the process name by given attribute; implies --compact-not; valid options are: age, cpu, mem;
