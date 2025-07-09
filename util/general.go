@@ -24,20 +24,20 @@ type Duration struct {
 	Seconds int64
 }
 
-// ExecutePipeline executes a command pipeline and returns the results.
+// ExecutePipeline executes a pipeline of shell commands connected by pipes.
 //
-// This function takes a command string that may contain pipe operators (|) and executes
-// each command in sequence, piping the output of each command to the input of the next.
-// It handles setting up the necessary pipes between commands and captures stdout and stderr.
+// This function takes a command string containing one or more commands separated by
+// pipe characters (|) and executes them in sequence, connecting their standard input
+// and output appropriately. Each command's stderr is captured separately.
 //
 // Parameters:
-//   - commandStr: The command string to execute, which may contain pipe operators
+//   - commandStr: A string containing one or more shell commands separated by pipes
 //
 // Returns:
 //   - int: Exit code of the last command in the pipeline
-//   - string: Combined stdout output from the last command
-//   - string: Combined stderr output from all commands
-//   - error: Any error encountered during execution
+//   - string: Combined stdout of the pipeline
+//   - string: Combined stderr of all commands
+//   - error: Error if any occurred during execution
 func ExecutePipeline(commandStr string) (int, string, string, error) {
 	commands := strings.Split(commandStr, "|")
 	var cmds []*exec.Cmd
