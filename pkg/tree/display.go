@@ -397,11 +397,44 @@ func (processTree *ProcessTree) buildLineItem(head string, pidIndex int) string 
 	// isThread := processTree.Nodes[pidIndex].NumThreads > 0 && processTree.Nodes[pidIndex].PPID > 0
 
 	// In compact mode, format the command with count for the first process in a group
-	if processTree.DisplayOptions.CompactMode {
-		// Get the count of identical processes
-		count, groupPIDs := processTree.GetProcessCount(pidIndex)
+	// if processTree.DisplayOptions.CompactMode {
+	// 	// Get the count of identical processes
+	// 	count, groupPIDs, _ := processTree.GetProcessCount(pidIndex)
 
-		// If there are multiple identical processes, format with count
+	// 	// If there are multiple identical processes, format with count
+	// 	if count > 1 {
+	// 		// Format in Linux pstree style
+	// 		compactStr = processTree.FormatCompactOutput(commandStr, count, groupPIDs)
+
+	// 		if compactStr != "" {
+	// 			// Create the connector string
+	// 			connector = "───"
+
+	// 			// Colorize the connector and compact format indicator in green if color support is available
+	// 			if processTree.DisplayOptions.ColorSupport {
+	// 				// The util.ColorGreen function modifies the string in place via pointer
+	// 				processTree.colorizeField("connector", &connector, pidIndex)
+	// 				// builder.WriteString(connector)
+	// 				processTree.colorizeField("compactStr", &compactStr, pidIndex)
+	// 				// builder.WriteString(compactStr)
+	// 			}
+
+	// 			// In Linux pstree, the format is just the count and brackets, not repeating the command
+	// 			commandStr = fmt.Sprintf("%s%s%s", commandStr, connector, compactStr)
+	// 		}
+	// 	}
+	// }
+
+	showCompacted := false
+	// Get the count of identical processes
+	count, groupPIDs, groupHasThreads := processTree.GetProcessCount(pidIndex)
+	if count > 1 && groupHasThreads {
+		showCompacted = false
+	} else if count > 1 && !groupHasThreads {
+		showCompacted = true
+	}
+
+	if showCompacted {
 		if count > 1 {
 			// Format in Linux pstree style
 			compactStr = processTree.FormatCompactOutput(commandStr, count, groupPIDs)
@@ -424,12 +457,6 @@ func (processTree *ProcessTree) buildLineItem(head string, pidIndex int) string 
 			}
 		}
 	}
-
-	// For threads in non-compact mode, wrap the command in curly braces
-	// if !processTree.DisplayOptions.CompactMode && isThread && processTree.Nodes[pidIndex].NumThreads == 0 {
-	// 	// This is likely a thread of a process
-	// 	commandStr = fmt.Sprintf("{%s}", commandStr)
-	// }
 
 	processTree.colorizeField("command", &commandStr, pidIndex)
 	builder.WriteString(commandStr)
