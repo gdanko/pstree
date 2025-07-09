@@ -66,7 +66,7 @@ func GetPersistentFlags(cmd *cobra.Command, colorSupport bool, colorCount int, u
 	cmd.PersistentFlags().BoolVarP(&flagThreads, "threads", "t", false, "show the number of threads with each process, e.g., (t:xx)")
 
 	if runtime.GOOS == "linux" || (username == "gdanko" || username == "gary.danko") { // I put this here to show all output for the usage section of the README
-		cmd.PersistentFlags().BoolVarP(&flagHideThreads, "hide-threads", "H", false, "hide threads, show only processes (Linux-only)")
+		cmd.PersistentFlags().BoolVarP(&flagHideThreads, "hide-threads", "T", false, "hide threads, show only processes (Linux-only)")
 	}
 
 	// Filtering and sorting
