@@ -41,10 +41,10 @@ func GetPersistentFlags(cmd *cobra.Command, colorSupport bool, colorCount int, u
 	// Color options
 	if colorSupport {
 		if colorCount >= 8 && colorCount < 256 {
-			cmd.PersistentFlags().BoolVarP(&flagColor, "color", "C", false, fmt.Sprintf("add some beautiful %s to the pstree output; cannot be used with --color-attr", color.Print8ColorRainbow("color")))
+			cmd.PersistentFlags().BoolVarP(&flagColor, "color", "", false, fmt.Sprintf("add some beautiful %s to the pstree output; cannot be used with --color-attr", color.Print8ColorRainbow("color")))
 			cmd.PersistentFlags().StringVarP(&flagColorAttr, "color-attr", "k", "", fmt.Sprintf("color the process name by given attribute; implies --compact-not; valid options are: %s;\ncannot be used with --color", strings.Join(validAttributes, ", ")))
 		} else if colorCount >= 256 {
-			cmd.PersistentFlags().BoolVarP(&flagColor, "color", "C", false, gorainbow.Rainbow("add some beautiful color to the pstree output; cannot be used with --color-attr or --rainbow"))
+			cmd.PersistentFlags().BoolVarP(&flagColor, "color", "", false, gorainbow.Rainbow("add some beautiful color to the pstree output; cannot be used with --color-attr or --rainbow"))
 			cmd.PersistentFlags().BoolVarP(&flagRainbow, "rainbow", "r", false, "for the adventurous; cannot be used with --color-attr or --color")
 			cmd.PersistentFlags().StringVarP(&flagColorAttr, "color-attr", "k", "", fmt.Sprintf("color the process name by given attribute; implies --compact-not; valid options are: %s;\ncannot be used with --color or --rainbow", strings.Join(validAttributes, ", ")))
 			cmd.PersistentFlags().StringVarP(&flagColorScheme, "color-scheme", "q", "", fmt.Sprintf("override the default color scheme; valid options are: %s", strings.Join(validColorSchemes, ", ")))
@@ -52,9 +52,9 @@ func GetPersistentFlags(cmd *cobra.Command, colorSupport bool, colorCount int, u
 	}
 
 	// Optional information
-	cmd.PersistentFlags().BoolVarP(&flagShowAll, "all", "A", false, "equivalent to -a -c -g -G -m -O -p -t --show-group")
-	cmd.PersistentFlags().BoolVarP(&flagCompactNot, "compact-not", "n", false, "do not compact identical subtrees in output")
-	cmd.PersistentFlags().BoolVarP(&flagCpu, "cpu", "c", false, "show CPU utilization percentage with each process, e.g., (c:0.00%); implies --compact-not")
+	cmd.PersistentFlags().BoolVarP(&flagShowAll, "all", "A", false, "equivalent to --show-owner --show-group --show-pids --show-pgids --age --cpu --memory --threads --arguments")
+	cmd.PersistentFlags().BoolVarP(&flagCompactNot, "compact-not", "c", false, "do not compact identical subtrees in output")
+	cmd.PersistentFlags().BoolVarP(&flagCpu, "cpu", "C", false, "show CPU utilization percentage with each process, e.g., (c:0.00%); implies --compact-not")
 	cmd.PersistentFlags().BoolVarP(&flagMemory, "memory", "m", false, "show the memory usage with each process, e.g., (m:x.y MiB); implies --compact-not")
 	cmd.PersistentFlags().BoolVarP(&flagShowOwner, "show-owner", "O", false, "show the owner of the process")
 	cmd.PersistentFlags().BoolVarP(&flagShowGroup, "show-group", "", false, "show the group of the process")
