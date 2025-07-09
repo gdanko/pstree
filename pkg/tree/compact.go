@@ -138,14 +138,15 @@ func (processTree *ProcessTree) ShouldSkipProcess(pidIndex int) bool {
 // Returns:
 //   - count: Number of identical processes in the group
 //   - isThread: Whether the process group represents threads
-func (processTree *ProcessTree) GetProcessCount(pidIndex int) (int, []int32) {
+func (processTree *ProcessTree) GetProcessCount(pidIndex int) (int, []int32, bool) {
 	var (
-		args         []string
-		cmd          string
-		compositeKey string
-		groupPIDs    []int32
-		parentPID    int32
-		processOwner string
+		args            []string
+		cmd             string
+		compositeKey    string
+		groupHasThreads bool
+		groupPIDs       []int32
+		parentPID       int32
+		processOwner    string
 	)
 
 	// Get parent PID and command
@@ -166,14 +167,18 @@ func (processTree *ProcessTree) GetProcessCount(pidIndex int) (int, []int32) {
 		if group, exists := groups[compositeKey][processOwner]; exists && group.FirstIndex == pidIndex {
 			// Find PIDs for each member of the group
 			for i := range group.Indices {
+				groupProcess := processTree.Nodes[group.Indices[i]]
+				if len(groupProcess.Threads) > 0 {
+					groupHasThreads = true
+				}
 				groupPIDs = append(groupPIDs, processTree.Nodes[group.Indices[i]].PID)
 			}
-			return group.Count, groupPIDs
+			return group.Count, groupPIDs, groupHasThreads
 		}
 	}
 
 	// No group or not the first process in the group
-	return 1, []int32{}
+	return 1, []int32{}, false
 }
 
 //------------------------------------------------------------------------------
