@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.23.0 -->
-<!-- CreationDate: Tue Jul  8 18:53:31 2025 -->
+<!-- CreationDate: Wed Jul  9 15:05:37 2025 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -36,8 +36,8 @@
 </h2>
 
 
-<p style="margin-left:9%; margin-top: 1em">pstree &minus;
-display a tree of processes</p>
+<p style="margin-left:9%; margin-top: 1em">pstree - display
+a tree of processes</p>
 
 <h2>SYNOPSIS
 <a name="SYNOPSIS"></a>
@@ -45,27 +45,27 @@ display a tree of processes</p>
 
 
 <p style="margin-left:9%; margin-top: 1em"><b>pstree</b>
-[<b>-A</b> | <b>--all</b>] [<b>-a</b> | <b>--arguments</b>]
-[<b>-C</b> | <b>--cpu</b>] [<b>--color</b>] [<b>-d</b> |
-<b>--debug</b>] [<b>-g</b> | <b>--show-pgids</b>] [<b>-G</b>
-| <b>--age</b>] [<b>-h</b> | <b>--help</b>] [<b>-T</b> |
+[<b>-G</b> | <b>--age</b>] [<b>-A</b> | <b>--all</b>]
+[<b>-a</b> | <b>--arguments</b>] [<b>--color</b>] [<b>-k</b>
+| <b>--color-attr</b> <i>attr</i>] [<b>-q</b> |
+<b>--color-scheme</b> <i>scheme</i>] [<b>-c</b> |
+<b>--compact-not</b>] [<b>-s</b> | <b>--contains</b>
+<i>pattern</i>] [<b>-C</b> | <b>--cpu</b>] [<b>-d</b> |
+<b>--debug</b>] [<b>-X</b> | <b>--exclude-root</b>]
+[<b>-h</b> | <b>--help</b>] [<b>-T</b> |
 <b>--hide-threads</b>] [<b>-i</b> | <b>--ibm-850</b>]
-[<b>-I</b> | <b>--uid-transitions</b>] [<b>-k</b> |
-<b>--color-attr</b> <i>attr</i>] [<b>-l</b> | <b>--level</b>
-<i>level</i>] [<b>-m</b> | <b>--memory</b>] [<b>-c</b> |
-<b>--compact-not</b>] [<b>-o</b> | <b>--order-by</b>
-<i>field</i>] [<b>--show-group</b>] [<b>-O</b> |
-<b>--show-owner</b>] [<b>-p</b> | <b>--show-pids</b>]
-[<b>-P</b> | <b>--pid</b> <i>PID</i>] [<b>-q</b> |
-<b>--color-scheme</b> <i>scheme</i>] [<b>-r</b> |
-<b>--rainbow</b>] [<b>-s</b> | <b>--contains</b>
-<i>pattern</i>] [<b>-S</b> | <b>--show-pgls</b>]
-[<b>--show-ppids</b>] [<b>-t</b> | <b>--threads</b>]
-[<b>-u</b> | <b>--utf-8</b>] [<b>-U</b> |
-<b>--user-transitions</b>] [<b>--user</b> <i>username</i>]
-[<b>-v</b> | <b>--vt-100</b>] [<b>-V</b> | <b>--version</b>]
-[<b>-w</b> | <b>--wide</b>] [<b>-X</b> |
-<b>--exclude-root</b>]</p>
+[<b>-l</b> | <b>--level</b> <i>level</i>] [<b>-m</b> |
+<b>--memory</b>] [<b>-o</b> | <b>--order-by</b>
+<i>field</i>] [<b>-P</b> | <b>--pid</b> <i>PID</i>]
+[<b>-r</b> | <b>--rainbow</b>] [<b>--show-group</b>]
+[<b>-g</b> | <b>--show-pgids</b>] [<b>-S</b> |
+<b>--show-pgls</b>] [<b>-p</b> | <b>--show-pids</b>]
+[<b>--show-ppids</b>] [<b>-O</b> | <b>--show-owner</b>]
+[<b>-t</b> | <b>--threads</b>] [<b>-I</b> |
+<b>--uid-transitions</b>] [<b>--user</b> <i>username</i>]
+[<b>-U</b> | <b>--user-transitions</b>] [<b>-u</b> |
+<b>--utf-8</b>] [<b>-V</b> | <b>--version</b>] [<b>-v</b> |
+<b>--vt-100</b>] [<b>-w</b> | <b>--wide</b>]</p>
 
 <h2>DESCRIPTION
 <a name="DESCRIPTION"></a>
@@ -86,25 +86,24 @@ command name and arguments. This can be disabled with the
 </h2>
 
 
-<p style="margin-left:9%; margin-top: 1em"><b>&minus;G,
-&minus;-age</b></p>
+<p style="margin-left:9%; margin-top: 1em"><b>-G,
+--age</b></p>
 
 <p style="margin-left:18%;">Show the age of each process in
 the list using the format (dd:hh:mm:ss).</p>
 
-<p style="margin-left:9%;"><b>&minus;A, &minus;-all</b></p>
+<p style="margin-left:9%;"><b>-A, --all</b></p>
 
 <p style="margin-left:18%;">Equivalent to <b>--show-owner
 --show-group --show-pids --show-pgids --age --cpu --memory
 --threads --arguments</b>.</p>
 
-<p style="margin-left:9%;"><b>&minus;a,
-&minus;-arguments</b></p>
+<p style="margin-left:9%;"><b>-a, --arguments</b></p>
 
 <p style="margin-left:18%;">Show command line arguments
 after the process name.</p>
 
-<p style="margin-left:9%;"><b>&minus;-color</b></p>
+<p style="margin-left:9%;"><b>--color</b></p>
 
 <p style="margin-left:18%;">Colorize the pstree output.
 This option is only visible in the help if your terminal
@@ -113,8 +112,8 @@ terminal doesn&rsquo;t support at least 8 color output. This
 option cannot be used with <b>--color-attr</b> or
 <b>--rainbow</b>.</p>
 
-<p style="margin-left:9%;"><b>&minus;k,
-&minus;-color-attr</b> <i>attr</i></p>
+<p style="margin-left:9%;"><b>-k, --color-attr</b>
+<i>attr</i></p>
 
 <p style="margin-left:18%;">Color the process entry by the
 given attribute. Valid options are: age, cpu, mem. This
@@ -166,15 +165,14 @@ system memory: green (&lt;10%), yellow (10-20%), red
 (&gt;20%).</p> </td></tr>
 </table>
 
-<p style="margin-left:9%;"><b>&minus;q,
-&minus;-color-scheme</b> <i>scheme</i></p>
+<p style="margin-left:9%;"><b>-q, --color-scheme</b>
+<i>scheme</i></p>
 
 <p style="margin-left:18%;">Override the default color
 scheme. Valid options are: darwin, linux, powershell,
 windows10, xterm.</p>
 
-<p style="margin-left:9%;"><b>&minus;c,
-&minus;-compact-not</b></p>
+<p style="margin-left:9%;"><b>-c, --compact-not</b></p>
 
 <p style="margin-left:18%;">Do not compact identical
 subtrees in output. By default, identical process subtrees
@@ -183,43 +181,39 @@ instances exist (e.g., &quot;process---N*[process]&quot;).
 This option disables compaction, showing each process
 individually.</p>
 
-<p style="margin-left:9%;"><b>&minus;s,
-&minus;-contains</b> <i>pattern</i></p>
+<p style="margin-left:9%;"><b>-s, --contains</b>
+<i>pattern</i></p>
 
 <p style="margin-left:18%;">Show only branches containing
 processes with <i>pattern</i> in the command line. This
 option implies <b>--compact-not</b>, since some of the
 results may be buried in collapsed subtrees.</p>
 
-<p style="margin-left:9%;"><b>&minus;C, &minus;-cpu</b></p>
+<p style="margin-left:9%;"><b>-C, --cpu</b></p>
 
 <p style="margin-left:18%;">Show the CPU utilization for
 each process in the list using the format (c:0.00%). This
 option implies <b>--compact-not</b>, since some of the
 results may be buried in collapsed subtrees.</p>
 
-<p style="margin-left:9%;"><b>&minus;d,
-&minus;-debug</b></p>
+<p style="margin-left:9%;"><b>-d, --debug</b></p>
 
 <p style="margin-left:18%;">Show debugging data. Specify
 multiple times (-d, -dd, -ddd) to increase debugging
 level.</p>
 
-<p style="margin-left:9%;"><b>&minus;X,
-&minus;-exclude-root</b></p>
+<p style="margin-left:9%;"><b>-X, --exclude-root</b></p>
 
 <p style="margin-left:18%;">Don&rsquo;t show branches
 containing only root processes. This option cannot be used
 with <b>--user</b>.</p>
 
-<p style="margin-left:9%;"><b>&minus;h,
-&minus;-help</b></p>
+<p style="margin-left:9%;"><b>-h, --help</b></p>
 
 <p style="margin-left:18%;">Display a help message and
 exit.</p>
 
-<p style="margin-left:9%;"><b>&minus;T,
-&minus;-hide-threads</b></p>
+<p style="margin-left:9%;"><b>-T, --hide-threads</b></p>
 
 <p style="margin-left:18%;">Hide threads, showing only
 processes. When this option is used, threads will not be
@@ -229,41 +223,37 @@ be shown if the -t option is used. This option is only
 supported on Linux OSes. This is because Darwin OS does not
 expose thread IDs.</p>
 
-<p style="margin-left:9%;"><b>&minus;i,
-&minus;-ibm-850</b></p>
+<p style="margin-left:9%;"><b>-i, --ibm-850</b></p>
 
 <p style="margin-left:18%;">Use IBM-850 line drawing
 characters; only supported on DOS/Windows.</p>
 
-<p style="margin-left:9%;"><b>&minus;l, &minus;-level</b>
+<p style="margin-left:9%;"><b>-l, --level</b>
 <i>level</i></p>
 
 <p style="margin-left:18%;">Print tree to <i>level</i>
 level deep.</p>
 
-<p style="margin-left:9%;"><b>&minus;m,
-&minus;-memory</b></p>
+<p style="margin-left:9%;"><b>-m, --memory</b></p>
 
 <p style="margin-left:18%;">Show the memory usage for each
 process in the list using the format (m:0.00 MiB). This
 option implies <b>--compact-not</b>, since some of the
 results may be buried in collapsed subtrees.</p>
 
-<p style="margin-left:9%;"><b>&minus;o,
-&minus;-order-by</b> <i>field</i></p>
+<p style="margin-left:9%;"><b>-o, --order-by</b>
+<i>field</i></p>
 
 <p style="margin-left:18%;">Sort processes in ascending
 order by a given field. Available options are: age, cmd,
 cpu, mem, pid, threads, user.</p>
 
-<p style="margin-left:9%;"><b>&minus;P, &minus;-pid</b>
-<i>PID</i></p>
+<p style="margin-left:9%;"><b>-P, --pid</b> <i>PID</i></p>
 
 <p style="margin-left:18%;">Show only branches containing
 process <i>PID</i>.</p>
 
-<p style="margin-left:9%;"><b>&minus;r,
-&minus;-rainbow</b></p>
+<p style="margin-left:9%;"><b>-r, --rainbow</b></p>
 
 <p style="margin-left:18%;">Display the output in a really
 annoying rainbow pattern. This option is not available if
@@ -271,22 +261,24 @@ your terminal doesn&rsquo;t support 256 color output. This
 option cannot be used with <b>--color</b> or
 <b>--color-attr</b>.</p>
 
-<p style="margin-left:9%;"><b>&minus;g,
-&minus;-show-pgids</b></p>
+<p style="margin-left:9%;"><b>--show-group</b></p>
+
+<p style="margin-left:18%;">Show the group of the
+process.</p>
+
+<p style="margin-left:9%;"><b>-g, --show-pgids</b></p>
 
 <p style="margin-left:18%;">Show PGIDs. Process Group IDs
 are shown as decimal numbers in parentheses after each
 process name.</p>
 
-<p style="margin-left:9%;"><b>&minus;S,
-&minus;-show-pgls</b></p>
+<p style="margin-left:9%;"><b>-S, --show-pgls</b></p>
 
 <p style="margin-left:18%;">Show process group leader
 indicators. By default, process group leaders are not marked
 with special characters in the output.</p>
 
-<p style="margin-left:9%;"><b>&minus;p,
-&minus;-show-pids</b></p>
+<p style="margin-left:9%;"><b>-p, --show-pids</b></p>
 
 <p style="margin-left:18%;">Show PIDs. Process IDs are
 shown as decimal numbers in parentheses after each process
@@ -294,31 +286,23 @@ name. If the display of threads is enabled (Linux-only),
 this option will display the thread ID as a decimal number
 in parentheses after each thread name.</p>
 
-<p style="margin-left:9%;"><b>&minus;-show-ppids</b></p>
+<p style="margin-left:9%;"><b>--show-ppids</b></p>
 
 <p style="margin-left:18%;">Show parent process IDs. Parent
 Process IDs are shown as decimal numbers in parentheses
 after each process name.</p>
 
-<p style="margin-left:9%;"><b>&minus;-show-group</b></p>
-
-<p style="margin-left:18%;">Show the group of the
-process.</p>
-
-<p style="margin-left:9%;"><b>&minus;O,
-&minus;-show-owner</b></p>
+<p style="margin-left:9%;"><b>-O, --show-owner</b></p>
 
 <p style="margin-left:18%;">Show the owner of the
 process.</p>
 
-<p style="margin-left:9%;"><b>&minus;t,
-&minus;-threads</b></p>
+<p style="margin-left:9%;"><b>-t, --threads</b></p>
 
 <p style="margin-left:18%;">Show the number of threads for
 each process in the list using the format (t:xx).</p>
 
-<p style="margin-left:9%;"><b>&minus;I,
-&minus;-uid-transitions</b></p>
+<p style="margin-left:9%;"><b>-I, --uid-transitions</b></p>
 
 <p style="margin-left:18%;">Show processes where the user
 ID changes from the parent process, e.g., (uid&rarr;uid).
@@ -326,16 +310,15 @@ This makes it easy to identify privilege escalations or
 drops in the process tree. This option cannot be used with
 <b>--user-transitions</b>.</p>
 
-<p style="margin-left:9%;"><b>&minus;-user</b>
-<i>user</i></p>
+<p style="margin-left:9%;"><b>--user</b> <i>user</i></p>
 
 <p style="margin-left:18%;">Show only branches containing
 processes of <i>user</i>. This option can be used more than
 once. This option cannot be used with
 <b>--exclude-root</b>.</p>
 
-<p style="margin-left:9%;"><b>&minus;U,
-&minus;-user-transitions</b></p>
+<p style="margin-left:9%;"><b>-U,
+--user-transitions</b></p>
 
 <p style="margin-left:18%;">Show processes where the
 username changes from the parent process, e.g.,
@@ -343,26 +326,22 @@ username changes from the parent process, e.g.,
 escalations or drops in the process tree. This option cannot
 be used with <b>--uid-transitions</b>.</p>
 
-<p style="margin-left:9%;"><b>&minus;u,
-&minus;-utf-8</b></p>
+<p style="margin-left:9%;"><b>-u, --utf-8</b></p>
 
 <p style="margin-left:18%;">Use UTF-8 (Unicode) line
 drawing characters.</p>
 
-<p style="margin-left:9%;"><b>&minus;V,
-&minus;-version</b></p>
+<p style="margin-left:9%;"><b>-V, --version</b></p>
 
 <p style="margin-left:18%;">Display version information and
 exit.</p>
 
-<p style="margin-left:9%;"><b>&minus;v,
-&minus;-vt-100</b></p>
+<p style="margin-left:9%;"><b>-v, --vt-100</b></p>
 
 <p style="margin-left:18%;">Use VT-100 line drawing
 characters.</p>
 
-<p style="margin-left:9%;"><b>&minus;w,
-&minus;-wide</b></p>
+<p style="margin-left:9%;"><b>-w, --wide</b></p>
 
 <p style="margin-left:18%;">Do not truncate output to the
 width of the screen.</p>
@@ -381,7 +360,7 @@ process tree:</p>
 tree with PIDs, CPU usage, memory usage, and process
 owners:</p>
 
-<p style="margin-left:9%; margin-top: 1em">pstree -p -c -m
+<p style="margin-left:9%; margin-top: 1em">pstree -p -C -m
 -O</p>
 
 <p style="margin-left:9%; margin-top: 1em">Show a process
