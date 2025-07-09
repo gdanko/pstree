@@ -18,8 +18,15 @@ import (
 // processes that should be skipped during printing (all except the first process
 // in each group).
 //
+// If any process in a potential group has threads and thread display is enabled
+// (HideThreads is false), that group of processes will not be compacted.
+//
 // This function should be called before printing the tree when compact mode is enabled.
-func (processTree *ProcessTree) InitCompactMode() {
+//
+// Returns:
+//   - error: nil if successful, or an error if initialization fails
+func (processTree *ProcessTree) InitCompactMode() error {
+	processTree.Logger.Debug("Entering processTree.InitCompactMode()")
 	var (
 		args         []string
 		cmd          string
@@ -77,29 +84,35 @@ func (processTree *ProcessTree) InitCompactMode() {
 				Owner:      processTree.Nodes[pidIndex].Username,
 			}
 		} else {
-			// Add to existing group
-			group.Count++
-			group.Indices = append(group.Indices, pidIndex)
+			// Check if any process in the group has threads
+			hasThreads := false
+			if len(processTree.Nodes[pidIndex].Threads) > 0 {
+				hasThreads = true
+			}
+			for _, idx := range group.Indices {
+				if len(processTree.Nodes[idx].Threads) > 0 {
+					hasThreads = true
+					break
+				}
+			}
 
-			// Mark this process to be skipped during printing
-			processTree.SkipProcesses[pidIndex] = true
+			// Only add to group if either:
+			// 1. No threads in the group and current process, or
+			// 2. Threads are hidden
+			if !hasThreads || processTree.DisplayOptions.HideThreads {
+				// Add to existing group
+				group.Count++
+				group.Indices = append(group.Indices, pidIndex)
+
+				// Mark this process to be skipped during printing
+				processTree.SkipProcesses[pidIndex] = true
+			}
 		}
 
 		// Update the group in the map
 		processTree.ProcessGroups[parentPID][compositeKey][processOwner] = group
 	}
-	// Find the first example of groups of two identical processes
-	// and print them for debugging purposes
-	// for _, v := range processTree.ProcessGroups {
-	// 	for _, v := range v {
-	// 		if len(v.Indices) > 1 {
-	// 			pretty.Println(v.Indices)
-	// 			for pidIndex := range v.Indices {
-	// 				pretty.Println(processTree.Nodes[v.Indices[pidIndex]])
-	// 			}
-	// 		}
-	// 	}
-	// }
+	return nil
 }
 
 //------------------------------------------------------------------------------
@@ -210,6 +223,17 @@ func (processTree *ProcessTree) FormatCompactOutput(command string, count int, g
 	}
 }
 
+// PIDsToString converts a slice of process IDs to a slice of their string representations.
+//
+// This function is used in compact mode when displaying process groups with PIDs.
+// Each PID is converted to a string representation that can be joined together
+// for display in the process tree.
+//
+// Parameters:
+//   - pids: Slice of int32 process IDs to convert
+//
+// Returns:
+//   - []string: Slice of string representations of the PIDs
 func (processTree *ProcessTree) PIDsToString(pids []int32) []string {
 	pidStrings := make([]string, len(pids))
 	for i, pid := range pids {
