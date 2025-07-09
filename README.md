@@ -80,7 +80,7 @@ Display a tree of processes.
 
 Application Options:
   -G, --age                   show the age of the process using the format (dd:hh:mm:ss)
-  -A, --all                   equivalent to -acgGmOpt
+  -A, --all                   equivalent to -a -c -g -G -m -O -p -t --show-group
   -a, --arguments             show command line arguments
   -C, --color                 add some beautiful color to the pstree output; cannot be used with --color-attr or --rainbow
   -k, --color-attr string     color the process name by given attribute; implies --compact-not; valid options are: age, cpu, mem;
@@ -92,7 +92,7 @@ Application Options:
   -d, --debug count           Increase debugging level (-d, -dd, -ddd)
   -X, --exclude-root          don't show branches containing only root processes; cannot be used with --user
   -h, --help                  help for pstree
-  -H, --hide-threads          hide threads, show only processes (Linux-only)
+  -T, --hide-threads          hide threads, show only processes (Linux-only)
   -i, --ibm-850               use IBM-850 line drawing characters; only supported on DOS/Windows
   -l, --level int             print tree to <level> level deep
       --map-tree              use the map-based tree structure (experimental)
@@ -104,7 +104,7 @@ Application Options:
   -O, --show-owner            show the owner of the process
   -g, --show-pgids            show process group IDs
   -S, --show-pgls             show process group leader indicators
-  -p, --show-pids             show process IDs
+  -p, --show-pids             show process IDs (or thread IDs when displaying threads on Linux)
       --show-ppids            show parent process IDs
   -t, --threads               show the number of threads with each process, e.g., (t:xx)
   -I, --uid-transitions       show processes where the user ID changes from the parent process, e.g., (uid→uid); cannot be used with --user-transitions
@@ -117,8 +117,6 @@ Application Options:
 
 Process group leaders are marked with '=' for ASCII, '¤' for IBM-850, '◆' for VT-100, and '●' for UTF-8.
 ```
-
-
 
 ## Testing
 
