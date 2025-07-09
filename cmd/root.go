@@ -32,10 +32,11 @@ var (
 	flagContains            string
 	flagCpu                 bool
 	flagExcludeRoot         bool
+	flagGenerateThreads     bool // Generate threads for testing purposes
 	flagHideThreads         bool
 	flagIBM850              bool
 	flagLevel               int
-	flagMapBasedTree        bool // New flag for using the map-based tree structure
+	flagMapBasedTree        bool // Experimental map-based tree structure
 	flagMemory              bool
 	flagOrderBy             string
 	flagPid                 int32
@@ -218,7 +219,7 @@ For more information about these matters, see the file named LICENSE.`,
 	}
 
 	screenWidth = util.GetScreenWidth()
-	pstree.GetProcesses(&processes)
+	pstree.GetProcesses(&processes, flagGenerateThreads)
 
 	if flagOrderBy != "" {
 		if !slices.Contains(validOrderBy, flagOrderBy) {
