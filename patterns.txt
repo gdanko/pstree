@@ -1,0 +1,90 @@
+pstree
+├─starter───charon───16*[{charon}]
+
+pstree -T
+├─starter───charon
+
+pstree -c -T
+├─starter───charon
+
+pstree -p -T
+├─starter(1689)───charon(1725)
+
+pstree -p
+├─starter(1689)───charon(1725)─┬─{charon}(1918)
+│                              ├─{charon}(1919)
+│                              ├─{charon}(1920)
+│                              ├─{charon}(1921)
+│                              ├─{charon}(1922)
+│                              ├─{charon}(1923)
+│                              ├─{charon}(1924)
+│                              ├─{charon}(1925)
+│                              ├─{charon}(1926)
+│                              ├─{charon}(1927)
+│                              ├─{charon}(1928)
+│                              ├─{charon}(1929)
+│                              ├─{charon}(1930)
+│                              ├─{charon}(1931)
+│                              ├─{charon}(1932)
+│                              └─{charon}(1933)
+
+pstree -c
+├─starter───charon─┬─{charon}
+│                  ├─{charon}
+│                  ├─{charon}
+│                  ├─{charon}
+│                  ├─{charon}
+│                  ├─{charon}
+│                  ├─{charon}
+│                  ├─{charon}
+│                  ├─{charon}
+│                  ├─{charon}
+│                  ├─{charon}
+│                  ├─{charon}
+│                  ├─{charon}
+│                  ├─{charon}
+│                  ├─{charon}
+│                  └─{charon}
+
+pstree -c -p
+├─starter(1689)───charon(1725)─┬─{charon}(1918)
+│                              ├─{charon}(1919)
+│                              ├─{charon}(1920)
+│                              ├─{charon}(1921)
+│                              ├─{charon}(1922)
+│                              ├─{charon}(1923)
+│                              ├─{charon}(1924)
+│                              ├─{charon}(1925)
+│                              ├─{charon}(1926)
+│                              ├─{charon}(1927)
+│                              ├─{charon}(1928)
+│                              ├─{charon}(1929)
+│                              ├─{charon}(1930)
+│                              ├─{charon}(1931)
+│                              ├─{charon}(1932)
+│                              └─{charon}(1933)
+
+
+### From ChatGPT
+Without -c (default — compacted):
+bash───myworker───2*[child]
+
+## With -c (no compaction — all instances shown):
+bash───myworker───child
+               └──child
+
+## Both would still show threads like:
+myworker───3*[{myworker}]
+
+##  Example (Compacted Output — Default pstree)
+# Assume a process myapp has:
+* 2 threads
+* 2 identical child processes named worker
+myapp───2*[worker]
+      └─2*[{myapp}]
+
+## Example (Uncompacted Output — pstree -c)
+* Same process structure, but with -c:
+myapp───worker
+      ├─worker
+      └─2*[{myapp}]

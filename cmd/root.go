@@ -11,6 +11,7 @@ import (
 	"github.com/gdanko/pstree/pkg/globals"
 	"github.com/gdanko/pstree/pkg/logger"
 	"github.com/gdanko/pstree/pkg/pstree"
+	"github.com/gdanko/pstree/pkg/tree"
 	"github.com/gdanko/pstree/util"
 	"github.com/shirou/gopsutil/v4/mem"
 	"github.com/spf13/cobra"
@@ -20,7 +21,7 @@ var (
 	colorCount              int
 	colorSupport            bool
 	debugLevel              int
-	displayOptions          pstree.DisplayOptions
+	displayOptions          tree.DisplayOptions
 	errorMessage            string
 	flagAge                 bool
 	flagArguments           bool
@@ -31,15 +32,17 @@ var (
 	flagContains            string
 	flagCpu                 bool
 	flagExcludeRoot         bool
+	flagGenerateThreads     bool // Generate threads for testing purposes
 	flagHideThreads         bool
 	flagIBM850              bool
 	flagLevel               int
-	flagMapBasedTree        bool // New flag for using the map-based tree structure
+	flagMapBasedTree        bool // Experimental map-based tree structure
 	flagMemory              bool
 	flagOrderBy             string
 	flagPid                 int32
 	flagRainbow             bool
 	flagShowAll             bool
+	flagShowGroup           bool
 	flagShowOwner           bool
 	flagShowPGIDs           bool
 	flagShowPGLs            bool
@@ -54,17 +57,17 @@ var (
 	flagVT100               bool
 	flagWide                bool
 	installedMemory         *mem.VirtualMemoryStat
-	processes               []pstree.Process
-	processTree             *pstree.ProcessTree
-	processMap              *pstree.ProcessMap // New variable for the map-based tree
+	processes               []tree.Process
+	processTree             *tree.ProcessTree
+	processMap              *tree.ProcessMap // New variable for the map-based tree
 	screenWidth             int
-	sorted                  []pstree.Process
+	sorted                  []tree.Process
 	unicodeSupport          bool
 	usageTemplate           string
 	username                string
 	validAttributes         []string = []string{"age", "cpu", "mem"}
 	validColorSchemes       []string = []string{"darwin", "linux", "powershell", "windows10", "xterm"}
-	validOrderBy            []string = []string{"age", "cpu", "mem", "pid", "threads", "user"}
+	validOrderBy            []string = []string{"age", "cmd", "cpu", "mem", "pid", "threads", "user"}
 	version                 string   = "0.8.1"
 	versionString           string
 	rootCmd                 = &cobra.Command{
@@ -106,7 +109,7 @@ Display a tree of processes.
 Application Options:
 {{.Flags.FlagUsages}}
 Process group leaders are marked with '%s' for ASCII, '%s' for IBM-850, '%s' for VT-100, and '%s' for UTF-8.
-`, pstree.TreeStyles["ascii"].PGL, pstree.TreeStyles["pc850"].PGL, pstree.TreeStyles["vt100"].PGL, pstree.TreeStyles["utf8"].PGL)
+`, tree.TreeStyles["ascii"].PGL, tree.TreeStyles["pc850"].PGL, tree.TreeStyles["vt100"].PGL, tree.TreeStyles["utf8"].PGL)
 
 	rootCmd.SetUsageTemplate(usageTemplate)
 }
@@ -216,7 +219,7 @@ For more information about these matters, see the file named LICENSE.`,
 	}
 
 	screenWidth = util.GetScreenWidth()
-	pstree.GetProcesses(&processes)
+	pstree.GetProcesses(&processes, flagGenerateThreads)
 
 	if flagOrderBy != "" {
 		if !slices.Contains(validOrderBy, flagOrderBy) {
@@ -227,11 +230,13 @@ For more information about these matters, see the file named LICENSE.`,
 		if err != nil {
 			panic(err)
 		}
-		sorted = []pstree.Process{proc}
+		sorted = []tree.Process{proc}
 		switch flagOrderBy {
 		case "age":
 			flagAge = true
 			pstree.SortProcsByAge(&processes)
+		case "cmd":
+			pstree.SortProcsByCmd(&processes)
 		case "cpu":
 			flagCpu = true
 			pstree.SortProcsByCpu(&processes)
@@ -274,13 +279,14 @@ For more information about these matters, see the file named LICENSE.`,
 		flagArguments = true
 		flagCpu = true
 		flagMemory = true
+		flagShowGroup = true
 		flagShowOwner = true
 		flagShowPGIDs = true
 		flagShowPIDs = true
 		flagThreads = true
 	}
 
-	displayOptions = pstree.DisplayOptions{
+	displayOptions = tree.DisplayOptions{
 		ColorAttr:           flagColorAttr,
 		ColorCount:          colorCount,
 		ColorizeOutput:      flagColor,
@@ -299,6 +305,7 @@ For more information about these matters, see the file named LICENSE.`,
 		ScreenWidth:         screenWidth,
 		ShowArguments:       flagArguments,
 		ShowCpuPercent:      flagCpu,
+		ShowGroup:           flagShowGroup,
 		ShowMemoryUsage:     flagMemory,
 		ShowNumThreads:      flagThreads,
 		ShowOwner:           flagShowOwner,
@@ -318,12 +325,11 @@ For more information about these matters, see the file named LICENSE.`,
 	// Choose between traditional array-based tree or new map-based tree
 	// Filtering by PID, username, etc. is not currently working with the map-based implementation
 	if flagMapBasedTree {
-
 		// Use the new map-based tree structure
 		logger.Logger.Debug("Using map-based tree structure")
 
 		// Build the process map
-		processMap = pstree.NewProcessMap(logger.Logger, processes, displayOptions)
+		processMap = tree.NewProcessMap(logger.Logger, processes, displayOptions)
 
 		// Mark processes to be displayed
 		processMap.FindPrintable()
@@ -343,7 +349,7 @@ For more information about these matters, see the file named LICENSE.`,
 		logger.Logger.Debug("Using traditional array-based tree structure")
 
 		// Generate the process tree
-		processTree = pstree.NewProcessTree(debugLevel, logger.Logger, processes, displayOptions)
+		processTree = tree.NewProcessTree(debugLevel, logger.Logger, processes, displayOptions)
 
 		// Mark processes to be displayed
 		processTree.MarkProcesses()

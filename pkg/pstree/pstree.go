@@ -10,10 +10,13 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"path/filepath"
+	"runtime"
 	"sort"
 	"time"
 
 	"github.com/gdanko/pstree/pkg/metrics"
+	"github.com/gdanko/pstree/pkg/tree"
 	"github.com/gdanko/pstree/util"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/net"
@@ -53,23 +56,33 @@ func SortByPid(procs []*process.Process) []*process.Process {
 // Returns:
 //   - The Process struct for the specified PID
 //   - An error if the process with the given PID was not found
-func GetProcessByPid(processes *[]Process, pid int32) (proc Process, err error) {
+func GetProcessByPid(processes *[]tree.Process, pid int32) (proc tree.Process, err error) {
 	for i := range *processes {
 		if (*processes)[i].PID == pid {
 			return (*processes)[i], nil
 		}
 	}
 	errorMessage := fmt.Sprintf("the process with the PID %d was not found", pid)
-	return Process{}, errors.New(errorMessage)
+	return tree.Process{}, errors.New(errorMessage)
 }
 
 // SortProcsByAge sorts the processes slice by process age in ascending order.
 //
 // Parameters:
 //   - processes: Pointer to a slice of Process structs to be sorted
-func SortProcsByAge(processes *[]Process) {
+func SortProcsByAge(processes *[]tree.Process) {
 	sort.Slice(*processes, func(i, j int) bool {
 		return (*processes)[i].Age < (*processes)[j].Age
+	})
+}
+
+// SortProcsByCmd sorts the processes slice by command name in ascending order.
+//
+// Parameters:
+//   - processes: Pointer to a slice of Process structs to be sorted
+func SortProcsByCmd(processes *[]tree.Process) {
+	sort.Slice(*processes, func(i, j int) bool {
+		return (*processes)[i].Command < (*processes)[j].Command
 	})
 }
 
@@ -77,7 +90,7 @@ func SortProcsByAge(processes *[]Process) {
 //
 // Parameters:
 //   - processes: Pointer to a slice of Process structs to be sorted
-func SortProcsByCpu(processes *[]Process) {
+func SortProcsByCpu(processes *[]tree.Process) {
 	sort.Slice(*processes, func(i, j int) bool {
 		return (*processes)[i].CPUPercent < (*processes)[j].CPUPercent
 	})
@@ -87,7 +100,7 @@ func SortProcsByCpu(processes *[]Process) {
 //
 // Parameters:
 //   - processes: Pointer to a slice of Process structs to be sorted
-func SortProcsByMemory(processes *[]Process) {
+func SortProcsByMemory(processes *[]tree.Process) {
 	sort.Slice(*processes, func(i, j int) bool {
 		return float64((*processes)[i].MemoryInfo.RSS) < float64((*processes)[j].MemoryInfo.RSS)
 	})
@@ -97,7 +110,7 @@ func SortProcsByMemory(processes *[]Process) {
 //
 // Parameters:
 //   - processes: Pointer to a slice of Process structs to be sorted
-func SortProcsByUsername(processes *[]Process) {
+func SortProcsByUsername(processes *[]tree.Process) {
 	sort.Slice(*processes, func(i, j int) bool {
 		return (*processes)[i].Username < (*processes)[j].Username
 	})
@@ -107,7 +120,7 @@ func SortProcsByUsername(processes *[]Process) {
 //
 // Parameters:
 //   - processes: Pointer to a slice of Process structs to be sorted
-func SortProcsByPid(processes *[]Process) {
+func SortProcsByPid(processes *[]tree.Process) {
 	sort.Slice(*processes, func(i, j int) bool {
 		return (*processes)[i].PID < (*processes)[j].PID
 	})
@@ -117,7 +130,7 @@ func SortProcsByPid(processes *[]Process) {
 //
 // Parameters:
 //   - processes: Pointer to a slice of Process structs to be sorted
-func SortProcsByNumThreads(processes *[]Process) {
+func SortProcsByNumThreads(processes *[]tree.Process) {
 	sort.Slice(*processes, func(i, j int) bool {
 		return (*processes)[i].NumThreads < (*processes)[j].NumThreads
 	})
@@ -137,7 +150,7 @@ func SortProcsByNumThreads(processes *[]Process) {
 //
 // Returns:
 //   - A new Process struct populated with information from the input process
-func GenerateProcess(proc *process.Process) Process {
+func GenerateProcess(proc *process.Process) tree.Process {
 	var (
 		args          []string
 		command       string
@@ -147,7 +160,8 @@ func GenerateProcess(proc *process.Process) Process {
 		environment   []string
 		err           error
 		gids          []uint32
-		groups        []uint32
+		groupName     string = "unknown"
+		groupsMap     map[uint32]string
 		pgid          int
 		pid           int32
 		ppid          int32
@@ -156,6 +170,7 @@ func GenerateProcess(proc *process.Process) Process {
 		numFDs        int32
 		numThreads    int32
 		openFiles     []process.OpenFilesStat
+		threads       map[int32]*cpu.TimesStat
 		uids          []uint32
 		username      string
 	)
@@ -218,23 +233,23 @@ func GenerateProcess(proc *process.Process) Process {
 		environment = environmentOut
 	}
 
-	gidsChannel := make(chan func(ctx context.Context, proc *process.Process) (gids []uint32, err error))
+	gidsChannel := make(chan func(ctx context.Context, proc *process.Process) (gids []uint32, groups map[uint32]string, err error))
 	go metrics.ProcessGIDs(gidsChannel)
-	gidsOut, err := (<-gidsChannel)(ctx, proc)
+	gidsOut, groupsMap, err := (<-gidsChannel)(ctx, proc)
 	if err != nil {
 		gids = []uint32{}
 	} else {
 		gids = gidsOut
 	}
 
-	groupsChannel := make(chan func(ctx context.Context, proc *process.Process) (groups []uint32, err error))
-	go metrics.ProcessGroups(groupsChannel)
-	groupsOut, err := (<-groupsChannel)(ctx, proc)
-	if err != nil {
-		groups = []uint32{}
-	} else {
-		groups = groupsOut
-	}
+	// groupsChannel := make(chan func(ctx context.Context, proc *process.Process) (groups []uint32, err error))
+	// go metrics.ProcessGroups(groupsChannel)
+	// groupsOut, err := (<-groupsChannel)(ctx, proc)
+	// if err != nil {
+	// 	groups = []uint32{}
+	// } else {
+	// 	groups = groupsOut
+	// }
 
 	memoryInfoChannel := make(chan func(ctx context.Context, proc *process.Process) (memoryInfo *process.MemoryInfoStat, err error))
 	go metrics.ProcessMemoryInfo(memoryInfoChannel)
@@ -299,6 +314,15 @@ func GenerateProcess(proc *process.Process) Process {
 		ppid = ppidOut
 	}
 
+	threadsChannel := make(chan func(ctx context.Context, proc *process.Process) (threads map[int32]*cpu.TimesStat, err error))
+	go metrics.ProcessThreads(threadsChannel)
+	threadsOut, err := (<-threadsChannel)(ctx, proc)
+	if err != nil {
+		threads = map[int32]*cpu.TimesStat{}
+	} else {
+		threads = threadsOut
+	}
+
 	usernameChannel := make(chan func(ctx context.Context, proc *process.Process) (username string, err error))
 	go metrics.ProcessUsername(usernameChannel)
 	usernameOut, err := (<-usernameChannel)(ctx, proc)
@@ -327,11 +351,35 @@ func GenerateProcess(proc *process.Process) Process {
 		}
 	}
 
-	return Process{
+	processThreads := []tree.Thread{}
+	for threadID, thread := range threads {
+		if threadID != pid {
+			processThreads = append(processThreads, tree.Thread{
+				Args:     args,
+				Command:  filepath.Base(command),
+				CPUTimes: thread,
+				PGID:     int32(pgid),
+				PID:      pid,
+				PPID:     ppid,
+				TID:      threadID,
+			})
+		}
+	}
+
+	// Try to determine the group name from the groups map if available
+	// and if the first UID is present in the map. This is to ensure
+	// we have a valid group name for the process.
+	if len(gids) > 0 {
+		for _, groupName = range groupsMap {
+			break
+		}
+	}
+
+	return tree.Process{
 		Age:           util.GetUnixTimestamp() - createTime,
 		Args:          args,
 		Child:         -1,
-		Children:      &[]Process{},
+		Children:      &[]tree.Process{},
 		Command:       command,
 		Connections:   []net.ConnectionStat{},
 		CPUPercent:    util.RoundFloat(cpuPercent, 2),
@@ -339,7 +387,8 @@ func GenerateProcess(proc *process.Process) Process {
 		CreateTime:    createTime,
 		Environment:   environment,
 		GIDs:          gids,
-		Groups:        groups,
+		Group:         groupName,
+		Groups:        groupsMap,
 		MemoryInfo:    memoryInfo,
 		MemoryPercent: memoryPercent,
 		NumFDs:        numFDs,
@@ -350,6 +399,7 @@ func GenerateProcess(proc *process.Process) Process {
 		PID:           pid,
 		PPID:          ppid,
 		Sister:        -1,
+		Threads:       processThreads,
 		UIDs:          uids,
 		Username:      username,
 	}
@@ -362,17 +412,8 @@ func GenerateProcess(proc *process.Process) Process {
 // generateProcess function.
 //
 // Parameters:
-//   - logger: A structured logger for recording information during process collection
 //   - processes: A pointer to a slice that will be populated with Process structs
-//
-// This function uses the gopsutil library to get a list of all processes running on the system,
-// sorts them by PID, and then generates detailed Process structs for each one using the
-// generateProcess function.
-//
-// Parameters:
-//   - logger: A structured logger for recording information during process collection
-//   - processes: A pointer to a slice that will be populated with Process structs
-func GetProcesses(processes *[]Process) {
+func GetProcesses(processes *[]tree.Process, generateThreads bool) {
 	var (
 		err      error
 		sorted   []*process.Process
@@ -386,6 +427,26 @@ func GetProcesses(processes *[]Process) {
 	sorted = SortByPid(unsorted)
 
 	for _, p := range sorted {
-		*processes = append(*processes, GenerateProcess(p))
+		newProcess := GenerateProcess(p)
+
+		// Only if OS is Darwin and --generate-threads is enabled
+		// This is for testing purposes to simulate thread data on Darwin
+		// because Darwin does not provide thread IDs and therefore cannot
+		// return a list of threads for a process.
+		if generateThreads && runtime.GOOS == "darwin" {
+			if newProcess.NumThreads > 0 {
+				for i := 1; i <= int(newProcess.NumThreads); i++ {
+					newProcess.Threads = append(newProcess.Threads, tree.Thread{
+						TID:     int32(i + 100), // Example thread IDs for illustration
+						PPID:    newProcess.PPID,
+						PID:     newProcess.PID,
+						PGID:    newProcess.PGID,
+						Command: newProcess.Command,
+						Args:    newProcess.Args,
+					})
+				}
+			}
+		}
+		*processes = append(*processes, newProcess)
 	}
 }

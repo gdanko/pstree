@@ -13,12 +13,13 @@ It uses [gopsutil](https://github.com/shirou/gopsutil) for gathering process inf
 - Show process group IDs (`--pgid`)
 - Show parent process IDs (`--show-ppids`)
 - Show command line arguments (`--arguments`)
+- Show process group information (`--show-group`)
 - Show process owner information (`--show-owner`)
 - Show process age in dd:hh:mm:ss format (`--age`)
 - Show CPU utilization percentage (`--cpu`)
 - Show memory usage in MiB (`--memory`)
 - Show thread count for each process (`--threads`)
-- Hide threads in compact mode, showing only processes (`--hide-threads`)
+- Hide threads, showing only processes on Linux systems (`--hide-threads`)
 
 ### Filtering and Selection
 - Filter by process ID (`--pid`)
@@ -55,7 +56,7 @@ It uses [gopsutil](https://github.com/shirou/gopsutil) for gathering process inf
 
 ### Output Control
 - Non-compact mode to show all processes individually (`--compact-not`)
-- Sort processes by various attributes (`--order-by`): age, cpu, mem, pid, threads, user
+- Sort processes by various attributes (`--order-by`): age, cmd, cpu, mem, pid, threads, user
 - All-inclusive mode to enable multiple options at once (`--all`)
 
 ## Compiling
@@ -79,7 +80,7 @@ Display a tree of processes.
 
 Application Options:
   -G, --age                   show the age of the process using the format (dd:hh:mm:ss)
-  -A, --all                   equivalent to -acgGmOpt
+  -A, --all                   equivalent to --show-owner --show-group --show-pids --show-pgids --age --cpu --memory --threads --arguments
   -a, --arguments             show command line arguments
   -C, --color                 add some beautiful color to the pstree output; cannot be used with --color-attr or --rainbow
   -k, --color-attr string     color the process name by given attribute; implies --compact-not; valid options are: age, cpu, mem;
@@ -91,17 +92,19 @@ Application Options:
   -d, --debug count           Increase debugging level (-d, -dd, -ddd)
   -X, --exclude-root          don't show branches containing only root processes; cannot be used with --user
   -h, --help                  help for pstree
-  -H, --hide-threads          hide threads, show only processes
+  -T, --hide-threads          hide threads, show only processes (Linux-only)
   -i, --ibm-850               use IBM-850 line drawing characters; only supported on DOS/Windows
   -l, --level int             print tree to <level> level deep
+      --map-tree              use the map-based tree structure (experimental)
   -m, --memory                show the memory usage with each process, e.g., (m:x.y MiB); implies --compact-not
-  -o, --order-by string       sort the results by <field>; valid options are: age, cpu, mem, pid, threads, user
+  -o, --order-by string       sort the results by <field>; valid options are: age, cmd, cpu, mem, pid, threads, user
   -P, --pid int32             show only branches containing process <pid>
   -r, --rainbow               for the adventurous; cannot be used with --color-attr or --color
+      --show-group            show the group of the process
   -O, --show-owner            show the owner of the process
   -g, --show-pgids            show process group IDs
   -S, --show-pgls             show process group leader indicators
-  -p, --show-pids             show process IDs
+  -p, --show-pids             show process IDs (or thread IDs when displaying threads on Linux)
       --show-ppids            show parent process IDs
   -t, --threads               show the number of threads with each process, e.g., (t:xx)
   -I, --uid-transitions       show processes where the user ID changes from the parent process, e.g., (uid→uid); cannot be used with --user-transitions
@@ -114,8 +117,6 @@ Application Options:
 
 Process group leaders are marked with '=' for ASCII, '¤' for IBM-850, '◆' for VT-100, and '●' for UTF-8.
 ```
-
-
 
 ## Testing
 

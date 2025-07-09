@@ -3,10 +3,11 @@
 // This file contains the core data structures and type definitions used throughout the package.
 // It defines the Process, DisplayOptions, ProcessTree, and TreeChars types that form the foundation
 // of the process tree visualization system.
-package pstree
+package tree
 
 import (
 	"log/slog"
+	"regexp"
 
 	"github.com/gdanko/pstree/pkg/color"
 	"github.com/shirou/gopsutil/v4/cpu"
@@ -44,8 +45,10 @@ type Process struct {
 	Environment []string
 	// Group IDs associated with this process
 	GIDs []uint32
-	// Groups associated with this process
-	Groups []uint32
+	// The group name associated with the process
+	Group string
+	// A map of group ID < group name
+	Groups map[uint32]string
 	// Indicates if this process has a different UID from its parent
 	HasUIDTransition bool
 	// Indicates if this process is the current process or an ancestor
@@ -80,10 +83,31 @@ type Process struct {
 	Sister int
 	// Process status information
 	Status []string
+	// A map of threads for the process
+	Threads []Thread
+	// Thread ID (if this is a thread)
+	TID int32
 	// User IDs associated with this process
 	UIDs []uint32
 	// Username of the process owner
 	Username string
+}
+
+type Thread struct {
+	// Command line arguments
+	Args []string
+	// Process group ID
+	PGID int32
+	// PID
+	PID int32
+	// Parent PID
+	PPID int32
+	// Thread ID
+	TID int32
+	// Command name (executable name)
+	Command string
+	// CPU Times
+	CPUTimes *cpu.TimesStat
 }
 
 //------------------------------------------------------------------------------
@@ -129,6 +153,8 @@ type DisplayOptions struct {
 	ShowArguments bool
 	// Whether to show CPU usage percentage
 	ShowCpuPercent bool
+	// Whether to show the process group
+	ShowGroup bool
 	// Whether to show memory usage
 	ShowMemoryUsage bool
 	// Whether to show thread count
@@ -189,6 +215,10 @@ type ProcessTree struct {
 	Colorizer color.Colorizer
 	// Color scheme for applying colors to text
 	ColorScheme color.ColorScheme
+	// Process groups for compact mode
+	ProcessGroups map[int32]map[string]map[string]ProcessGroup
+	// Map to track processes that should be skipped during printing
+	SkipProcesses map[int]bool
 }
 
 //------------------------------------------------------------------------------
@@ -273,4 +303,15 @@ var TreeStyles = map[string]TreeChars{
 		S2:   "\342\224\200\342\224\200", // ss
 		SG:   "",                         // sg
 	},
+}
+
+var AnsiEscape = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
+
+// ProcessGroup represents a group of identical processes
+type ProcessGroup struct {
+	Count      int    // Number of identical processes
+	FirstIndex int    // Index of the first process in the group
+	FullPath   string // Full path of the command
+	Indices    []int  // Indices of all processes in the group
+	Owner      string // Owner of the process group
 }

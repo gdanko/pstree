@@ -1,42 +1,43 @@
 .\" -*- coding: utf-8 -*-
 .ad b
-.TH PSTREE 1 "July 05, 2025" "0.8.1" "User Commands"
+.TH PSTREE 1 "July 09, 2025" "0.8.1" "User Commands"
 .SH NAME
 pstree \- display a tree of processes
 .SH SYNOPSIS
 .B pstree
+[\fB-G\fR | \fB--age\fR]
 [\fB-A\fR | \fB--all\fR]
 [\fB-a\fR | \fB--arguments\fR]
-[\fB-c\fR | \fB--cpu\fR]
-[\fB-C\fR | \fB--color\fR]
-[\fB-d\fR | \fB--debug\fR]
-[\fB-g\fR | \fB--show-pgids\fR]
-[\fB-G\fR | \fB--age\fR]
-[\fB-h\fR | \fB--help\fR]
-[\fB-H\fR | \fB--hide-threads\fR]
-[\fB-i\fR | \fB--ibm-850\fR]
-[\fB-I\fR | \fB--uid-transitions\fR]
+[\fB--color\fR]
 [\fB-k\fR | \fB--color-attr\fR \fIattr\fR]
+[\fB-q\fR | \fB--color-scheme\fR \fIscheme\fR]
+[\fB-c\fR | \fB--compact-not\fR]
+[\fB-s\fR | \fB--contains\fR \fIpattern\fR]
+[\fB-C\fR | \fB--cpu\fR]
+[\fB-d\fR | \fB--debug\fR]
+[\fB-X\fR | \fB--exclude-root\fR]
+[\fB-h\fR | \fB--help\fR]
+[\fB-T\fR | \fB--hide-threads\fR]
+[\fB-i\fR | \fB--ibm-850\fR]
 [\fB-l\fR | \fB--level\fR \fIlevel\fR]
 [\fB-m\fR | \fB--memory\fR]
-[\fB-n\fR | \fB--compact-not\fR]
 [\fB-o\fR | \fB--order-by\fR \fIfield\fR]
-[\fB-O\fR | \fB--show-owner\fR]
-[\fB-p\fR | \fB--show-pids\fR]
 [\fB-P\fR | \fB--pid\fR \fIPID\fR]
-[\fB-q\fR | \fB--color-scheme\fR \fIscheme\fR]
 [\fB-r\fR | \fB--rainbow\fR]
-[\fB-s\fR | \fB--contains\fR \fIpattern\fR]
+[\fB--show-group\fR]
+[\fB-g\fR | \fB--show-pgids\fR]
 [\fB-S\fR | \fB--show-pgls\fR]
+[\fB-p\fR | \fB--show-pids\fR]
 [\fB--show-ppids\fR]
+[\fB-O\fR | \fB--show-owner\fR]
 [\fB-t\fR | \fB--threads\fR]
-[\fB-u\fR | \fB--utf-8\fR]
-[\fB-U\fR | \fB--user-transitions\fR]
+[\fB-I\fR | \fB--uid-transitions\fR]
 [\fB--user\fR \fIusername\fR]
-[\fB-v\fR | \fB--vt-100\fR]
+[\fB-U\fR | \fB--user-transitions\fR]
+[\fB-u\fR | \fB--utf-8\fR]
 [\fB-V\fR | \fB--version\fR]
+[\fB-v\fR | \fB--vt-100\fR]
 [\fB-w\fR | \fB--wide\fR]
-[\fB-X\fR | \fB--exclude-root\fR]
 .SH DESCRIPTION
 .B pstree
 shows running processes as a tree. The tree is rooted at launchd. If \fB--pid\fR is specified, the tree will be rooted at the specified PID. If \fB--user\fR is specified, all process trees rooted at processes owned by that user are shown. By default, processes are grouped and collapsed by command name and arguments. This can be disabled with the \fB--compact-not\fR option. 
@@ -46,12 +47,12 @@ shows running processes as a tree. The tree is rooted at launchd. If \fB--pid\fR
 Show the age of each process in the list using the format (dd:hh:mm:ss).
 .TP
 .B \-A, \--all
-Equivalent to -acgGmOptU.
+Equivalent to \fB--show-owner\fR \fB--show-group\fR \fB--show-pids\fR \fB--show-pgids\fR \fB--age\fR \fB--cpu\fR \fB--memory\fR \fB--threads\fR \fB--arguments\fR.
 .TP
 .B \-a, \--arguments
 Show command line arguments after the process name.
 .TP
-.B \-C, \--color
+.B \--color
 Colorize the pstree output. This option is only visible in the help if your terminal supports color. This option is not available if your terminal doesn't support at least 8 color output. This option cannot be used with \fB--color-attr\fR or \fB--rainbow\fR.
 .TP
 .B \-k, \--color-attr \fIattr\fR
@@ -71,13 +72,13 @@ Colors processes by memory usage as percentage of total system memory: green (<1
 .B \-q, \--color-scheme \fIscheme\fR
 Override the default color scheme. Valid options are: darwin, linux, powershell, windows10, xterm.
 .TP
-.B \-n, \--compact-not
+.B \-c, \--compact-not
 Do not compact identical subtrees in output. By default, identical process subtrees are shown only once with a count indicating how many instances exist (e.g., "process---N*[process]"). This option disables compaction, showing each process individually.
 .TP
 .B \-s, \--contains \fIpattern\fR
 Show only branches containing processes with \fIpattern\fR in the command line. This option implies \fB--compact-not\fR, since some of the results may be buried in collapsed subtrees.
 .TP
-.B \-c, \--cpu
+.B \-C, \--cpu
 Show the CPU utilization for each process in the list using the format (c:0.00%). This option implies \fB--compact-not\fR, since some of the results may be buried in collapsed subtrees.
 .TP
 .B \-d, \--debug
@@ -89,8 +90,8 @@ Don't show branches containing only root processes. This option cannot be used w
 .B \-h, \--help
 Display a help message and exit.
 .TP
-.B \-H, \--hide-threads
-Hide threads, showing only processes. When this option is used, threads will not be displayed in the process tree and thread information will be omitted from compact mode output. Thread counts will still be shown if the -t option is used.
+.B \-T, \--hide-threads
+Hide threads, showing only processes. When this option is used, threads will not be displayed in the process tree and thread information will be omitted from compact mode output. Thread counts will still be shown if the -t option is used. This option is only supported on Linux OSes. This is because Darwin OS does not expose thread IDs.
 .TP
 .B \-i, \--ibm-850
 Use IBM-850 line drawing characters; only supported on DOS/Windows.
@@ -102,13 +103,16 @@ Print tree to \fIlevel\fR level deep.
 Show the memory usage for each process in the list using the format (m:0.00 MiB). This option implies \fB--compact-not\fR, since some of the results may be buried in collapsed subtrees.
 .TP
 .B \-o, \--order-by \fIfield\fR
-Sort processes by a given field. Available options are: age, cpu, mem, pid, threads, user.
+Sort processes in ascending order by a given field. Available options are: age, cmd, cpu, mem, pid, threads, user.
 .TP
 .B \-P, \--pid \fIPID\fR
 Show only branches containing process \fIPID\fR.
 .TP
 .B \-r, \--rainbow
 Display the output in a really annoying rainbow pattern. This option is not available if your terminal doesn't support 256 color output. This option cannot be used with \fB--color\fR or \fB--color-attr\fR.
+.TP
+.B \--show-group
+Show the group of the process.
 .TP
 .B \-g, \--show-pgids
 Show PGIDs. Process Group IDs are shown as decimal numbers in parentheses after each process name.
@@ -117,7 +121,7 @@ Show PGIDs. Process Group IDs are shown as decimal numbers in parentheses after 
 Show process group leader indicators. By default, process group leaders are not marked with special characters in the output.
 .TP
 .B \-p, \--show-pids
-Show PIDs. Process IDs are shown as decimal numbers in parentheses after each process name.
+Show PIDs. Process IDs are shown as decimal numbers in parentheses after each process name. If the display of threads is enabled (Linux-only), this option will display the thread ID as a decimal number in parentheses after each thread name.
 .TP
 .B \--show-ppids
 Show parent process IDs. Parent Process IDs are shown as decimal numbers in parentheses after each process name.
@@ -159,7 +163,7 @@ Display a basic process tree:
 Show a process tree with PIDs, CPU usage, memory usage, and process owners:
 .PP
 .nf
-    pstree -p -c -m -O
+    pstree -p -C -m -O
 .fi
 .PP
 Show a process tree for a specific user with process age and thread counts:

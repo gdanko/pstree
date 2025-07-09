@@ -4,7 +4,7 @@
 // hierarchical structure, which is more intuitive and easier to maintain than the array-based
 // approach. It's designed to work alongside the existing implementation while providing
 // a path for gradual refactoring.
-package pstree
+package tree
 
 import (
 	"fmt"
@@ -1126,7 +1126,7 @@ func (processMap *ProcessMap) colorizeField(fieldName string, value *string, pro
 func (processMap *ProcessMap) visibleWidth(input string) int {
 	width := 0
 	for len(input) > 0 {
-		if loc := ansiEscape.FindStringIndex(input); loc != nil && loc[0] == 0 {
+		if loc := AnsiEscape.FindStringIndex(input); loc != nil && loc[0] == 0 {
 			// Skip ANSI
 			input = input[loc[1]:]
 			continue
@@ -1170,7 +1170,7 @@ func (processMap *ProcessMap) truncateANSI(input string) string {
 	width := 0
 
 	for len(input) > 0 {
-		if loc := ansiEscape.FindStringIndex(input); loc != nil && loc[0] == 0 {
+		if loc := AnsiEscape.FindStringIndex(input); loc != nil && loc[0] == 0 {
 			esc := input[loc[0]:loc[1]]
 			output.WriteString(esc)
 			input = input[loc[1]:]

@@ -3,7 +3,7 @@ package cmd
 import (
 	"testing"
 
-	"github.com/gdanko/pstree/pkg/pstree"
+	"github.com/gdanko/pstree/pkg/tree"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,7 +14,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 	testCases := []struct {
 		name         string
 		setupFlags   func()
-		checkOptions func(t *testing.T, opts pstree.DisplayOptions)
+		checkOptions func(t *testing.T, opts tree.DisplayOptions)
 	}{
 		{
 			name: "CPU flag (-c)",
@@ -22,7 +22,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 				flagCpu = true
 				flagCompactNot = false // Reset this as it gets modified
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.True(t, opts.ShowCpuPercent, "ShowCpuPercent should be true when -c flag is set")
 				assert.True(t, !opts.CompactMode, "CompactMode should be false when -c flag is set (implies --compact-not)")
 			},
@@ -33,7 +33,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 				flagMemory = true
 				flagCompactNot = false // Reset this as it gets modified
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.True(t, opts.ShowMemoryUsage, "ShowMemoryUsage should be true when -m flag is set")
 				assert.True(t, !opts.CompactMode, "CompactMode should be false when -m flag is set (implies --compact-not)")
 			},
@@ -43,7 +43,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 			setupFlags: func() {
 				flagAge = true
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.True(t, opts.ShowProcessAge, "ShowProcessAge should be true when -G flag is set")
 			},
 		},
@@ -52,7 +52,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 			setupFlags: func() {
 				flagShowPIDs = true
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.True(t, opts.ShowPIDs, "ShowPids should be true when -p flag is set")
 			},
 		},
@@ -61,7 +61,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 			setupFlags: func() {
 				flagShowPGIDs = true
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.True(t, opts.ShowPGIDs, "ShowPGIDs should be true when -g flag is set")
 			},
 		},
@@ -70,7 +70,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 			setupFlags: func() {
 				flagShowOwner = true
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.True(t, opts.ShowOwner, "ShowOwner should be true when -O flag is set")
 			},
 		},
@@ -79,7 +79,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 			setupFlags: func() {
 				flagThreads = true
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.True(t, opts.ShowNumThreads, "ShowNumThreads should be true when -t flag is set")
 			},
 		},
@@ -88,7 +88,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 			setupFlags: func() {
 				flagHideThreads = true
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.True(t, opts.HideThreads, "HideThreads should be true when -H flag is set")
 			},
 		},
@@ -97,7 +97,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 			setupFlags: func() {
 				flagShowPGLs = true
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.True(t, opts.ShowPGLs, "ShowPGLs should be true when -S flag is set")
 			},
 		},
@@ -106,7 +106,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 			setupFlags: func() {
 				flagArguments = true
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.True(t, opts.ShowArguments, "ShowArguments should be true when -a flag is set")
 			},
 		},
@@ -115,7 +115,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 			setupFlags: func() {
 				flagShowUIDTransitions = true
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.True(t, opts.ShowUIDTransitions, "ShowUIDTransitions should be true when -I flag is set")
 			},
 		},
@@ -124,7 +124,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 			setupFlags: func() {
 				flagShowUserTransitions = true
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.True(t, opts.ShowUserTransitions, "ShowUserTransitions should be true when -U flag is set")
 			},
 		},
@@ -133,7 +133,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 			setupFlags: func() {
 				flagIBM850 = true
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.True(t, opts.IBM850Graphics, "IBM850Graphics should be true when -i flag is set")
 			},
 		},
@@ -142,7 +142,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 			setupFlags: func() {
 				flagUTF8 = true
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.True(t, opts.UTF8Graphics, "UTF8Graphics should be true when -u flag is set")
 			},
 		},
@@ -151,7 +151,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 			setupFlags: func() {
 				flagVT100 = true
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.True(t, opts.VT100Graphics, "VT100Graphics should be true when -v flag is set")
 			},
 		},
@@ -160,7 +160,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 			setupFlags: func() {
 				flagLevel = 5
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.Equal(t, 5, opts.MaxDepth, "MaxDepth should be 5 when -l 5 flag is set")
 			},
 		},
@@ -170,7 +170,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 				flagColorAttr = "cpu"
 				flagCompactNot = false // Reset this as it gets modified
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.Equal(t, "cpu", opts.ColorAttr, "ColorAttr should be 'cpu' when -k cpu flag is set")
 				assert.True(t, !opts.CompactMode, "CompactMode should be false when -k flag is set (implies --compact-not)")
 			},
@@ -181,7 +181,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 				flagColor = true
 				colorSupport = true
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.True(t, opts.ColorizeOutput, "ColorizeOutput should be true when -C flag is set")
 			},
 		},
@@ -192,7 +192,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 				colorSupport = true
 				colorCount = 256
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.True(t, opts.RainbowOutput, "RainbowOutput should be true when -r flag is set")
 			},
 		},
@@ -201,7 +201,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 			setupFlags: func() {
 				flagCompactNot = true
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.False(t, opts.CompactMode, "CompactMode should be false when -n flag is set")
 			},
 		},
@@ -220,7 +220,7 @@ func TestFlagToDisplayOptions(t *testing.T) {
 				flagShowUIDTransitions = false
 				flagThreads = false
 			},
-			checkOptions: func(t *testing.T, opts pstree.DisplayOptions) {
+			checkOptions: func(t *testing.T, opts tree.DisplayOptions) {
 				assert.True(t, opts.ShowProcessAge, "ShowProcessAge should be true when -A flag is set")
 				assert.True(t, opts.ShowArguments, "ShowArguments should be true when -A flag is set")
 				assert.True(t, opts.ShowCpuPercent, "ShowCpuPercent should be true when -A flag is set")
@@ -306,7 +306,7 @@ func applyFlagsToDisplayOptions() {
 		flagThreads = true
 	}
 
-	displayOptions = pstree.DisplayOptions{
+	displayOptions = tree.DisplayOptions{
 		ColorAttr:           flagColorAttr,
 		ColorCount:          colorCount,
 		ColorizeOutput:      flagColor,
