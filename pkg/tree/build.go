@@ -121,9 +121,6 @@ func NewProcessTree(debugLevel int, logger *slog.Logger, processes []Process, di
 	// Mark UID transitions
 	processTree.MarkUIDTransitions()
 
-	// Mark threads for display
-	processTree.MarkThreads()
-
 	return processTree
 }
 

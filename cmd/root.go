@@ -354,6 +354,9 @@ For more information about these matters, see the file named LICENSE.`,
 		// Mark processes to be displayed
 		processTree.MarkProcesses()
 
+		// Mark threads for display
+		processTree.MarkThreads()
+
 		// Drop unmarked processes
 		processTree.DropUnmarked()
 
