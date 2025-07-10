@@ -198,20 +198,19 @@ func (processTree *ProcessTree) GetProcessCount(pidIndex int) (int, []int32, boo
 // OUTPUT FORMATTING
 //------------------------------------------------------------------------------
 
-// FormatCompactOutput formats the command with count for compact mode.
+// FormatCompactOutput formats the compacted processes.
 //
 // This function creates a formatted string representation of a process group
 // in the style of Linux pstree. For regular processes, the format is "N*[command]",
-// and for threads, the format is "N*[{command}]", where N is the count.
+// where N is the count.
 //
 // Parameters:
 //   - command: The command name to format
-//   - count: Number of identical processes/threads
-//   - isThread: Whether this is a thread group
-//   - hideThreads: Whether threads should be hidden
+//   - count: Number of identical processes
+//   - groupPIDs: The list of PIDs for this process group
 //
 // Returns:
-//   - Formatted string for display, or empty string if threads should be hidden
+//   - Formatted string for display
 func (processTree *ProcessTree) FormatCompactOutput(command string, count int, groupPIDs []int32) string {
 	if count <= 1 {
 		return command
@@ -221,6 +220,32 @@ func (processTree *ProcessTree) FormatCompactOutput(command string, count int, g
 	} else {
 		return fmt.Sprintf("%d*[%s]", count, filepath.Base(command))
 	}
+}
+
+// FormatCompactedThreads formats the compacted threads.
+//
+// This function creates a formatted string representation of a process group's
+// threads in the style of Linux pstree. For regular processes, the format
+// is "{command}" for 1 thread and "N*[{command}]" for > 1 threads,
+// where N is the count.
+//
+// Parameters:
+//   - command: The command name to format
+//   - compactableThreads: Number of threads that can be compacted
+//
+// Returns:
+//   - Formatted string for display
+func (processTree *ProcessTree) FormatCompactedThreads(command string, compactableThreads int32) string {
+	var (
+		compactedThread string
+	)
+
+	if compactableThreads == 1 {
+		compactedThread = fmt.Sprintf("───{%s}", filepath.Base(command))
+	} else if compactableThreads > 1 {
+		compactedThread = fmt.Sprintf("───%d*[{%s}]", compactableThreads, filepath.Base(command))
+	}
+	return compactedThread
 }
 
 // PIDsToString converts a slice of process IDs to a slice of their string representations.
