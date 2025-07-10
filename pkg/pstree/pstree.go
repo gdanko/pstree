@@ -370,7 +370,7 @@ func GenerateProcess(proc *process.Process) tree.Process {
 		}
 	}
 
-	processThreads := []tree.Thread{}
+	processThreads := make([]tree.Thread, 0, numThreads)
 	for threadID, thread := range threads {
 		if threadID != pid {
 			processThreads = append(processThreads, tree.Thread{
