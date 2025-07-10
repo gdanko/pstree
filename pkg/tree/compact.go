@@ -216,9 +216,9 @@ func (processTree *ProcessTree) FormatCompactOutput(command string, count int, g
 		return command
 	}
 	if processTree.DisplayOptions.ShowPIDs {
-		return fmt.Sprintf("%d*[%s] (%s)", count, filepath.Base(command), strings.Join(processTree.PIDsToString(groupPIDs), ","))
+		return fmt.Sprintf("───%d*[%s] (%s)", count, filepath.Base(command), strings.Join(processTree.PIDsToString(groupPIDs), ","))
 	} else {
-		return fmt.Sprintf("%d*[%s]", count, filepath.Base(command))
+		return fmt.Sprintf("───%d*[%s]", count, filepath.Base(command))
 	}
 }
 
