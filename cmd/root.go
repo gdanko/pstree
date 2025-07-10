@@ -357,12 +357,6 @@ For more information about these matters, see the file named LICENSE.`,
 		// Drop unmarked processes
 		processTree.DropUnmarked()
 
-		// Show processes that will be displayed
-		if processTree.DebugLevel > 2 {
-			processTree.ShowPrintable()
-			os.Exit(0)
-		}
-
 		// Print the tree
 		processTree.PrintTree(0, "")
 	}
