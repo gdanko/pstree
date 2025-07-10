@@ -87,6 +87,8 @@ func (processTree *ProcessTree) colorizeField(fieldName string, value *string, p
 				processTree.Colorizer.Connector(processTree.ColorScheme, value)
 			case "command":
 				processTree.Colorizer.Command(processTree.ColorScheme, value)
+			case "compactedThread":
+				processTree.Colorizer.CompactedThread(processTree.ColorScheme, value)
 			case "compactStr":
 				processTree.Colorizer.CompactStr(processTree.ColorScheme, value)
 			case "cpu":
