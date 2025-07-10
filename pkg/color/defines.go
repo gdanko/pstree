@@ -32,51 +32,53 @@ var Colorizers = map[string]Colorizer{
 		Age:                Color8GreenBold,
 		Args:               Color8Red,
 		Command:            Color8BlueBold,
+		CompactedThread:    Color8BlackBold,
 		CompactStr:         Color8BlackBold,
 		Connector:          Color8BlackBold,
 		CPU:                Color8YellowBold,
+		CPUHigh:            Color8Red,
+		CPULow:             Color8Green,
+		CPUMedium:          Color8Yellow,
+		Default:            Color8Green,
 		Memory:             Color8RedBold,
+		MemoryHigh:         Color8Red,
+		MemoryLow:          Color8Green,
+		MemoryMedium:       Color8Yellow,
 		NumThreads:         Color8WhiteBold,
 		Owner:              Color8CyanBold,
 		OwnerTransition:    Color8BlackBold,
 		PIDPGID:            Color8MagentaBold,
 		Prefix:             Color8Green,
+		ProcessAgeHigh:     Color8Cyan,
 		ProcessAgeLow:      Color8Red,
 		ProcessAgeMedium:   Color8Yellow,
-		ProcessAgeHigh:     Color8Cyan,
 		ProcessAgeVeryHigh: Color8Green,
-		CPULow:             Color8Green,
-		CPUMedium:          Color8Yellow,
-		CPUHigh:            Color8Red,
-		MemoryLow:          Color8Green,
-		MemoryMedium:       Color8Yellow,
-		MemoryHigh:         Color8Red,
-		Default:            Color8Green,
 	},
 	"256color": {
 		Age:                Color256Green,
 		Args:               Color256Red,
 		Command:            Color256Blue,
+		CompactedThread:    Color256BlackBold,
 		CompactStr:         Color256BlackBold,
 		Connector:          Color256BlackBold,
 		CPU:                Color256Yellow,
+		CPUHigh:            Color256Red,
+		CPULow:             Color256Green,
+		CPUMedium:          Color256Yellow,
+		Default:            Color256Green,
 		Memory:             Color256Orange,
+		MemoryHigh:         Color256Red,
+		MemoryLow:          Color256Green,
+		MemoryMedium:       Color256Yellow,
 		NumThreads:         Color256White,
 		Owner:              Color256Cyan,
 		OwnerTransition:    Color256BlackBold,
 		PIDPGID:            Color256Magenta,
 		Prefix:             Color256Green,
+		ProcessAgeHigh:     Color256Cyan,
 		ProcessAgeLow:      Color256Red,
 		ProcessAgeMedium:   Color256Yellow,
-		ProcessAgeHigh:     Color256Cyan,
 		ProcessAgeVeryHigh: Color256Green,
-		CPULow:             Color256Green,
-		CPUMedium:          Color256Yellow,
-		CPUHigh:            Color256Red,
-		MemoryLow:          Color256Green,
-		MemoryMedium:       Color256Yellow,
-		MemoryHigh:         Color256Red,
-		Default:            Color256Green,
 	},
 }
 
@@ -84,26 +86,27 @@ type Colorizer struct {
 	Age                ColorFunc
 	Args               ColorFunc
 	Command            ColorFunc
+	CompactedThread    ColorFunc
 	CompactStr         ColorFunc
 	Connector          ColorFunc
 	CPU                ColorFunc
+	CPUHigh            ColorFunc
+	CPULow             ColorFunc
+	CPUMedium          ColorFunc
+	Default            ColorFunc
 	Memory             ColorFunc
+	MemoryHigh         ColorFunc
+	MemoryLow          ColorFunc
+	MemoryMedium       ColorFunc
 	NumThreads         ColorFunc
 	Owner              ColorFunc
 	OwnerTransition    ColorFunc
 	PIDPGID            ColorFunc
 	Prefix             ColorFunc
+	ProcessAgeHigh     ColorFunc
 	ProcessAgeLow      ColorFunc
 	ProcessAgeMedium   ColorFunc
-	ProcessAgeHigh     ColorFunc
 	ProcessAgeVeryHigh ColorFunc
-	CPULow             ColorFunc
-	CPUMedium          ColorFunc
-	CPUHigh            ColorFunc
-	MemoryLow          ColorFunc
-	MemoryMedium       ColorFunc
-	MemoryHigh         ColorFunc
-	Default            ColorFunc
 }
 
 type ColorMap struct {
