@@ -110,7 +110,7 @@ func (processTree *ProcessTree) PrintTree(pidIndex int, head string) {
 	// This is where the threads are printed underneath the process. This needs to be conditional.
 	// Only do this if PIDs are displayed, otherwise we compact them.
 	if !processTree.DisplayOptions.HideThreads && len(processTree.Nodes[pidIndex].Threads) > 0 {
-		if processTree.DisplayOptions.ShowPIDs {
+		if processTree.DisplayOptions.ShowPIDs || !processTree.DisplayOptions.CompactMode {
 			processTree.PrintThreads(pidIndex, newHead)
 		}
 	}
@@ -207,28 +207,23 @@ func (processTree *ProcessTree) buildLinePrefix(head string, pidIndex int) strin
 	hasChildren := processTree.Nodes[pidIndex].Child != -1 && processTree.AtDepth < processTree.DisplayOptions.MaxDepth
 	hasThreads := !processTree.DisplayOptions.HideThreads && len(processTree.Nodes[pidIndex].Threads) > 0
 
-	// Add branch character if the process has children or threads
+	// Set the branch character based on whether or not the process has children or threads
+	// and various display options
 	if hasChildren {
-		processTree.Logger.Debug(fmt.Sprintf("Process %d has children", processTree.Nodes[pidIndex].PID))
 		builder.WriteString(processTree.TreeChars.P)
 	} else if hasThreads {
 		if processTree.DisplayOptions.ShowPIDs {
-			processTree.Logger.Debug(fmt.Sprintf("Process %d has threads and display of PIDs is enabled", processTree.Nodes[pidIndex].PID))
+			builder.WriteString(processTree.TreeChars.P)
+		} else if !processTree.DisplayOptions.CompactMode {
 			builder.WriteString(processTree.TreeChars.P)
 		} else {
-			processTree.Logger.Debug(fmt.Sprintf("Process %d has threads and display of PIDs is disabled", processTree.Nodes[pidIndex].PID))
 			builder.WriteString(processTree.TreeChars.S2)
 		}
 	} else {
-		processTree.Logger.Debug(fmt.Sprintf("Process %d has no children and no threads", processTree.Nodes[pidIndex].PID))
 		builder.WriteString(processTree.TreeChars.S2)
 	}
-	// if hasChildren || hasThreads {
-	// 	builder.WriteString(processTree.TreeChars.P)
-	// } else {
-	// 	builder.WriteString(processTree.TreeChars.S2)
-	// }
 
+	// Logic for displaying PGID indicators
 	if processTree.Nodes[pidIndex].PID == processTree.Nodes[pidIndex].PGID {
 		if !processTree.DisplayOptions.ShowPGLs {
 			builder.WriteString(processTree.TreeChars.NPGL)
@@ -238,6 +233,7 @@ func (processTree *ProcessTree) buildLinePrefix(head string, pidIndex int) strin
 	} else {
 		builder.WriteString(processTree.TreeChars.NPGL)
 	}
+
 	builder.WriteString(processTree.TreeChars.EG)
 
 	// Return the completed string
@@ -264,26 +260,28 @@ func (processTree *ProcessTree) buildLinePrefix(head string, pidIndex int) strin
 func (processTree *ProcessTree) buildLineItem(head string, pidIndex int) string {
 	processTree.Logger.Debug(fmt.Sprintf("processTree.buildLineItem(head=\"%s\", pidIndex=%d, atDepth=%d)", head, pidIndex, processTree.AtDepth))
 	var (
-		ageString        string
-		args             string
-		commandStr       string
-		compactedThread  string
-		compactStr       string
-		connector        string
-		cpuPercent       string
-		group            string
-		linePrefix       string
-		memoryUsage      string
-		owner            string
-		ownerGroupSlice  []string
-		ownerGroupString string
-		ownerTransition  string
-		pgidString       string
-		pidPgidSlice     []string
-		pidPgidString    string
-		pidString        string
-		ppidString       string
-		threads          string
+		ageString            string
+		args                 string
+		commandStr           string
+		compactableThreads   int32
+		compactedThread      string
+		compactStr           string
+		connector            string
+		cpuPercent           string
+		group                string
+		linePrefix           string
+		memoryUsage          string
+		owner                string
+		ownerGroupSlice      []string
+		ownerGroupString     string
+		ownerTransition      string
+		pgidString           string
+		pidPgidSlice         []string
+		pidPgidString        string
+		pidString            string
+		ppidString           string
+		showCompactedThreads bool = true
+		threads              string
 	)
 
 	// Create a strings.Builder with an estimated capacity
@@ -450,45 +448,26 @@ func (processTree *ProcessTree) buildLineItem(head string, pidIndex int) string 
 	builder.WriteString(commandStr)
 
 	// Display of threads is different when --show-pids isn't specified
-	if !processTree.DisplayOptions.HideThreads && len(processTree.Nodes[pidIndex].Threads) > 0 {
-		// We do not use the main process as a thread in compact mode
-		if !processTree.DisplayOptions.ShowPIDs && (processTree.Nodes[pidIndex].NumThreads-1) > 0 {
-			compactableThreads := processTree.Nodes[pidIndex].NumThreads - 1 // Exclude the main process itself
-			if compactableThreads == 1 {
-				if processTree.DisplayOptions.ShowPGIDs {
-					compactedThread = fmt.Sprintf(
-						"───{%s} %d)",
-						filepath.Base(processTree.Nodes[pidIndex].Command),
-						processTree.Nodes[pidIndex].PGID,
-					)
-				} else {
-					compactedThread = fmt.Sprintf(
-						"───{%s}",
-						filepath.Base(processTree.Nodes[pidIndex].Command),
-					)
-				}
+	// Don't do any of this noise if there are no threads to display
+	compactableThreads = processTree.Nodes[pidIndex].NumThreads - 1
+	if compactableThreads > 0 {
+		if processTree.DisplayOptions.HideThreads {
+			showCompactedThreads = false
+		} else if processTree.DisplayOptions.ShowPIDs {
+			showCompactedThreads = false
+		} else if !processTree.DisplayOptions.CompactMode {
+			showCompactedThreads = false
+		}
 
-			} else if compactableThreads > 1 {
-				if processTree.DisplayOptions.ShowPGIDs {
-					compactedThread = fmt.Sprintf(
-						"───%d*[{%s}(%d)]",
-						processTree.Nodes[pidIndex].NumThreads-1, // -1 because the main process is not counted as a thread
-						filepath.Base(processTree.Nodes[pidIndex].Command),
-						processTree.Nodes[pidIndex].PGID,
-					)
-				} else {
-					compactedThread = fmt.Sprintf(
-						"───%d*[{%s}]",
-						processTree.Nodes[pidIndex].NumThreads-1, // -1 because the main process is not counted as a thread
-						filepath.Base(processTree.Nodes[pidIndex].Command),
-					)
-				}
-			}
+		if showCompactedThreads {
+			compactedThread = processTree.FormatCompactedThreads(processTree.Nodes[pidIndex].Command, compactableThreads)
 			processTree.colorizeField("compactedThread", &compactedThread, pidIndex)
 			builder.WriteString(compactedThread)
+			builder.WriteString(" ")
 		}
 	}
 
+	// Display the arguments if enabled
 	if processTree.DisplayOptions.ShowArguments {
 		if len(processTree.Nodes[pidIndex].Args) > 0 {
 			// psutil.Process sometimes prepends the first argument with the name of the binary,
@@ -511,7 +490,7 @@ func (processTree *ProcessTree) buildLineItem(head string, pidIndex int) string 
 		}
 		args = strings.Join(processTree.Nodes[pidIndex].Args, " ")
 		processTree.colorizeField("args", &args, pidIndex)
-		builder.WriteString(" ")
+		// builder.WriteString(" ")
 		builder.WriteString(args)
 		builder.WriteString(" ")
 	}
