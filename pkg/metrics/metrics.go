@@ -276,10 +276,10 @@ func ProcessStatus(c chan func(ctx context.Context, proc *process.Process) (stat
 //
 // Parameters:
 //   - c: Channel to send the function through
-func ProcessThreads(c chan func(ctx context.Context, proc *process.Process) (status map[int32]*cpu.TimesStat, err error)) {
-	c <- (func(ctx context.Context, proc *process.Process) (status map[int32]*cpu.TimesStat, err error) {
-		status, err = proc.ThreadsWithContext(ctx)
-		return status, err
+func ProcessThreads(c chan func(ctx context.Context, proc *process.Process) (threads map[int32]*cpu.TimesStat, err error)) {
+	c <- (func(ctx context.Context, proc *process.Process) (threads map[int32]*cpu.TimesStat, err error) {
+		threads, err = proc.ThreadsWithContext(ctx)
+		return threads, err
 	})
 }
 
