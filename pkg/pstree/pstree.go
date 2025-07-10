@@ -24,6 +24,25 @@ import (
 )
 
 //------------------------------------------------------------------------------
+// THREAD SORTING FUNCTIONS
+//------------------------------------------------------------------------------
+// Functions in this section handle sorting threads by various attributes.
+
+// SortByTid sorts a slice of tree.Thread pointers by their TID in ascending order.
+//
+// Parameters:
+//   - procs: Slice of thread pointers to be sorted
+//
+// Returns:
+//   - Sorted slice of thread pointers
+func SortByTid(threads *[]tree.Thread) *[]tree.Thread {
+	sort.Slice(*threads, func(i, j int) bool {
+		return (*threads)[i].TID < (*threads)[j].TID // Ascending order
+	})
+	return threads
+}
+
+//------------------------------------------------------------------------------
 // PROCESS SORTING FUNCTIONS
 //------------------------------------------------------------------------------
 // Functions in this section handle sorting processes by various attributes.
@@ -365,6 +384,7 @@ func GenerateProcess(proc *process.Process) tree.Process {
 			})
 		}
 	}
+	SortByTid(&processThreads)
 
 	// Try to determine the group name from the groups map if available
 	// and if the first UID is present in the map. This is to ensure
